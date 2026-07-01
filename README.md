@@ -109,8 +109,24 @@ message (the default — the on-demand GPU is normally paused).
 
 ## Status
 
-🚧 Early scaffolding. See [`CLAUDE.md`](./CLAUDE.md) for the full engineering operating agreement
-and [`docs/`](./docs) for data sourcing and golden-set scenarios.
+**P0 — Foundation: complete.** Reproducible skeleton in place:
+
+- `uv`-locked Python monorepo (`src/sutradhar`), ruff + mypy (strict) + pytest, two-tier CI.
+- Env-driven `pydantic-settings` config with secret redaction; committed `.env.example`.
+- Dockerized Postgres (+pgvector) + Redis with healthchecks (`make up`).
+- Graceful OpenAI-compatible LLM smoke (`make smoke`) — green whether the GPU is up or off — and an
+  HF Hub auth check (`make hf-check`).
+- One-command on-demand GPU validation (`make gpu-validate`): create → vLLM serve → smoke → destroy,
+  teardown guaranteed. **Live-validated Gemma-4-E4B on an A100 at ~98 tok/s for ~$0.34**
+  (evidence in [`infra/README.md`](./infra/README.md); DEC-0001 follow-up discharged).
+- Protected `main` (ruleset: required Tier-1 checks + PR + no force-push).
+
+See [`docs/BENCHMARKS.md`](./docs/BENCHMARKS.md) (two-table skeleton) and
+[`docs/PORTFOLIO.md`](./docs/PORTFOLIO.md) for the quantified results (filled from P2 onward).
+Next: **P1** — data ingestion + the Work/Version remake graph.
+
+See [`CLAUDE.md`](./CLAUDE.md) for the full engineering operating agreement and [`docs/`](./docs)
+for data sourcing, decisions, and golden-set scenarios.
 
 ## Licensing
 
