@@ -165,3 +165,129 @@ chosen SKU. `LLM_BASE_URL`/`LLM_MODEL` stay env-driven so the same stack targets
 **Sources (accessed 2026-07-01).** JarvisLabs pricing (`jarvislabs.ai`, `costbench.com`, `gpuvec.com`,
 `nodepedia.com`); QLoRA/vLLM VRAM sizing (Unsloth requirements; koishiai 24 GB QLoRA guide; vLLM +
 Mistral-Small-24B serving docs); Sarvam-M FP8 serving (`sarvam.ai/blogs/sarvam-m`).
+
+---
+
+## DEC-P0-1 — Python dependency & packaging manager: uv (2026-07-01)
+
+**Status:** Accepted (P0 grooming). Applies repo-wide from P0.
+
+**Context.** P0 needs a reproducible, "rebuild-from-scratch" Python toolchain (CLAUDE.md infra;
+ROADMAP §6.1/§6.6) that CI and Docker share without drift.
+
+**Options.** (A) **uv** — Rust-based, single tool for resolve+venv+lock, `uv.lock`, fast CI/Docker.
+(B) **Poetry** — mature, known, heavier/slower. (C) **pip-tools + venv** — minimal, manual, weakest DX.
+
+**Decision.** **uv.** Commit `uv.lock`; CI runs `uv sync --frozen`; Docker uses `uv sync`. Speed +
+deterministic lockfile directly serve the reproducibility and cost-discipline goals.
+
+**Consequences.** `pyproject.toml` + `uv.lock` are the source of truth; contributors install uv.
+If a hard blocker appears, Poetry is the documented fallback (same `pyproject.toml`).
+
+**Sources (accessed 2026-07-01).** Astral uv docs (`docs.astral.sh/uv`); uv lockfile/CI + Docker
+reproducibility guides (pydevtools; uv 2026 guides).
+
+---
+
+## DEC-P0-2 — Repo Python layout: single `src/sutradhar/` package (2026-07-01)
+
+**Status:** Accepted (P0 grooming).
+
+**Context.** The CLAUDE.md subsystem dirs are hyphenated (`data-pipeline`, `rag-engine`) — not
+valid import names. P0 must define how they map to importable code.
+
+**Options.** (A) **Single installable `src/sutradhar/` package** with subpackages
+(`sutradhar.config`, `.serving`, `.rag`, `.pipeline`, …); hyphenated dirs hold entrypoints/
+Dockerfiles/READMEs importing `sutradhar.*`. (B) **Multi-package workspace** — one installable pkg
+per subsystem. (C) **Flat `sutradhar/` at repo root.**
+
+**Decision.** **A.** One `pyproject.toml`, one venv, one test suite, one import root; a
+dir→package mapping table lives in the top-level README. Preserves the CLAUDE.md directory story
+while keeping imports clean.
+
+**Consequences.** Subsystems are Python subpackages, not separate distributions; if a subsystem is
+ever split into its own service, it is promoted out of the monopackage at that time (noted for a
+future decision).
+
+---
+
+## DEC-P0-3 — Task runner: Makefile (2026-07-01)
+
+**Status:** Accepted (P0 grooming).
+
+**Context.** CLAUDE.md references "make/task targets"; P0 needs `setup/fmt/lint/typecheck/test/up/
+down/smoke/hf-check/gpu-validate/gpu-nuke`.
+
+**Options.** (A) **Makefile** — ubiquitous, zero install, CI-friendly. (B) **justfile** — cleaner
+syntax, extra install. (C) **Taskfile (go-task)** — YAML, extra binary.
+
+**Decision.** **Makefile.** Nothing extra to install on the low-spec laptop or in CI; matches
+CLAUDE.md wording.
+
+**Consequences.** Targets are the documented entrypoints in every module README and the RUNBOOK.
+
+---
+
+## DEC-P0-4 — LLM endpoint client contract: OpenAI-compatible (2026-07-01)
+
+**Status:** Accepted (P0 grooming). Sets the contract reused by P3 tracing and P5 serving.
+
+**Context.** The connectivity smoke test (P0 exit criteria) and all later generation calls target an
+on-demand vLLM endpoint via env-driven `LLM_BASE_URL`/`LLM_MODEL`. The client contract must stay
+swappable across vLLM, a frontier API (P4 data-teacher), and a local fallback.
+
+**Options.** (A) **OpenAI-compatible via the `openai` SDK** against `LLM_BASE_URL` — vLLM serves this
+natively (verified routes `GET /health`, `GET /v1/models`, `POST /v1/chat/completions`; `--api-key`
+→ Bearer). (B) **Raw `httpx`** to `/v1/chat/completions` — no dep, hand-rolled, drift risk.
+(C) **vLLM-native `/generate`** — couples to a non-standard route, breaks swappability.
+
+**Decision.** **A.** Standardizing on the OpenAI-compatible contract now is what makes the endpoint
+truly env-swappable later. `LLMClient.health()` probes `/health` → `/v1/models` → a 1-token
+`/v1/chat/completions`; a connection-refused/timeout short-circuits to `status="off"` (exit 0, never
+a crash) — the seed of the P5/P6 graceful-degradation thread.
+
+**Consequences.** Adds the `openai` dep in P0. `status:"off"` is a first-class success path, not an
+exception.
+
+**Sources (accessed 2026-07-01).** vLLM "OpenAI-Compatible Server" docs
+(`docs.vllm.ai/.../serving/openai_compatible_server`) — `/health`, `/v1/models`,
+`/v1/chat/completions`, `--api-key`.
+
+---
+
+## DEC-P0-5 — JarvisLabs P0 GPU validation: full ephemeral create→smoke→destroy (2026-07-01)
+
+**Status:** Accepted (P0 grooming). Implements the DEC-0001 follow-up (validate Gemma-4-E4B + vLLM
+on the rented GPU before committing budget) and the P0 "smoke green in both states" exit criterion.
+
+**Context.** P0 must prove the smoke test's *up* state against a real rented GPU without keeping any
+standing machine. DEC-0003 names JarvisLabs (per-minute billing) as the on-demand provider.
+
+**Options.** (A) **Manual** dashboard/`jl` bring-up, no committed automation — not reproducible from
+scratch. (B) **Thin `gpu-up/gpu-down` resume/pause helper** — assumes a pre-existing (warm) paused
+instance; leaves teardown to the operator. (C) **Full ephemeral automation** — one script
+provisions a fresh instance, serves, validates, and destroys it.
+
+**Decision.** **C — full ephemeral automation.** `make gpu-validate` drives the `jarvislabs` SDK/`jl`
+CLI: **create** a fresh instance (`GPU_TYPE`, e.g. A100-40GB, via `JARVISLABS_API_KEY`) → `vllm
+serve` Gemma-4-E4B (fallback `Qwen3-4B-Instruct-2507`) → health-wait on `/health` → `make smoke`
+(expect `status="up"` + real token) → capture evidence → **destroy**. Chosen because it best
+embodies the mission's "rebuild from scratch, never depend on a warm machine, volume deleted after
+use" principle: the UP-state proof is reproducible from nothing.
+
+**Guardrails.** (1) **Teardown guaranteed** via `try/finally` + a `make gpu-nuke` safety target that
+destroys any stray tagged instance — a leaked billing GPU is treated as a defect (a teardown test
+injects a smoke failure and asserts destroy still runs). (2) **Never on a PR** — developer- or
+`workflow_dispatch`-invoked only (cost + secrets); Tier-1 CI stays fully mocked/stubbed. (3) The
+*cold* create→destroy validation is distinct from the P6 **sub-2-min warm-resume** demo path (R4),
+which remains in `docs/RUNBOOK.md`.
+
+**Consequences.** Adds `JARVISLABS_API_KEY` (+ `GPU_TYPE`) to `.env.example`; drops any persistent
+instance id (fresh each run). Cost bounded to one short create→destroy cycle (~$0.89/hr, minutes,
+well under $1), within the DEC-0003 envelope. Evidence (log/screenshot + tokens/sec + create→up
+time) is captured into `/infra/README.md` as the seed for the P6 RUNBOOK.
+
+**Sources (accessed 2026-07-01).** JarvisLabs Python SDK + `jl` CLI docs (`docs.jarvislabs.ai/sdk`,
+`/cli` — programmatic create/pause/resume/destroy, `jl run` auto-destroy; replaces deprecated
+`jlclient`); JarvisLabs "Serving LLMs" tutorial (`vllm serve --port 8000` reached from the laptop
+via tunnel).
