@@ -44,8 +44,37 @@ uv run pytest -m integration            # CREATE EXTENSION vector; + Redis PING-
 
 
 ## On-demand GPU — seed mini-runbook
-<!-- Populated in P0 task 8 with evidence from the make gpu-validate run:
-     boots? model? tokens/sec glimpse? create→up wall-clock. Full RUNBOOK is P6. -->
+
+`make gpu-validate` runs `infra/gpu/jarvis.py`: it creates a fresh JarvisLabs A100, serves
+`LLM_MODEL` on vLLM, health-waits, runs the connectivity smoke against it, captures evidence, and
+**destroys** the instance (teardown guaranteed in `try/finally`; `make gpu-nuke` destroys any stray
+`sutradhar-p0-validate` instance). Developer / `workflow_dispatch` invoked only — never on a PR.
+
+### Evidence — first validation run (2026-07-01, discharges the DEC-0001 vLLM-on-GPU follow-up)
+
+| Field | Result |
+|-------|--------|
+| Provider / GPU | JarvisLabs, **A100-PCIE-40GB** (region IN2), ₹84.24/hr |
+| Instance | machine_id `437621`, container (`pytorch` template), port 8000 exposed |
+| vLLM | `0.24.0`, `pip install -U vllm` on a fresh container |
+| Model booted | **`google/gemma-4-E4B`** ✅ (ungated; loaded in ~46 s, `max_model_len=131072`) |
+| create → first `/health` 200 | ~5.5 min cold (incl. vLLM install + weight load + `torch.compile` ~52 s); ~100 s on warm compile cache |
+| Smoke (`make smoke`) | **`status="up"`**, `sample_token='{"'`, `latency_ms≈196` |
+| Throughput glimpse | ~**98 tok/s** single-stream (128 tokens / 1.31 s, greedy) |
+| Teardown | `destroy(437621)` → clean; **0 instances remaining** |
+| Cost | ₹1884.11 → ₹1855.73 = **₹28.38 (~$0.34)** for the whole create→destroy cycle |
+
+**Findings folded into `infra/gpu/jarvis.py`:**
+1. **Reach path:** a container's `public_ip:8000` is firewalled; the port is reachable only via the
+   proxied `https://<id>N.notebooksn.jarvislabs.net` endpoint (here the port-8000 mapping was the
+   2nd `endpoints[]` URL). `candidate_base_urls()` probes `public_ip` **and** every `endpoints[]`
+   entry and uses the first that returns `/health` 200, so this is handled automatically.
+2. **Chat template:** base `gemma-4-E4B` ships no chat template → `/v1/chat/completions` 400s
+   without one. The startup script now writes a Gemma template and passes `--chat-template`
+   (`GEMMA_CHAT_TEMPLATE` in `jarvis.py`); text `/v1/completions` works without it.
+
+> This was the *cold, from-scratch* validation (create→destroy). The sub-2-min **warm-resume** demo
+> path (R4) is a separate flow owned by `docs/RUNBOOK.md` in P6. No standing GPU, ever.
 
 ## Branch-protection policy
 <!-- Populated in P0 task 10: Tier-1 required on PRs to main; Tier-2 is workflow_dispatch-only. -->

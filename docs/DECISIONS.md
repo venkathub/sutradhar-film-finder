@@ -74,8 +74,13 @@ If, after all this, QLoRA still does not beat the base, we record the finding an
   to reference DEC-0001 (2026-07-01).
 - Record exact `google/gemma-4-E4B` and `Qwen/Qwen3-4B-Instruct-2507` revisions/commit SHAs in
   `.env.example` + `BENCHMARKS.md` when the P4 run happens (reproducibility).
-- Validate Gemma 4 E4B QLoRA + vLLM on the rented GPU in a P0/P4 smoke step before committing GPU
-  budget; fall back to Qwen3-4B-Instruct-2507 if unstable.
+- ✅ Validate Gemma 4 E4B + vLLM on the rented GPU in a P0 smoke step before committing GPU budget;
+  fall back to Qwen3-4B-Instruct-2507 if unstable. **Discharged 2026-07-01 (P0 task 8):**
+  `google/gemma-4-E4B` (ungated) booted on a JarvisLabs **A100-40GB** under **vLLM 0.24.0**; the
+  connectivity smoke returned `status="up"` (~98 tok/s single-stream); instance created→destroyed in
+  one ephemeral cycle for **₹28.38 (~$0.34)**. No fallback needed. Finding: the base model ships **no
+  chat template**, so vLLM must be served with `--chat-template` for `/v1/chat/completions` (folded
+  into `infra/gpu/jarvis.py`; evidence in `infra/README.md`).
 
 **Sources (accessed 2026-07-01).**
 - Gemma 4 launch + Apache 2.0: HF blog `huggingface.co/blog/gemma4`; model card `ai.google.dev/gemma/docs/core/model_card_4`; `google/gemma-4-E4B`.
