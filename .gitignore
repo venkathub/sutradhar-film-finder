@@ -1,0 +1,53 @@
+# Secrets / env
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# ML / model artifacts (registered to HF Hub, not committed)
+*.gguf
+*.safetensors
+*.bin
+*.pt
+*.ckpt
+checkpoints/
+adapters/
+mlruns/
+mlartifacts/
+
+# Data (ingested at build time from TMDB/Wikidata/IMDb)
+data/raw/
+data/interim/
+data/processed/
+*.duckdb
+*.sqlite
+
+# Vector store / DB volumes
+qdrant_storage/
+pgdata/
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+*.log
