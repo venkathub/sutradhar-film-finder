@@ -1,0 +1,102 @@
+# Sutradhar Tool / Function Schema — v0 (frozen in P1)
+
+> The tool surface the Conversation/Intent model calls. It is **frozen at v0 before P4** because three
+> things depend on a stable schema: P4 synthetic tool-calling data, P5 API orchestration, and the
+> base-vs-QLoRA **tool-call accuracy** metric. Changes are versioned (v0 → v1 …) and logged in
+> `docs/DECISIONS.md`. All tools are read-only over the P1 Work/Version graph and RAG index.
+>
+> **Status:** DRAFT v0 seed — finalized as part of P1 exit criteria. Signatures below are the seed to
+> verify/refine against the graph schema during P1.
+
+---
+
+## Design rules
+- **Facts come from tools, never from weights.** Every user-visible claim must trace to a tool result
+  (grounding + citations). The model orchestrates; it does not recall catalog facts.
+- **Relationship-typed results.** Version results always carry the edge label
+  (`is_original_of` / `is_remake_of` / `is_official_dub_of` / `is_unofficial_remake_of` /
+  `is_sequel_of`) and the `is_original` flag.
+- **Every result carries `sources[]` + `confidence`** (from the P1 verification gate). CANDIDATE-tier
+  edges are excluded.
+- **Scoping is explicit.** Version queries take a `scope` (`indian` | `all` | `foreign`) so the model
+  can honor "Indian versions" vs "non-Indian versions" (GS-09).
+
+---
+
+## Tools (v0)
+
+### `resolve_title`
+Resolve a (possibly transliterated / misspelled / code-mixed) title to candidate Works/Versions.
+```jsonc
+resolve_title(
+  title: string,            // e.g. "Papanaasam", "Drushyam"
+  language?: string         // BCP-ish hint: ta | ml | te | hi | en | native
+) -> {
+  candidates: [ { work_id, version_id?, matched_title, language, year, score, sources[] } ],
+  ambiguous: boolean        // true → ask user to disambiguate (GS-10 collisions)
+}
+```
+Backs: GS-07, GS-10, GS-11 (sparse + rapidfuzz + transliteration).
+
+### `search_by_plot`
+Semantic retrieval of Works from a plot/story description with no title/actor anchor.
+```jsonc
+search_by_plot(
+  description: string,
+  top_k?: int = 10
+) -> {
+  results: [ { work_id, canonical_title, language, year, score } ],
+  abstain: boolean          // true when below the calibrated NO_MATCH threshold (GS-02)
+}
+```
+Backs: GS-01, GS-03; `abstain` enforces "never hallucinate a film."
+
+### `get_work`
+Canonical Work node + metadata.
+```jsonc
+get_work(work_id: string) -> {
+  work_id, canonical_title, source_work?,   // e.g. novel for Devdas (GS-05)
+  based_on?: [work_id|source_id], sources[], confidence
+}
+```
+
+### `get_versions`
+All Version nodes for a Work with typed relationship labels and the original flagged.
+```jsonc
+get_versions(
+  work_id: string,
+  scope?: "indian" | "all" | "foreign" = "indian",
+  include_sequels?: boolean = false          // GS-06 franchise traversal
+) -> {
+  original: { version_id, title, language, year, cast_lead[], sources[] },
+  versions: [ { version_id, title, language, year, cast_lead[], relationship, is_original, sources[], confidence } ]
+}
+```
+Backs: GS-01, GS-04 (dub vs remake), GS-05 (siblings, not a chain), GS-06, GS-09.
+
+### `refine_filter`
+Narrow a current version set across a conversational turn (backtracking).
+```jsonc
+refine_filter(
+  version_set: [version_id],
+  by: { actor?: string, language?: string, year?: int, era?: "original"|"newer"|"older", relationship?: string }
+) -> { versions: [ { version_id, title, language, year, relationship, is_original } ] }
+```
+Backs: GS-08 ("the one with Ajay Devgn" → "no, the original one" → "is there a Telugu one?").
+
+---
+
+## Coverage vs golden scenarios
+| Tool | GS scenarios |
+|---|---|
+| `resolve_title` | GS-07, GS-10, GS-11 |
+| `search_by_plot` | GS-01, GS-03, GS-02 (abstain) |
+| `get_work` | GS-05, GS-09 |
+| `get_versions` | GS-01, GS-04, GS-05, GS-06, GS-09 |
+| `refine_filter` | GS-08 |
+
+## Versioning
+- **v0** — this seed, frozen at P1 exit.
+- Any signature/label change increments the version and is logged in `DECISIONS.md`; P4 synthetic data
+  and P5 orchestration always target a single pinned version, recorded in the benchmark reproducibility
+  stamp (`ROADMAP.md` §6.1).

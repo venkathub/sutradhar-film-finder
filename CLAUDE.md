@@ -47,8 +47,8 @@ and document why. Knowing when fine-tuning did NOT help is a senior signal, not 
 4. Catalog + Remake-Graph store — Postgres modelling canonical Work nodes and per-language
    Version nodes with typed edges (is_original_of / is_remake_of / is_official_dub_of /
    is_unofficial_remake_of / is_sequel_of); embeddings in pgvector OR Qdrant (decide in P2).
-5. Conversation/Intent model — Gemma 3 4B-it with a QLoRA adapter: code-mixed intent, slot
-   extraction, backtracking, tool-calling.
+5. Conversation/Intent model — Gemma 4 E4B with a QLoRA adapter: code-mixed intent, slot
+   extraction, backtracking, tool-calling. (Base model per docs/DECISIONS.md DEC-0001.)
 6. Serving — vLLM on a rented GPU, brought up ON-DEMAND for a live demo (and for the benchmark
    capture), then stopped. There is NO 24/7 CPU-served model: we do not keep an LLM live on a CPU
    host. The standing portfolio evidence is the documented benchmark from the live GPU run, not a
@@ -64,10 +64,13 @@ Cross-cutting: Evals & Observability (RAGAS + Langfuse + MLflow), CI-gated.
   edges via P144 "based on" / P1877 "after a work by"), IMDb non-commercial dumps (title.akas
   for AKA/dub titles), curated Kaggle Indian-movie sets to backfill South-Indian coverage.
 - Stores: Postgres (+ pgvector) or Qdrant; Redis optional cache.
-- Models: serve the fine-tuned Gemma 3 4B-it (base + QLoRA adapter via vLLM) on the on-demand GPU;
-  base for benchmark = Gemma 3 4B-it (Qwen3 4B as fallback); embeddings = BGE-M3 (MIT); reranker =
-  bge-reranker-v2-m3; optional bigger live showcase = Sarvam-M 24B (Apache 2.0) on the GPU. GGUF
-  quantization is optional (only needed if a CPU fallback is ever wanted), not a deploy requirement.
+- Models (see docs/DECISIONS.md DEC-0001 for rationale + sources; all IDs env-driven): serve the
+  fine-tuned Gemma 4 E4B (base + QLoRA adapter via vLLM) on the on-demand GPU; base for benchmark =
+  Gemma 4 E4B (Qwen3-4B-Instruct-2507 as fallback); embeddings = BGE-M3 (MIT); reranker =
+  bge-reranker-v2-m3; optional bigger live showcase AND synthetic-data teacher = Sarvam-M 24B
+  (Apache 2.0) on the GPU — NOT the fine-tune base (it is already Indic-specialized, leaving no
+  beatable headroom). GGUF quantization is optional (only needed if a CPU fallback is ever wanted),
+  not a deploy requirement.
 - MLOps: MLflow (tracking + model registry, self-hosted), Langfuse Cloud free tier (LLM tracing),
   GitHub Actions (CI with eval gate), Docker + docker-compose, Hugging Face Hub (artifact registry
   / reproducibility bridge).
@@ -78,7 +81,7 @@ Cross-cutting: Evals & Observability (RAGAS + Langfuse + MLflow), CI-gated.
 - TMDB: free developer API (attribution required); verify current terms; data is community-editable.
 - Wikipedia: CC BY-SA 4.0 (attribution + share-alike). Accessed via API/dump, NEVER HTML-scraped.
   Used for plot text (embeddings) and as a candidate-edge source under human verification.
-- Sarvam-M (24B): Apache 2.0. Gemma 3 / Qwen3: permissive. Avoid Sarvam-1 (2B) — non-commercial.
+- Sarvam-M (24B): Apache 2.0. Gemma 4 / Qwen3: Apache 2.0. Avoid Sarvam-1 (2B) — non-commercial.
 - Sourcing strategy and per-field precedence live in docs/DATA_SOURCES.md. "High confidence" is an
   ENFORCED property: a record/edge is ground-truth only if HIGH confidence (>=2 independent sources
   agree, or an authoritative structured source) OR human-verified, with no unresolved conflict.
@@ -86,12 +89,15 @@ Cross-cutting: Evals & Observability (RAGAS + Langfuse + MLflow), CI-gated.
 - Maintain docs/LICENSING.md mapping every source/model to its license and our usage + attribution.
 
 ## Environment & infra constraints (budget is a first-class feature)
-- Developer laptop is low-spec: it runs ONLY Claude Code + editor + Docker for app services. The
-  LLM NEVER trains or serves on the laptop.
-- GPU is rented, never owned. JarvisLabs (per-minute billing; pause = storage-only) is used for a
-  ONE-TIME job: QLoRA fine-tune + embedding precompute + benchmark capture. Then STOP the instance.
-  After pushing artifacts to the HF Hub, the volume can be DELETED and the stack rebuilt from
-  scratch — we never depend on a warm machine.
+- Developer laptop is low-spec: it runs ONLY Claude Code + editor + Docker for app services. NO
+  neural-model operation (LLM, embedding, reranker, or neural transliteration) trains, serves, or
+  runs inference on the laptop — every model op runs on the rented on-demand GPU; the laptop and CI
+  operate on persisted artifacts only. Deterministic rule-based transliteration is not a model.
+- GPU is rented, never owned. JarvisLabs (per-minute billing; pause = storage-only) runs the neural
+  jobs in short on-demand sessions — candidate-edge extraction (P1), embedding/index build +
+  retrieval eval (P2), and the ONE-TIME QLoRA fine-tune + benchmark capture (P4) — then STOP the
+  instance. After pushing artifacts to the HF Hub, the volume can be DELETED and the stack rebuilt
+  from scratch — we never depend on a warm machine.
 - NO 24/7 CPU DEPLOYMENT. We do not run the LLM on a CPU host for always-on uptime. There is no
   permanently-live inference endpoint. This is a deliberate cost decision, not a gap.
 - The standing portfolio evidence is the BENCHMARK from the live GPU run, documented with strong
@@ -100,11 +106,12 @@ Cross-cutting: Evals & Observability (RAGAS + Langfuse + MLflow), CI-gated.
   repo / README) even though the model is not. The evidence is the proof; the endpoint is on-demand.
 - On-demand GPU is used for two things only: (a) the ONE-TIME training + benchmark-capture run, and
   (b) a QUICK live demo if an interviewer asks during a call. Resume JarvisLabs (sub-2-min), bring
-  the stack up with one command, demo, then STOP. Default the live demo to the fine-tuned Gemma 3
-  4B (fast to load); the 24B is an optional "if time permits" showcase.
+  the stack up with one command, demo, then STOP. Default the live demo to the fine-tuned Gemma 4
+  E4B (fast to load); the Sarvam-M 24B is an optional "if time permits" showcase.
 - A small/cheap always-on host (e.g. a low-tier VPS or static host) MAY serve only the static
   surface — landing page, README, architecture diagram, the recorded demo video, and the benchmark
-  report — plus, optionally, the lightweight retrieval API + dashboards. It never serves the LLM.
+  report — plus, optionally, dashboards over precomputed/recorded results. It never serves any neural
+  model (LLM, embedder, or reranker); any live query path requires the on-demand GPU.
 - GPU is rented, never owned. After the training+benchmark run, push artifacts to the HF Hub, then
   STOP and delete the volume; the whole stack is rebuilt from scratch on demand, never kept warm.
 - Cost discipline is part of the portfolio: "nothing inference-side runs 24/7; the GPU is up only

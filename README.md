@@ -40,7 +40,7 @@ and document why.
 2. **API layer (FastAPI)** — orchestration, guardrails, caching, token/cost/latency tracking.
 3. **RAG Engine** — query normalization + transliteration, hybrid retrieval (BGE-M3 dense + sparse), cross-encoder reranking (bge-reranker-v2-m3), grounding, prompt-injection guardrails.
 4. **Catalog + Remake-Graph store** — Postgres modelling canonical Work nodes and per-language Version nodes with typed edges; embeddings in pgvector or Qdrant.
-5. **Conversation/Intent model** — Gemma 3 4B-it + QLoRA adapter.
+5. **Conversation/Intent model** — Gemma 4 E4B + QLoRA adapter (see `docs/DECISIONS.md` DEC-0001).
 6. **Serving** — vLLM on a rented GPU, brought up **on-demand** for demo/benchmark, then stopped.
 
 Cross-cutting: **Evals & Observability** (RAGAS + Langfuse + MLflow), CI-gated.
