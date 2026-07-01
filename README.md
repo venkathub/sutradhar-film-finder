@@ -81,6 +81,32 @@ Nothing inference-side runs 24/7. The GPU is rented (never owned), brought up on
 benchmark and for live interview demos, then stopped. The standing portfolio evidence is the
 **documented benchmark** from the live GPU run — not a live endpoint.
 
+## Quickstart
+
+Fresh clone → running stack in one command each (task runner is `make`; see `make help`):
+
+```bash
+cp .env.example .env       # fill HF_TOKEN etc. as needed; no secret goes in git
+make setup                 # uv sync — install the locked environment
+make up                    # start Postgres(+pgvector) + Redis, wait for healthy
+make smoke                 # LLM connectivity: token if the GPU is up, graceful "endpoint OFF" if not
+make hf-check              # verify Hugging Face auth (whoami)
+make down                  # stop the stack
+```
+
+**30-second demo:** `make up && make smoke` shows the live stack and the graceful endpoint-OFF
+message (the default — the on-demand GPU is normally paused).
+
+| Target | Purpose |
+|--------|---------|
+| `setup` | `uv sync` the locked env |
+| `fmt` / `lint` / `typecheck` | ruff format / ruff check / mypy (strict) |
+| `test` / `test-int` | unit tests / integration tests (needs `make up`) |
+| `check` | Tier-1 gate: lint + typecheck + unit tests |
+| `up` / `down` / `down-v` | compose stack up / down / down + drop volume |
+| `smoke` / `hf-check` | LLM connectivity smoke / HF auth check |
+| `gpu-validate` / `gpu-nuke` | one-time ephemeral GPU validation / stray-instance safety |
+
 ## Status
 
 🚧 Early scaffolding. See [`CLAUDE.md`](./CLAUDE.md) for the full engineering operating agreement
