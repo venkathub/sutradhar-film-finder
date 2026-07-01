@@ -58,16 +58,75 @@ Cross-cutting: **Evals & Observability** (RAGAS + Langfuse + MLflow), CI-gated.
 | `/infra` | Docker, docker-compose, CI |
 | `/docs` | ROADMAP, DECISIONS, RUNBOOK, BENCHMARKS, LICENSING, PORTFOLIO, DATA_SOURCES, GOLDEN_SET_SCENARIOS |
 
+### Directory → import package
+
+The `CLAUDE.md` subsystem directories are hyphenated and are **not** valid import names. All Python
+code lives in one installable package, `sutradhar` (under `src/`, per `docs/DECISIONS.md` DEC-P0-2);
+the hyphenated top-level dirs hold entrypoint scripts, Dockerfiles, and READMEs that import from
+`sutradhar.*`. Directory name ≠ import name by design.
+
+| Directory | Import package |
+|-----------|----------------|
+| `data-pipeline` | `sutradhar.pipeline` |
+| `rag-engine` | `sutradhar.rag` |
+| `serving` | `sutradhar.serving` |
+| `finetune` | `sutradhar.finetune` |
+| `evals` | `sutradhar.evals` |
+| `infra` | — (containers / CI; no import package) |
+| `ui` | — (frontend assets; no import package) |
+
 ## Cost discipline (a first-class feature)
 
 Nothing inference-side runs 24/7. The GPU is rented (never owned), brought up only to capture the
 benchmark and for live interview demos, then stopped. The standing portfolio evidence is the
 **documented benchmark** from the live GPU run — not a live endpoint.
 
+## Quickstart
+
+Fresh clone → running stack in one command each (task runner is `make`; see `make help`):
+
+```bash
+cp .env.example .env       # fill HF_TOKEN etc. as needed; no secret goes in git
+make setup                 # uv sync — install the locked environment
+make up                    # start Postgres(+pgvector) + Redis, wait for healthy
+make smoke                 # LLM connectivity: token if the GPU is up, graceful "endpoint OFF" if not
+make hf-check              # verify Hugging Face auth (whoami)
+make down                  # stop the stack
+```
+
+**30-second demo:** `make up && make smoke` shows the live stack and the graceful endpoint-OFF
+message (the default — the on-demand GPU is normally paused).
+
+| Target | Purpose |
+|--------|---------|
+| `setup` | `uv sync` the locked env |
+| `fmt` / `lint` / `typecheck` | ruff format / ruff check / mypy (strict) |
+| `test` / `test-int` | unit tests / integration tests (needs `make up`) |
+| `check` | Tier-1 gate: lint + typecheck + unit tests |
+| `up` / `down` / `down-v` | compose stack up / down / down + drop volume |
+| `smoke` / `hf-check` | LLM connectivity smoke / HF auth check |
+| `gpu-validate` / `gpu-nuke` | one-time ephemeral GPU validation / stray-instance safety |
+
 ## Status
 
-🚧 Early scaffolding. See [`CLAUDE.md`](./CLAUDE.md) for the full engineering operating agreement
-and [`docs/`](./docs) for data sourcing and golden-set scenarios.
+**P0 — Foundation: complete.** Reproducible skeleton in place:
+
+- `uv`-locked Python monorepo (`src/sutradhar`), ruff + mypy (strict) + pytest, two-tier CI.
+- Env-driven `pydantic-settings` config with secret redaction; committed `.env.example`.
+- Dockerized Postgres (+pgvector) + Redis with healthchecks (`make up`).
+- Graceful OpenAI-compatible LLM smoke (`make smoke`) — green whether the GPU is up or off — and an
+  HF Hub auth check (`make hf-check`).
+- One-command on-demand GPU validation (`make gpu-validate`): create → vLLM serve → smoke → destroy,
+  teardown guaranteed. **Live-validated Gemma-4-E4B on an A100 at ~98 tok/s for ~$0.34**
+  (evidence in [`infra/README.md`](./infra/README.md); DEC-0001 follow-up discharged).
+- Protected `main` (ruleset: required Tier-1 checks + PR + no force-push).
+
+See [`docs/BENCHMARKS.md`](./docs/BENCHMARKS.md) (two-table skeleton) and
+[`docs/PORTFOLIO.md`](./docs/PORTFOLIO.md) for the quantified results (filled from P2 onward).
+Next: **P1** — data ingestion + the Work/Version remake graph.
+
+See [`CLAUDE.md`](./CLAUDE.md) for the full engineering operating agreement and [`docs/`](./docs)
+for data sourcing, decisions, and golden-set scenarios.
 
 ## Licensing
 
