@@ -14,6 +14,7 @@ import yaml
 _REPO = Path(__file__).resolve().parents[1]
 _WORKFLOWS = _REPO / ".github" / "workflows"
 _TIER1 = _WORKFLOWS / "tier1.yml"
+_TIER2 = _WORKFLOWS / "tier2.yml"
 
 # Steps that would make a job touch a GPU or a neural model — forbidden in PR-triggered jobs.
 _UNSAFE = re.compile(r"gpu-validate|gpu-nuke|jarvis|vllm serve|make gpu", re.IGNORECASE)
@@ -71,3 +72,28 @@ def test_no_secret_literals_in_tracked_files() -> None:
         pytest.skip("git not available")
     # git grep exits 1 when there are NO matches — that's what we want.
     assert proc.returncode == 1, f"possible secret literal committed:\n{proc.stdout}"
+
+
+def test_tier2_is_valid_yaml_with_eval_job() -> None:
+    wf = _load(_TIER2)
+    assert wf["name"] == "tier-2"
+    assert "eval-harness" in wf["jobs"]
+
+
+def test_tier2_is_workflow_dispatch_only() -> None:
+    """Tier-2 must never trigger on pull_request/push — GPU/eval work stays off the PR path."""
+    wf = _load(_TIER2)
+    on = wf["on"] if "on" in wf else wf[True]  # PyYAML parses bare `on:` as boolean True
+    keys = set(on) if isinstance(on, dict) else {on}
+    assert "workflow_dispatch" in keys
+    assert "pull_request" not in keys
+    assert "push" not in keys
+
+
+def test_tier2_is_placeholder_only() -> None:
+    """P0 Tier-2 is a no-op shell; guard against accidental early GPU/model wiring."""
+    text = _TIER2.read_text(encoding="utf-8")
+    assert "placeholder" in text.lower()
+    wf = _load(_TIER2)
+    for step in wf["jobs"]["eval-harness"].get("steps", []):
+        assert not _UNSAFE.search(str(step.get("run", "")))

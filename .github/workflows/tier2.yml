@@ -1,0 +1,30 @@
+# Tier-2 CI — GPU-window shell. workflow_dispatch ONLY (never on PR/push): it may run
+# GPU/model/eval steps that cost money and need secrets. P0 ships it as an empty placeholder;
+# P2/P3 fill in the real eval-harness run (RAGAS + the two-table benchmark) inside a GPU window.
+name: tier-2
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Why this GPU-window run is being triggered"
+        required: false
+        default: "manual eval-harness run"
+
+concurrency:
+  group: tier2-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  eval-harness:
+    name: eval-harness (placeholder)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Eval-harness placeholder
+        # P0 no-op. P2/P3 replace this with the RAGAS eval + two-table benchmark run,
+        # executed only inside an on-demand GPU window (never on a PR).
+        run: |
+          echo "Tier-2 eval-harness placeholder — no-op until P2/P3."
+          echo "Runs only inside an on-demand GPU window; never gates PRs."
+          echo "reason: ${{ github.event.inputs.reason }}"

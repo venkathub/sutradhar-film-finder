@@ -77,7 +77,38 @@ uv run pytest -m integration            # CREATE EXTENSION vector; + Redis PING-
 > path (R4) is a separate flow owned by `docs/RUNBOOK.md` in P6. No standing GPU, ever.
 
 ## Branch-protection policy
-<!-- Populated in P0 task 10: Tier-1 required on PRs to main; Tier-2 is workflow_dispatch-only. -->
+
+**`main` is protected.** Merges require a green **Tier-1** run and a review; no direct pushes.
+
+- **Required status checks (Tier-1, `.github/workflows/tier1.yml`):** `lint-type-test`,
+  `integration`, and `secret-guard` must pass before a PR can merge to `main`.
+- **Require a pull request before merging** (at least 1 approving review); **no direct pushes** to
+  `main`; require branches to be up to date before merge.
+- **Tier-2 (`.github/workflows/tier2.yml`) never gates PRs** — it is `workflow_dispatch`-only and
+  runs GPU/eval work deliberately inside an on-demand GPU window (P2/P3 onward). Keeping GPU/secret
+  work off the PR path is a cost-and-safety decision (P0_SPEC §2.5, §4).
+- **Secrets:** set the repo/org secret **`HF_TOKEN`** so the optional Tier-1 `hf-auth` job can run
+  `make hf-check`; it is skipped (not failed) when the secret is absent, and never runs on PRs.
+
+> These are the intended GitHub branch-protection settings for this repo; apply them in
+> Settings → Branches. The full operational runbook is `docs/RUNBOOK.md` (P6).
+
+### Applied (2026-07-01)
+
+Classic branch protection and rulesets are **not available on a private free-tier repo**
+(GitHub returns 403: "Upgrade to GitHub Pro or make this repository public"). The repo was made
+**public** and protection applied as a **repository ruleset** (`main protection (P0)`, id `18391957`,
+enforcement `active`) on `refs/heads/main`:
+
+| Rule | Setting |
+|------|---------|
+| `required_status_checks` (strict) | `lint · type · unit tests`, `compose stack (Postgres+pgvector, Redis)`, `secret guard` |
+| `pull_request` | required; `0` approving reviews (solo repo — raise when collaborators are added) |
+| `non_fast_forward` | force-pushes to `main` blocked |
+| `deletion` | `main` cannot be deleted |
+
+Managed via `gh api …/rulesets`. Required-check contexts are the Tier-1 job **names** in
+`tier1.yml`; if a job name changes, update the ruleset context to match.
 
 ## Status
 **P0 builds the local compose stack, CI shells, and the one-time GPU validation.** The full
