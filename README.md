@@ -58,6 +58,23 @@ Cross-cutting: **Evals & Observability** (RAGAS + Langfuse + MLflow), CI-gated.
 | `/infra` | Docker, docker-compose, CI |
 | `/docs` | ROADMAP, DECISIONS, RUNBOOK, BENCHMARKS, LICENSING, PORTFOLIO, DATA_SOURCES, GOLDEN_SET_SCENARIOS |
 
+### Directory → import package
+
+The `CLAUDE.md` subsystem directories are hyphenated and are **not** valid import names. All Python
+code lives in one installable package, `sutradhar` (under `src/`, per `docs/DECISIONS.md` DEC-P0-2);
+the hyphenated top-level dirs hold entrypoint scripts, Dockerfiles, and READMEs that import from
+`sutradhar.*`. Directory name ≠ import name by design.
+
+| Directory | Import package |
+|-----------|----------------|
+| `data-pipeline` | `sutradhar.pipeline` |
+| `rag-engine` | `sutradhar.rag` |
+| `serving` | `sutradhar.serving` |
+| `finetune` | `sutradhar.finetune` |
+| `evals` | `sutradhar.evals` |
+| `infra` | — (containers / CI; no import package) |
+| `ui` | — (frontend assets; no import package) |
+
 ## Cost discipline (a first-class feature)
 
 Nothing inference-side runs 24/7. The GPU is rented (never owned), brought up only to capture the
