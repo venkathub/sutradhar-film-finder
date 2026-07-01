@@ -27,8 +27,10 @@ def main() -> int:
     icon = {"up": "✓", "off": "…", "error": "✗"}.get(status.status, "?")
     print(f"[{icon}] LLM endpoint status: {status.status.upper()} — {status.detail}")
     if status.status == "up":
-        print(f"    model={status.model} sample_token={status.sample_token!r} "
-              f"latency_ms={status.latency_ms}")
+        print(
+            f"    model={status.model} sample_token={status.sample_token!r} "
+            f"latency_ms={status.latency_ms}"
+        )
     print(json.dumps(status.to_dict()))
     return _EXIT_CODES.get(status.status, 1)
 

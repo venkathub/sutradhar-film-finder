@@ -70,8 +70,11 @@ def _base_deps(client: _FakeClient, **over: Any) -> Any:
         list_instances=lambda c: c.instances_list,
         probe_health=lambda url, timeout: True,
         run_smoke=lambda url, s: EndpointStatus(
-            status="up", model="google/gemma-4-E4B", sample_token="pong",
-            latency_ms=11.0, detail="endpoint UP"
+            status="up",
+            model="google/gemma-4-E4B",
+            sample_token="pong",
+            latency_ms=11.0,
+            detail="endpoint UP",
         ),
         monotonic=monotonic,
         sleep=lambda s: None,

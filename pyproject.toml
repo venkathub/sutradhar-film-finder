@@ -24,6 +24,8 @@ dev = [
     "redis>=5.0",
     # On-demand GPU lifecycle (infra/gpu/jarvis.py) — used only by make gpu-validate/nuke.
     "jarvislabs>=0.2",
+    # CI workflow meta-tests (parse .github/workflows/*.yml).
+    "pyyaml>=6.0",
 ]
 
 [build-system]

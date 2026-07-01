@@ -1,0 +1,99 @@
+# Tier-1 CI — runs on every PR/push. No GPU, no model calls, no secrets required to pass.
+# Mirrors the local `make` targets; uses `uv sync --frozen` for a reproducible environment.
+name: tier-1
+
+on:
+  pull_request:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+
+concurrency:
+  group: tier1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-type-test:
+    name: lint · type · unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up uv (with cache)
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install locked environment
+        run: uv sync --frozen
+      - name: Lint (ruff)
+        run: uv run ruff check .
+      - name: Format check (ruff)
+        run: uv run ruff format --check .
+      - name: Type check (mypy, strict)
+        run: uv run mypy src
+      - name: Unit tests (integration excluded)
+        run: uv run pytest
+      - name: Validate against recorded artifacts (placeholder)
+        # P0 stub. P2+ replaces this with real validation of recorded retrieval/eval artifacts.
+        run: echo "artifact-validate stub — no recorded artifacts to validate in P0"
+
+  integration:
+    name: compose stack (Postgres+pgvector, Redis)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up uv (with cache)
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install locked environment
+        run: uv sync --frozen
+      - name: Seed .env from template
+        run: cp .env.example .env
+      - name: Bring up the stack
+        run: docker compose -f infra/docker-compose.yml up -d --wait
+      - name: Integration tests
+        run: uv run pytest -m integration
+      - name: Tear down
+        if: always()
+        run: docker compose -f infra/docker-compose.yml down -v
+
+  secret-guard:
+    name: secret guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: .env must not be tracked
+        run: |
+          if git ls-files --error-unmatch .env 2>/dev/null; then
+            echo "::error::.env is tracked — it must stay git-ignored"; exit 1
+          fi
+          echo ".env is not tracked (ok)"
+      - name: No secret literals committed
+        run: |
+          # HF tokens, private-key headers. .env.example carries only blank secrets.
+          if git grep -nE 'hf_[A-Za-z0-9]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----' -- . ':!*.lock'; then
+            echo "::error::possible secret literal committed"; exit 1
+          fi
+          echo "no secret literals found (ok)"
+
+  hf-auth:
+    name: hf whoami (optional)
+    runs-on: ubuntu-latest
+    # Skipped (not failed) when the repo/org secret HF_TOKEN is not configured.
+    if: ${{ github.event_name != 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up uv (with cache)
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install locked environment
+        run: uv sync --frozen
+      - name: HF whoami
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          if [ -z "${HF_TOKEN}" ]; then
+            echo "HF_TOKEN secret not set — skipping HF auth check"; exit 0
+          fi
+          make hf-check
