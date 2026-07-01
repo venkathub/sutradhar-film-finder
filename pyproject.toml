@@ -10,6 +10,7 @@ authors = [{ name = "Sutradhar" }]
 # keeping each P0 commit small and focused.
 dependencies = [
     "pydantic-settings>=2.4",
+    "openai>=1.40",
 ]
 
 [dependency-groups]
