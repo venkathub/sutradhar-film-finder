@@ -17,6 +17,9 @@ dev = [
     "pytest>=8.2",
     "ruff>=0.6",
     "mypy>=1.11",
+    # Integration-test clients for the local compose stack (not runtime deps).
+    "psycopg[binary]>=3.2",
+    "redis>=5.0",
 ]
 
 [build-system]
@@ -44,4 +47,8 @@ disallow_untyped_defs = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+# Integration tests (compose stack) are opt-in; unit CI stays hermetic and Docker-free.
+addopts = "-q -m 'not integration'"
+markers = [
+    "integration: tests that require the local docker-compose stack (Postgres+Redis)",
+]

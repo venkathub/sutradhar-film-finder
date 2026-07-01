@@ -1,0 +1,44 @@
+# Sutradhar — local development stack (P0 task 4).
+# Postgres (+pgvector) and Redis, healthchecked. Driven by the repo-root `.env`
+# (the same POSTGRES_*/REDIS values src/sutradhar/config reads); inline defaults
+# let it run without one. No schema here — the Work/Version schema is P1.
+#
+#   docker compose -f infra/docker-compose.yml up -d --wait
+#   docker compose -f infra/docker-compose.yml down          # add -v to drop the volume
+
+name: sutradhar
+
+services:
+  postgres:
+    # Pinned, multi-arch pgvector image (verified on Docker Hub 2026-07-01; P0_SPEC §2.7).
+    image: pgvector/pgvector:0.8.4-pg17
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sutradhar}
+      POSTGRES_USER: ${POSTGRES_USER:-sutradhar}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sutradhar}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sutradhar} -d ${POSTGRES_DB:-sutradhar}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+volumes:
+  pgdata:
