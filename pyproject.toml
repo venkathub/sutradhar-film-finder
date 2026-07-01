@@ -11,6 +11,7 @@ authors = [{ name = "Sutradhar" }]
 dependencies = [
     "pydantic-settings>=2.4",
     "openai>=1.40",
+    "huggingface-hub>=1.0",
 ]
 
 [dependency-groups]

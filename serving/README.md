@@ -36,3 +36,12 @@ Probe sequence (OpenAI-compatible, DEC-P0-4): `GET /health` → `GET /v1/models`
 `up`/`off` exit `0` per the spec's "green in both states". `error` exits `1` so a genuinely
 misconfigured/broken endpoint is detectable in CI and scripts (P0_SPEC §2.2 pins only up/off = 0;
 error exit code is this module's choice, logged here rather than in DECISIONS.md).
+
+## HF Hub auth check (P0)
+
+`make hf-check` (→ `python -m sutradhar.serving.hf_check`) verifies `HF_TOKEN` authenticates via
+`HfApi().whoami()` (huggingface_hub v1.0). Prints the username on success (exit 0). A **missing**
+token → clear `ConfigError` naming `HF_TOKEN` (exit 1); an **invalid** token → clear `HFAuthError`
+noting the modern **API-v2 token** requirement (exit 1). The token value is never printed. The CLI
+equivalent `hf auth whoami` is optional; the programmatic path is used so it stays CI-portable and
+mockable.
