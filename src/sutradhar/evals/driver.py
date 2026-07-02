@@ -42,6 +42,7 @@ from sqlalchemy.orm import Session
 from sutradhar.evals.generation import EmittedCall
 from sutradhar.evals.golden import GoldenFixture
 from sutradhar.evals.retrieval import EvalRunArtifact, QueryRecord
+from sutradhar.obs.tracing import Tracer
 from sutradhar.serving.llm_client import LLMClient
 
 TOOL_SCHEMA_PATH = Path("docs/phases/tool_schema.v0.json")
@@ -261,8 +262,10 @@ def run_fixture(
     fixture_id_ref: dict[str, str] | None = None,
     max_tool_rounds: int = MAX_TOOL_ROUNDS,
     temperature: float = 0.0,
+    tracer: Tracer | None = None,
 ) -> FixtureTranscript:
     """Execute one golden fixture conversation end-to-end (see module doc for the flow)."""
+    tracer = tracer or Tracer()  # default: disabled no-op (DEC-P3-6)
     if fixture_id_ref is not None:
         fixture_id_ref["fixture_id"] = fixture.id
     tools = openai_tools(schema)
@@ -276,60 +279,92 @@ def run_fixture(
     )
     messages: list[dict[str, Any]] = [{"role": "system", "content": system_prompt}]
 
-    for turn_index, user_turn in enumerate(turns):
-        messages.append({"role": "user", "content": user_turn})
-        answer: str | None = None
-        for _round in range(max_tool_rounds):
-            result = client.chat(messages, tools=tools, tool_choice="auto", temperature=temperature)
-            if result.status != "up":
-                transcript.chat_status = result.status
-                transcript.answers.append(None)
-                transcript.messages = messages[1:]
-                return transcript  # degrade, never crash (DEC-P0-4)
-            if result.usage is not None:
-                transcript.usage.append(result.usage)
-            if result.latency_ms is not None:
-                transcript.latencies_ms.append(result.latency_ms)
-            assert result.message is not None
-            messages.append(result.message)
+    with tracer.span(
+        f"fixture:{fixture.id}",
+        kind="agent",
+        metadata={"fixture_id": fixture.id, "prompt_hash": prompt_hash},
+    ) as fixture_span:
+        for turn_index, user_turn in enumerate(turns):
+            messages.append({"role": "user", "content": user_turn})
+            answer: str | None = None
+            for _round in range(max_tool_rounds):
+                with tracer.span(
+                    "chat",
+                    kind="generation",
+                    input={"turn": turn_index, "round": _round, "messages": len(messages)},
+                ) as chat_span:
+                    result = client.chat(
+                        messages, tools=tools, tool_choice="auto", temperature=temperature
+                    )
+                    chat_span.update(
+                        output={
+                            "status": result.status,
+                            "finish_reason": result.finish_reason,
+                            "tool_calls": len(result.tool_calls),
+                        }
+                    )
+                if result.status != "up":
+                    transcript.chat_status = result.status
+                    transcript.answers.append(None)
+                    transcript.messages = messages[1:]
+                    fixture_span.update(output={"aborted": result.status})
+                    return transcript  # degrade, never crash (DEC-P0-4)
+                if result.usage is not None:
+                    transcript.usage.append(result.usage)
+                if result.latency_ms is not None:
+                    transcript.latencies_ms.append(result.latency_ms)
+                assert result.message is not None
+                messages.append(result.message)
 
-            if not result.tool_calls:
-                answer = result.content
-                break
+                if not result.tool_calls:
+                    answer = result.content
+                    break
 
-            for call in result.tool_calls:
-                errors = validate_emitted_call(schema, call.name, call.arguments)
-                record = EmittedCallRecord(
-                    turn=turn_index,
-                    call_id=call.id,
-                    tool=call.name,
-                    arguments_raw=call.arguments_raw,
-                    arguments=call.arguments,
-                    schema_valid=not errors,
-                    validation_errors=errors,
-                )
-                if errors:
-                    payload: dict[str, Any] = {"error": "; ".join(errors)}
-                else:
-                    try:
-                        assert call.arguments is not None  # guaranteed by validation
-                        payload = execute_tool(call.name, call.arguments)
-                        record.executed = True
-                        record.result = payload
-                    except ToolExecutionError as exc:
-                        payload = {"error": str(exc)}
-                        record.error = str(exc)
-                transcript.calls.append(record)
-                messages.append(
-                    {
-                        "role": "tool",
-                        "tool_call_id": call.id,
-                        "content": json.dumps(payload, ensure_ascii=False),
-                    }
-                )
-        else:
-            transcript.tool_rounds_exhausted = True
-        transcript.answers.append(answer)
+                for call in result.tool_calls:
+                    errors = validate_emitted_call(schema, call.name, call.arguments)
+                    record = EmittedCallRecord(
+                        turn=turn_index,
+                        call_id=call.id,
+                        tool=call.name,
+                        arguments_raw=call.arguments_raw,
+                        arguments=call.arguments,
+                        schema_valid=not errors,
+                        validation_errors=errors,
+                    )
+                    with tracer.span(
+                        f"tool:{call.name}", kind="tool", input=call.arguments
+                    ) as tool_span:
+                        if errors:
+                            payload: dict[str, Any] = {"error": "; ".join(errors)}
+                            tool_span.update(output=payload, level="ERROR")
+                        else:
+                            try:
+                                assert call.arguments is not None  # guaranteed by validation
+                                payload = execute_tool(call.name, call.arguments)
+                                record.executed = True
+                                record.result = payload
+                                tool_span.update(output={"ok": True})
+                            except ToolExecutionError as exc:
+                                payload = {"error": str(exc)}
+                                record.error = str(exc)
+                                tool_span.update(output=payload, level="ERROR")
+                    transcript.calls.append(record)
+                    messages.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": call.id,
+                            "content": json.dumps(payload, ensure_ascii=False),
+                        }
+                    )
+            else:
+                transcript.tool_rounds_exhausted = True
+            transcript.answers.append(answer)
+        fixture_span.update(
+            output={
+                "answers": sum(1 for a in transcript.answers if a),
+                "calls": len(transcript.calls),
+            }
+        )
 
     transcript.messages = messages[1:]  # system excluded; prompt_hash pins it
     return transcript

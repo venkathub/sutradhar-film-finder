@@ -53,6 +53,9 @@ mlflow-up: ## Start self-hosted MLflow (idempotent: creates the `mlflow` DB if m
 mlflow-down: ## Stop the MLflow service (runs persist in Postgres + data/mlflow-artifacts/)
 	$(COMPOSE) --profile mlflow stop mlflow
 
+mlflow-backfill: ## P3: log the committed P2 retrieval run (Table 1) to MLflow (needs mlflow-up)
+	uv run python -m sutradhar.obs.mlflow_log backfill-retrieval
+
 db-migrate: ## Apply graph-schema migrations (alembic upgrade head; needs `make up`)
 	uv run alembic upgrade head
 

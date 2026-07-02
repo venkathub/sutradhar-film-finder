@@ -121,9 +121,11 @@ class JudgeClient:
         *,
         http_client: httpx.Client | None = None,
         prompts_dir: Path = PROMPTS_DIR,
+        tracer: Any = None,  # sutradhar.obs.tracing.Tracer; None = tracing off (DEC-P3-6)
     ) -> None:
         self._settings = settings
         self._prompts_dir = prompts_dir
+        self._tracer = tracer
         self._client: LLMClient | None = None
         if self.available:
             judge_settings = settings.model_copy(
@@ -159,18 +161,27 @@ class JudgeClient:
     def _judge(self, prompt: str) -> JudgeVerdict:
         if self._client is None:
             return JudgeVerdict(error="judge_error: judge off (JUDGE_BASE_URL unset)")
-        result = self._client.chat(
-            [{"role": "user", "content": prompt}],
-            temperature=0.0,
-            max_tokens=512,
-            extra_body={
-                "guided_json": VERDICT_JSON_SCHEMA,
-                "reasoning_effort": "low",
-            },
-        )
-        if result.status != "up":
-            return JudgeVerdict(error=f"judge_error: endpoint {result.status}: {result.detail}")
-        return parse_verdict(result.content)
+        from sutradhar.obs.tracing import Tracer
+
+        tracer = self._tracer or Tracer()  # disabled no-op by default
+        with tracer.span(
+            "judge", kind="evaluator", metadata={"model": self._settings.judge_model}
+        ) as span:
+            result = self._client.chat(
+                [{"role": "user", "content": prompt}],
+                temperature=0.0,
+                max_tokens=512,
+                extra_body={
+                    "guided_json": VERDICT_JSON_SCHEMA,
+                    "reasoning_effort": "low",
+                },
+            )
+            if result.status != "up":
+                span.update(output={"error": result.status}, level="ERROR")
+                return JudgeVerdict(error=f"judge_error: endpoint {result.status}: {result.detail}")
+            verdict = parse_verdict(result.content)
+            span.update(output={"score": verdict.score, "error": verdict.error})
+            return verdict
 
     def judge_coherence(self, conversation: list[dict[str, str]]) -> JudgeVerdict:
         """GS-08 backtracking-coherence rubric over (user, assistant-answer) turns."""

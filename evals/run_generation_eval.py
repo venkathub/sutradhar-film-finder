@@ -40,6 +40,8 @@ from sutradhar.evals.judge import COHERENCE_PROMPT, JudgeClient
 from sutradhar.evals.prompts import load_prompt_artifacts
 from sutradhar.evals.ragas_metrics import build_scorer, ragas_version
 from sutradhar.graph.db import create_graph_engine, create_session_factory
+from sutradhar.obs.mlflow_log import EXPERIMENT_GENERATION, log_generation_run
+from sutradhar.obs.tracing import Tracer
 from sutradhar.serving import LLMClient
 
 app = typer.Typer(add_completion=False)
@@ -92,6 +94,9 @@ def main(
     retrieval = load_retrieval_run()
     plot_search = RecordedPlotSearch(retrieval)
     fixture_ref: dict[str, str] = {"fixture_id": ""}
+    tracer = Tracer(settings)  # no-op unless LANGFUSE_* set (DEC-P3-6)
+    if tracer.enabled:
+        typer.echo(f"Langfuse tracing ON -> {settings.langfuse_host}")
     engine = create_graph_engine()
     factory = create_session_factory(engine)
     with factory() as session:
@@ -104,6 +109,7 @@ def main(
             execute_tool=executor,
             fixture_id_ref=fixture_ref,
             schema=schema,
+            tracer=tracer,
             log=typer.echo,
         )
     engine.dispose()
@@ -111,7 +117,7 @@ def main(
     # --- optional GPU-session enrichment passes (skip cleanly when off) ---
     judge_block = None
     if with_judge:
-        judge = JudgeClient(settings)
+        judge = JudgeClient(settings, tracer=tracer)
         if not judge.available:
             typer.echo("judge off — set JUDGE_BASE_URL/JUDGE_MODEL; skipping coherence pass")
         else:
@@ -149,6 +155,20 @@ def main(
     out = out_dir / f"{artifact.run_id}.json"
     out.write_text(artifact.model_dump_json(indent=1) + "\n", encoding="utf-8")
     typer.echo(f"committed generation-run artifact: {out}")
+
+    # --- observability evidence (both degrade cleanly when off/unreachable) ---
+    tracer.flush()
+    if tracer.enabled:
+        typer.echo(f"Langfuse trace: {tracer.trace_url() or tracer.last_trace_id}")
+    try:
+        mlflow_run = log_generation_run(artifact, out, settings=settings)
+        typer.echo(
+            f"MLflow run: {mlflow_run} ({EXPERIMENT_GENERATION} @ {settings.mlflow_tracking_uri})"
+        )
+    except Exception as exc:  # noqa: BLE001 — observability must never fail the eval
+        typer.echo(
+            f"MLflow logging skipped ({type(exc).__name__}) — start it with `make mlflow-up`"
+        )
 
     m = metrics
     typer.echo(

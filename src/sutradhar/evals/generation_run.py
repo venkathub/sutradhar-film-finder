@@ -370,6 +370,7 @@ def execute_fixtures(
     execute_tool: Any,
     fixture_id_ref: dict[str, str],
     schema: dict[str, Any] | None = None,
+    tracer: Any = None,  # sutradhar.obs.tracing.Tracer; None = disabled
     log: Any = print,
 ) -> list[FixtureResult]:
     schema = schema or load_tool_schema()
@@ -384,6 +385,7 @@ def execute_fixtures(
             schema=schema,
             execute_tool=execute_tool,
             fixture_id_ref=fixture_id_ref,
+            tracer=tracer,
         )
         results.append(score_fixture(fixture, transcript))
     return results
