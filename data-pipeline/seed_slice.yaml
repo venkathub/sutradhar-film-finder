@@ -62,7 +62,9 @@ works:
         country: indian
         wikidata_qid: Q18129183
         relationship: { type: is_remake_of, of: drishyam_ml }
-        note: no P144 edge on Wikidata as of 2026-07-02 — extraction-layer lift candidate
+        note: >
+          no P144 on Papanasam itself, but the ml original's P4969 (derivative work) points
+          here — the spine ingests the inverse (confirmed in the 2026-07-02 live run)
       drishyam_hi:
         title: Drishyam
         language: hi
@@ -295,7 +297,10 @@ works:
         country: indian
         wikidata_qid: Q1193810
         relationship: { type: is_remake_of, of: apthamitra_kn }
-        note: remake of Apthamitra, NOT of the ml original — proximate edge preserved (§2.7)
+        note: >
+          curated proximate source = Apthamitra (en.wikipedia); Wikidata P144 asserts the ml
+          original directly (live run 2026-07-02) — both edges may coexist in the graph, but
+          the proximate one must come from extraction+review (§2.7 modelling note)
       rajmohol_bn:
         title: Rajmohol
         language: bn
@@ -303,7 +308,9 @@ works:
         country: indian
         wikidata_qid: Q7286314
         relationship: { type: is_remake_of, of: chandramukhi_ta }
-        note: proximate source reported as Chandramukhi (dir. Swapan Saha) — verify at ingestion
+        note: >
+          proximate source reported as Chandramukhi; Wikidata P144 asserts Manichitrathazhu
+          directly (live run 2026-07-02) — proximate edge needs extraction+review
       bhool_bhulaiyaa_hi:
         title: Bhool Bhulaiyaa
         language: hi

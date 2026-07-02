@@ -54,6 +54,21 @@ class Settings(BaseSettings):
         validation_alias="RERANK_MODEL",
     )
 
+    # --- Data-source endpoints (P1 ingestion; env-swappable, never hardcoded in code) ---
+    wikidata_api_url: str = Field(
+        default="https://www.wikidata.org/w/api.php",
+        validation_alias="WIKIDATA_API_URL",
+    )
+    wikidata_sparql_url: str = Field(
+        default="https://query.wikidata.org/sparql",
+        validation_alias="WIKIDATA_SPARQL_URL",
+    )
+    # WMF User-Agent policy: descriptive UA with a contact; override with your fork/contact.
+    http_user_agent: str = Field(
+        default="SutradharBot/0.1 (https://github.com/sutradhar/sutradhar; data-pipeline)",
+        validation_alias="HTTP_USER_AGENT",
+    )
+
     # --- Postgres (+pgvector) ---
     postgres_host: str = Field(default="localhost", validation_alias="POSTGRES_HOST")
     postgres_port: int = Field(default=5432, validation_alias="POSTGRES_PORT")

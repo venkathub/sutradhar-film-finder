@@ -88,6 +88,31 @@ Loader: `sutradhar.pipeline.seed.load_seed_slice()` — typed pydantic validatio
 relationship targets, works without originals, duplicate QIDs, literary sources with versions all
 rejected at load).
 
+## Wikidata spine ingest (P1 task 4 — built)
+
+`sutradhar.pipeline.wikidata` + `data-pipeline/ingest_spine.py` (`make ingest-spine`):
+
+- **Two-phase access** (verified best practice, P1_SPEC §2.9): one SPARQL discovery query returns
+  QIDs only (P144/P4969 backlinks of the slice); entity detail comes from batched
+  `wbgetentities` (≤50/call). Descriptive User-Agent (WMF policy, `HTTP_USER_AGENT`), gzip,
+  429/503 `Retry-After` backoff. Endpoints env-driven (`WIKIDATA_API_URL`, `WIKIDATA_SPARQL_URL`).
+- **Snapshot-first:** raw responses land in `data/raw/wikidata/<UTC-stamp>/` (git-ignored) with a
+  sha256 `MANIFEST` before any DB write; `--offline` replays the latest snapshot, so rebuilds and
+  CI never re-hit the API (CI parses a committed trimmed capture under `tests/fixtures/wikidata/`).
+- **Idempotent upsert** keyed on QID (fallback `(work_id, language)` for QID-less dub tracks);
+  QID-anchored rows are HIGH, QID-less dub tracks are MEDIUM (single human source) until
+  corroborated. Seed-vs-Wikidata year disagreements open a `conflicts` row — never silently
+  resolved — which hides the row from the gate views until resolution.
+- **Metric honesty:** only edges **Wikidata asserts** are written (P144/P4969 → remake/based_on,
+  P155/P156 → sequel). Seed `relationship:` entries are curated truth, not an edge source.
+
+Live run 2026-07-02 (snapshot `20260702T055436Z`): 15 works, 31 versions, **12 edges**
+(8 `is_remake_of`, 3 `based_on`, 1 `is_sequel_of`), 0 conflicts. Wikidata's spine is measurably
+incomplete for the slice: the kn/te/si Drishyam remakes, both Drishyam-2 kn/te remakes, all dub
+tracks, and both proximate Manichitrathazhu-chain edges have **no** structured assertion — that
+gap is the extraction layer's lift target. 13 non-slice backlink QIDs were discovered and
+reported for conditional-add review (§7 Q1), not auto-ingested.
+
 ## Planned (remaining P1 tasks)
 - Ingest from Wikidata SPARQL (relationship spine: P144/P1877/P4969, P155/P156/P179), TMDB
   (`translations`, `alternative_titles`, credits), IMDb `title.akas` (slice-filtered), Wikipedia
