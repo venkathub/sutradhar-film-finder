@@ -307,11 +307,25 @@ lift"): flagship gate **PASS** (1.00 on all five flagships), edge coverage 19/20
 proximate edge has no stating source — recorded, not invented), precision 0.352, **6 verified
 edges beyond Wikidata**, 10 corroborations.
 
-## Planned (remaining P1 tasks)
-- Ingest from Wikidata SPARQL (relationship spine: P144/P1877/P4969, P155/P156/P179), TMDB
-  (`translations`, `alternative_titles`, credits), IMDb `title.akas` (slice-filtered), Wikipedia
-  REST (plots) — snapshot-first, API/dump only, never HTML scraping.
-- Deterministic rule-based transliteration + normalization (`match_key`; no neural model on the
-  laptop), rapidfuzz title resolution.
-- Precedence-table conflict resolution; LLM candidate-edge extraction (GPU session) + typer
-  review gate; coverage/lift reports; golden fixtures GS-01..GS-11.
+## Status: P1 COMPLETE (2026-07-02)
+
+All 16 P1 tasks shipped. **30-second demo:** `make graph-demo` — resolves any title (any script,
+any spelling) and prints the cited, relationship-labelled full franchise with the original
+flagged, straight from the ground-truth views. Try:
+
+```bash
+make graph-demo                                        # 'Papanasam' -> the Drishyam franchise
+uv run python data-pipeline/graph_demo.py "ദൃശ്യം"      # native script
+uv run python data-pipeline/graph_demo.py "Inception"  # NO_MATCH (and that's a feature)
+```
+
+From-scratch rebuild: `make up && make db-migrate && make ingest-seed` (connectors replay
+recorded snapshots via `--offline`), then `uv run python data-pipeline/extract_candidates.py
+--offline` (recorded artifact) and the review pass — the audited live session is
+`data-pipeline/review_decisions_20260702.yaml`; a rebuild re-reviews via `make
+review-candidates` (candidate ids regenerate) or mirrors it as CI does
+(`tests/integration/ci_review_pass.py`). Then `make graph-report && make golden-validate &&
+make graph-demo`. CI proves the whole chain from a clean database on every run.
+
+Evidence: `docs/BENCHMARKS.md` ("Graph coverage & extraction lift"), `docs/DECISIONS.md`
+(DEC-P1-1..8 + amendments), `evals/golden/` (frozen), `docs/phases/tool_schema.v0.json` (frozen).

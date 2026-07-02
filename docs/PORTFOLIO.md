@@ -19,3 +19,24 @@
 
 _Metrics to be added in later phases: retrieval Recall@10 / version-set recall (P2), base-vs-QLoRA
 generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
+
+## P1 — Catalog + remake-graph: verified cross-lingual film graph with a human-gated LLM pipeline
+
+- Built a **provenance-first cross-lingual film graph** (Postgres/SQLAlchemy: Works, per-language
+  Versions, 5 typed edge kinds) from **4 sources** (Wikidata SPARQL, TMDB, IMDb dumps, Wikipedia
+  API — snapshot-first, hash-stamped, fully offline-replayable), reaching **100% version coverage
+  on all 5 flagship remake franchises (31/31)** with every record carrying `confidence` +
+  `sources[]` and multi-source disagreements queued as conflicts — **never silently resolved**
+  (verification gate enforced *in the schema* via ground-truth views + triggers, 279 tests).
+- Shipped an **LLM extraction → human review pipeline** that recovered the remake edges Wikidata
+  is missing: an ephemeral A100 session (~$1, created→destroyed) ran Gemma-4-E4B over 27
+  Wikipedia articles with vLLM guided decoding (parse failures **92.6% → 7.4%**, measured) and a
+  verbatim-evidence guard; the audited human gate (58 candidates → 19 confirmed, precision
+  0.352 honestly reported) added **6 verified edges beyond Wikidata** — including the
+  remake-of-a-remake edge (Chandramukhi→Apthamitra) no structured source asserts.
+- Engineered **deterministic cross-script title resolution** (ITRANS transliteration chosen by
+  measurement over IAST/ISO — 89.7 vs 80.9 avg similarity on real native↔popular pairs — plus
+  rapidfuzz) so `பாபநாசம்`, "Papanaasam", and `दृश्यम` all resolve correctly; froze a
+  machine-checkable **tool contract** (JSON Schema + CI conformance gates) and a **25-fixture
+  golden set** across 11 scenario categories, every fixture validator-proven against
+  HIGH/human-verified graph records only.

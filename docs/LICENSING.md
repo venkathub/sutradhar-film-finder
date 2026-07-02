@@ -1,8 +1,8 @@
 # Licensing & attribution
 
 > Every data source and model Sutradhar uses, its license, how we use it, and the attribution we
-> owe. **Status: DRAFT (created P1 task 6; finalized at P1 close-out, task 16).** This is a
-> deliberate maturity signal (CLAUDE.md): license hygiene is part of the product.
+> owe. **Status: FINAL for P1 (2026-07-02)** — updated whenever a source/model is added. This is
+> a deliberate maturity signal (CLAUDE.md): license hygiene is part of the product.
 
 ## Data sources
 
