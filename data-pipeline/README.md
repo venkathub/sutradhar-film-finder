@@ -32,6 +32,12 @@ Every gated record/edge carries `confidence` (`HIGH`/`MEDIUM`) + inline `jsonb s
 (DEC-P1-3) + `human_verified`. `is_original_of` is **derived** (from `version.is_original` +
 incoming remake/dub edges), never stored — one source of truth.
 
+Writes go through the pydantic domain models in `src/sutradhar/graph/models.py` (`SourceRef`,
+`WorkRecord`, `VersionRecord`, `EdgeRecord`, …): empty `sources[]`, unknown source ids, malformed
+QID/tconst patterns, and edge shape violations fail **before** any insert; the DB CHECKs and the
+endpoint trigger are the backstop. `passes_gate_view()` / `golden_eligible()` mirror the two gate
+layers in Python for pipeline and fixture code.
+
 ### The verification gate as schema
 
 Downstream consumers read **only** the `ground_truth_works` / `ground_truth_versions` /
@@ -47,7 +53,7 @@ Downstream consumers read **only** the `ground_truth_works` / `ground_truth_vers
 ### Tests
 
 ```bash
-uv run pytest tests/test_graph_schema.py       # hermetic: schema inventory, DSN builder
+uv run pytest tests/test_graph_schema.py tests/test_graph_models.py  # hermetic units
 make up && uv run pytest -m integration        # constraints + gate views on real Postgres
 ```
 

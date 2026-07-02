@@ -9,6 +9,7 @@ authors = [{ name = "Sutradhar" }]
 # Runtime dependencies are added by the tasks that introduce them (config/serving/hf),
 # keeping each P0 commit small and focused.
 dependencies = [
+    "pydantic>=2.7",
     "pydantic-settings>=2.4",
     "openai>=1.40",
     "huggingface-hub>=1.0",

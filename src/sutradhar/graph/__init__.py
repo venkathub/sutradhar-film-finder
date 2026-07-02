@@ -1,6 +1,47 @@
-"""Catalog + Remake-Graph store (P1): schema, engine plumbing, and (later) repository."""
+"""Catalog + Remake-Graph store (P1): schema, domain models, engine plumbing, repository."""
 
 from sutradhar.graph.db import create_graph_engine, create_session_factory, postgres_url
+from sutradhar.graph.models import (
+    Confidence,
+    EdgeRecord,
+    EdgeType,
+    NodeKind,
+    PersonRecord,
+    RoleKind,
+    SourceId,
+    SourceRef,
+    TitleKind,
+    VersionCastRecord,
+    VersionRecord,
+    VersionTitleRecord,
+    WorkRecord,
+    WorkType,
+    golden_eligible,
+    passes_gate_view,
+    sources_to_jsonb,
+)
 from sutradhar.graph.schema import Base
 
-__all__ = ["Base", "create_graph_engine", "create_session_factory", "postgres_url"]
+__all__ = [
+    "Base",
+    "Confidence",
+    "EdgeRecord",
+    "EdgeType",
+    "NodeKind",
+    "PersonRecord",
+    "RoleKind",
+    "SourceId",
+    "SourceRef",
+    "TitleKind",
+    "VersionCastRecord",
+    "VersionRecord",
+    "VersionTitleRecord",
+    "WorkRecord",
+    "WorkType",
+    "create_graph_engine",
+    "create_session_factory",
+    "golden_eligible",
+    "passes_gate_view",
+    "postgres_url",
+    "sources_to_jsonb",
+]
