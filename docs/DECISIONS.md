@@ -723,3 +723,148 @@ instance pins live in `build_embed_startup_script`** (`pip install pyarrow huggi
 transformers-v5 reranker API break, then success), ~10 GPU-minutes total ≈ $0.22, sealed run
 `20260702T135315Z-f6583183` (833 unique texts, 44,217 rerank pairs) pulled, verified, pinned as
 `RETRIEVAL_RUN`; committed record in `evals/retrieval_runs/`.
+
+---
+
+## DEC-P3-1 — Generation judge: self-hosted OSS via vLLM, gpt-oss-20b primary (2026-07-02)
+
+**Status:** Accepted (P3 grooming; user-approved; spec `docs/phases/P3_SPEC.md` §3). Frontier API
+is the **documented escalation only**.
+
+**Context.** Table 2 needs an LLM judge (GS-08 backtracking coherence; RAGAS) under ROADMAP §6.4
+governance: pinned, cross-family, human-validated. Independence map: **Gemma** (under test),
+**Qwen** (fallback base), **Mistral line** (Sarvam-M teacher base — excludes Prometheus-2).
+
+**Options.** (A) **Self-hosted OSS judge on the ephemeral GPU** — candidates in measured order:
+**gpt-oss-20b** (OpenAI family; Apache 2.0; MoE ~14–16 GB → co-serves with BGE-M3 on the
+A100 40 GB workhorse; official vLLM cookbook; documented judge usage (TruLens); arXiv 2508.12461
+shows it matching/beating gpt-oss-120b on several benchmarks), then **Phi-4-14B** (MIT).
+(B) Frontier API (pinned dated version) — quality ceiling, but external key + model-deprecation
+risk under the reproducibility stamp + dilutes the self-hosted story. (C) Rejected: Llama-3.3-70B
+(AWQ-INT4 ≈ 47 GB weights — breaks the 48 GB Ada with KV; an 80 GB card for a judge violates
+DEC-0003); Prometheus-2 (Mistral/teacher-adjacent); Sarvam-M (is the teacher); Qwen family.
+
+**Decision.** **A, selected empirically:** serve candidates in one short ephemeral session; freeze
+the first to reach **κ ≥ 0.6** against the ~24-item human-labelled sample (Judge's Verdict
+methodology, arXiv 2510.09738 — agreement over correlation; 27/54 judges Tier-1; explicitly
+size-independent). One rubric revision allowed, then escalate to B and record it here. Judge runs
+as a **batch pass over recorded transcripts** (no always-on requirement; CI gates on the
+committed artifact per DEC-P2-6). Pinned as `{HF repo, revision SHA, vLLM config, prompt hash,
+temperature 0}`; rubric output schema-forced via guided decoding (per the DEC-P1-4 amendment
+finding). gpt-oss-20b reasoning effort pinned in the judge prompt.
+
+**Consequences.** `JUDGE_BASE_URL`/`JUDGE_MODEL`/`JUDGE_API_KEY` env (OpenAI-compatible → OSS↔
+frontier is config, not code — DEC-P0-4 contract); `judge` session added to `infra/gpu/jarvis.py`
+(DEC-P0-5 ephemeral pattern); judge licence rows added to `LICENSING.md`.
+
+## DEC-P3-2 — MLflow topology: compose service on the existing Postgres (2026-07-02)
+
+**Status:** Accepted (P3 grooming; user-approved).
+
+**Options.** (A) **Compose service; backend = existing Postgres (separate `mlflow` database);
+artifacts under `./data/mlflow-artifacts/`.** (B) SQLite file store + `mlflow ui`. (C) Managed.
+
+**Decision.** **A.** Genuine "self-hosted" (CLAUDE.md), DB-backed **model registry** ready for the
+P4 adapter, one light container, survives `make down`. `MLFLOW_TRACKING_URI` env-driven.
+
+**Consequences.** Experiments `sutradhar/retrieval` + `sutradhar/generation`; every run logs the
+§6.1 reproducibility stamp; a one-time backfill run logs the P2 Table 1 metrics, discharging its
+"(MLflow wiring lands in P3)" stamp note.
+
+## DEC-P3-3 — RAGAS: pinned lib; LLM = self-hosted judge; embeddings = BGE-M3 in-session (2026-07-02)
+
+**Status:** Accepted (P3 grooming; user-approved).
+
+**Decision.** RAGAS (version-pinned) computes faithfulness + answer_relevancy through the
+DEC-P3-1 judge endpoint with **BGE-M3 embeddings served in the same GPU session** (custom
+OpenAI-compatible LLMs/embeddings are first-class in ragas via its model factories /
+`BaseRagasLLM`/`BaseRagasEmbeddings`). **Zero external eval APIs** — the whole eval stack is
+OSS + self-hosted. Rejected: hand-rolled metrics (loses the recognized-tool signal); frontier-API
+RAGAS (only if DEC-P3-1 escalates). The **deterministic no-hallucinated-movie detector remains
+the gating faithfulness signal**; RAGAS numbers are reported, the detector gates.
+
+**Consequences.** ragas version recorded in every artifact stamp; RAGAS/judge scores are computed
+only inside GPU sessions over recorded transcripts; Tier-1 CI never calls a model.
+
+## DEC-P3-4 — Base-model prompting freeze: system prompt + intent taxonomy + 3 disjoint exemplars (2026-07-02)
+
+**Status:** Accepted (P3 grooming; user-approved). This is the "well-prompted base" honesty bar.
+
+**Decision.** System prompt + 6-label intent taxonomy (`find_by_plot | find_by_title |
+list_versions | refine | disambiguate | out_of_catalog`) + **3 handcrafted few-shot exemplars**
+(one code-mixed, one multi-turn refine, one NO_MATCH), native Gemma function-calling format.
+Rejected: zero-shot (under-prompted base inflates QLoRA lift — dishonest headroom); ReAct
+scratchpad (fights native FC tokens; noisier tool-call parsing). Artifacts live under
+`evals/prompts/`, hash-pinned (§6.3); **exemplar↔golden-set disjointness is test-enforced**;
+P4 evaluates the QLoRA column under the same system prompt.
+
+**Consequences.** Prompt hash appears in every generation artifact + the Table 2 stamp. Confirmed
+generation-fixture expansion (grooming Q1): **GS-07 → 5, GS-08 → 3, GS-02-conversational → 4**
+(~12–15 generation fixtures), all ground-truth-verified per the P1 gate before freezing.
+
+## DEC-P3-5 — Tool-call accuracy scoring: BFCL-style two-level (2026-07-02)
+
+**Status:** Accepted (P3 grooming; user-approved).
+
+**Decision.** (1) **Call-level AST match** — tool name + placeholder-bound, normalized arguments;
+(2) **sequence-level headline** — expected sequence appears in order, benign schema-valid extras
+tolerated; (3) **schema-validity rate** (hallucinated tool/param rate against
+`tool_schema.v0.json`) always reported as an independent number. Rejected: strict-only (one
+benign `get_work` zeroes a fixture; noisy at small n); unordered set (order *is* the behaviour
+in GS-08). Table 2 carries the sequence-level headline; the artifact carries all three. The same
+scorer bytes score base (P4-window top) and QLoRA columns.
+
+## DEC-P3-6 — Langfuse instrumentation boundary: thin explicit wrapper (2026-07-02)
+
+**Status:** Accepted (P3 grooming; user-approved).
+
+**Decision.** `sutradhar.obs.tracing` — explicit `trace()`/`span()` context managers wrapped
+around exactly four chokepoints (LLMClient.chat, tool executor, judge client, driver). **No-ops
+when `LANGFUSE_*` is unset** (Tier-1 CI, forks) — proven by a fake-sink unit test; no SDK
+import-time coupling. Rejected: `@observe` decorators (third-party contract spread through the
+codebase; harder to fake); OpenTelemetry+OTLP (heavier than a portfolio harness needs).
+P5's FastAPI middleware reuses this exact seam.
+
+## DEC-P3-7 — Langfuse deployment: self-hosted v3 on AIC Cloud `essential-8gb`, API-provisioned, idempotent from-scratch bootstrap (2026-07-02)
+
+**Status:** Accepted (P3 grooming; **user-directed**). Replaces the CLAUDE.md "Langfuse Cloud
+free tier" default — CLAUDE.md §Tech stack reconciled (2026-07-02); Cloud free tier remains the
+documented fallback.
+
+**Context (verified live against the AIC Cloud API, 2026-07-02).** Public catalogue
+`GET https://api.aiccloud.in/api/v1/public/essential-vps-plans` (no auth): the implemented
+product is **Essential VPS (Proxmox LXC)** — the docs-page "Cloud VPS API" paths 404.
+**`essential-8gb` = 4 vCPU / 8 GB / 80 GB NVMe / 200 Mbps at ₹799/mo** and is the **cheapest tier
+with `dedicated_ipv4: true`** (below 8 GB there is no public IPv4 → cannot serve `LANGFUSE_HOST`
+— smaller tiers are structurally out, not merely tight). Langfuse v3 = 6-container FOSS compose
+stack (web, worker, Postgres, ClickHouse, Redis, MinIO); official guidance ≥ 4 cores/16 GiB is
+right-sized to 8 GB + 4 GB swap for our trickle volume (documented low-RAM failure = worker/
+ClickHouse OOM); compose ships **no backups** — we add them.
+
+**Decision.** One `essential-8gb` VPS (Ubuntu 24.04), provisioned and configured by an
+**idempotent from-scratch bootstrap** (user requirement): `make langfuse-up` →
+`infra/langfuse/provision.py`, safe to re-run, converges from any state, sets up Langfuse from
+scratch **if not installed** —
+- **API phase (find-or-create):** locate instance by name (`GET /api/v1/vps`); if absent →
+  wallet pre-check (`GET /api/v1/billing/wallet`, top-up min ₹100) → `POST /api/v1/vps/checkout`
+  `{planSlug: essential-8gb, name: sutradhar-obs-01, os: ubuntu-24.04}` →
+  `POST /api/v1/vps/checkout/verify` with `sshKeys[]` (Razorpay payment legs are browser-only by
+  design: the script prepares the order and waits); if present but stopped → `start`.
+- **SSH phase (check-then-act per step):** swap configured → Docker installed → **Docker-in-LXC
+  nesting validated day-0** (if blocked: AIC support / KVM-class product, recorded here) →
+  langfuse repo at pinned release tag → secrets generated once (all `# CHANGEME`) and persisted →
+  **headless init** with pinned project keys → compose up → Caddy TLS (**443 only**; MinIO/CH/PG/
+  Redis never exposed; `AUTH_DISABLE_SIGNUP=true`) → backup cron (nightly pg_dump + ClickHouse
+  BACKUP + MinIO sync, off-box) → health check → prints `LANGFUSE_HOST` + keys for `.env`.
+- **No destructive operation without an explicit flag**; mock-tested (fake API + fake SSH
+  transcript) like `extract_session` — CI never spends money.
+
+**Consequences.** `AICCLOUD_API_KEY` added to `.env.example`; `LANGFUSE_HOST` → the VPS (custom
+domain supplied at execution; `<ip>.sslip.io` interim for Let's Encrypt); benchmark-cited traces
+are **exported (JSON + screenshot) and committed** with each run artifact so evidence outlives
+the VPS; standing-evidence budget +**₹799/mo** (12-mo −10% term if dashboard-purchasable — the
+checkout API exposes no term field); escalation = API `upgrade` to `essential-16gb` (₹1,599/mo)
+on OOM/disk pressure; the same VPS is the intended P6 consolidation host (static surface +
+optional read-only MLflow mirror — decided in P6). Rejected: Langfuse Cloud free tier as default
+($0 but vendor-hosted, weaker self-hosted story — kept as fallback); on-demand VM (dead trace
+links gut the standing evidence).

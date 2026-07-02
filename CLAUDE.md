@@ -71,7 +71,8 @@ Cross-cutting: Evals & Observability (RAGAS + Langfuse + MLflow), CI-gated.
   (Apache 2.0) on the GPU — NOT the fine-tune base (it is already Indic-specialized, leaving no
   beatable headroom). GGUF quantization is optional (only needed if a CPU fallback is ever wanted),
   not a deploy requirement.
-- MLOps: MLflow (tracking + model registry, self-hosted), Langfuse Cloud free tier (LLM tracing),
+- MLOps: MLflow (tracking + model registry, self-hosted), Langfuse (LLM tracing — self-hosted v3
+  on an AIC Cloud VPS per DEC-P3-7; Langfuse Cloud free tier is the documented fallback),
   GitHub Actions (CI with eval gate), Docker + docker-compose, Hugging Face Hub (artifact registry
   / reproducibility bridge).
 
