@@ -14,12 +14,9 @@ lift the extraction layer (task 11) + human gate (task 12) must earn.
 
 from __future__ import annotations
 
-import hashlib
-import json
 import time
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import Any
 
 import httpx
@@ -37,6 +34,16 @@ from sutradhar.graph.models import (
 )
 from sutradhar.graph.schema import Conflict, Edge, Version, Work
 from sutradhar.pipeline.seed import SeedSlice, SeedVersion, SeedWork
+from sutradhar.pipeline.snapshots import load_snapshot, write_snapshot
+
+__all__ = [  # snapshot helpers re-exported for entrypoint/back-compat
+    "WikidataClient",
+    "WikidataEntity",
+    "ingest_spine",
+    "load_snapshot",
+    "parse_entity",
+    "write_snapshot",
+]
 
 # --- Wikidata property/entity constants (verified 2026-07-02, P1_SPEC §2.9) ---
 
@@ -234,32 +241,7 @@ class WikidataClient:
         return sorted(set(found))
 
 
-# --- Snapshots (data/raw/, git-ignored, sha256-recorded — reproducibility stamp) ---
-
-
-def write_snapshot(base_dir: Path, name: str, payload: dict[str, Any]) -> str:
-    """Persist a raw response as JSON; append its sha256 to the snapshot manifest."""
-    base_dir.mkdir(parents=True, exist_ok=True)
-    path = base_dir / f"{name}.json"
-    blob = json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=1)
-    path.write_text(blob, encoding="utf-8")
-    digest = hashlib.sha256(blob.encode("utf-8")).hexdigest()
-    manifest = base_dir / "MANIFEST.sha256"
-    with manifest.open("a", encoding="utf-8") as fh:
-        fh.write(f"{digest}  {path.name}\n")
-    return digest
-
-
-def load_snapshot(base_dir: Path, name: str) -> dict[str, Any]:
-    """Load a snapshot, verifying its recorded hash (tamper/corruption check)."""
-    path = base_dir / f"{name}.json"
-    blob = path.read_text(encoding="utf-8")
-    digest = hashlib.sha256(blob.encode("utf-8")).hexdigest()
-    manifest = (base_dir / "MANIFEST.sha256").read_text(encoding="utf-8")
-    if f"{digest}  {path.name}" not in manifest:
-        raise ValueError(f"snapshot {path} does not match its recorded sha256")
-    result: dict[str, Any] = json.loads(blob)
-    return result
+# --- Snapshots: shared helpers live in sutradhar.pipeline.snapshots (re-exported here) ---
 
 
 # --- Spine ingest (idempotent upsert; Wikidata-asserted edges only) ---

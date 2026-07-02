@@ -8,7 +8,7 @@
 COMPOSE ?= docker compose -f infra/docker-compose.yml
 
 .DEFAULT_GOAL := help
-.PHONY: help setup fmt lint typecheck test test-int check up down down-v db-migrate ingest-spine \
+.PHONY: help setup fmt lint typecheck test test-int check up down down-v db-migrate ingest-spine enrich-tmdb \
         smoke hf-check gpu-validate gpu-nuke
 
 help: ## List available targets
@@ -49,6 +49,9 @@ db-migrate: ## Apply graph-schema migrations (alembic upgrade head; needs `make 
 
 ingest-spine: ## Ingest the Wikidata spine for the seed slice (snapshot-first; needs db-migrate)
 	uv run python data-pipeline/ingest_spine.py
+
+enrich-tmdb: ## Enrich versions from TMDB (titles/credits; needs ingest-spine + TMDB_API_KEY)
+	uv run python data-pipeline/enrich_tmdb.py
 
 smoke: ## LLM connectivity smoke test (green whether the GPU endpoint is up or off)
 	uv run python -m sutradhar.serving.smoke

@@ -63,6 +63,10 @@ class Settings(BaseSettings):
         default="https://query.wikidata.org/sparql",
         validation_alias="WIKIDATA_SPARQL_URL",
     )
+    tmdb_api_url: str = Field(
+        default="https://api.themoviedb.org/3",
+        validation_alias="TMDB_API_URL",
+    )
     # WMF User-Agent policy: descriptive UA with a contact; override with your fork/contact.
     http_user_agent: str = Field(
         default="SutradharBot/0.1 (https://github.com/sutradhar/sutradhar; data-pipeline)",

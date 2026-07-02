@@ -113,6 +113,31 @@ tracks, and both proximate Manichitrathazhu-chain edges have **no** structured a
 gap is the extraction layer's lift target. 13 non-slice backlink QIDs were discovered and
 reported for conditional-add review (§7 Q1), not auto-ingested.
 
+## TMDB enrichment (P1 task 5 — built)
+
+`sutradhar.pipeline.tmdb` + `data-pipeline/enrich_tmdb.py` (`make enrich-tmdb`):
+
+- **One call per film** (`append_to_response=translations,alternative_titles,credits`, verified
+  v3 contract §2.9); auth auto-detects a v4 Bearer token vs a v3 `api_key`; 429 `Retry-After`
+  backoff; endpoint env-driven (`TMDB_API_URL`). Snapshot-first (`data/raw/tmdb/`), `--offline`
+  replay, committed CI fixture (6 movies) under `tests/fixtures/tmdb/`.
+- **Titles → `version_title`:** canonical (own language), alternative titles (kind=aka), and
+  translations in a QID-less sibling's language mapped onto that sibling — kind=dub for dub
+  tracks, canonical for a bilingual co-original. Interim `match_key` per row (task 8 upgrades to
+  transliteration and re-keys idempotently).
+- **Credits → `person` / `version_cast`:** billing order <5 = lead, else support; crew
+  `job=Director` — the evidence base for the dub-vs-remake rule (task 9).
+- **Precedence table as code** (`sutradhar.pipeline.precedence`, the `DATA_SOURCES.md` rows):
+  `hub` / `primary_corroborate` / `majority` / `union` strategies. Rule-decidable disagreements
+  are recorded as `conflicts(status=resolved, resolution={by: rule})` — never silent, row stays
+  live; rule-undecidable splits (e.g. a 2-way year split) stay `open` and the gate views hide
+  the row until human resolution.
+
+Live run 2026-07-02 (snapshot `20260702T061520Z`): 27/27 versions enriched, **117 title rows
+(30 canonical / 86 aka / 1 dub), 312 people, 382 cast rows, 0 conflicts** — seed, Wikidata, and
+TMDB agree on every checked field. Honest gap: TMDB's translations give only the Baahubali *ml*
+dub title; the ta/hi dub titles and Devadas (ta) must come from IMDb `title.akas` (task 6).
+
 ## Planned (remaining P1 tasks)
 - Ingest from Wikidata SPARQL (relationship spine: P144/P1877/P4969, P155/P156/P179), TMDB
   (`translations`, `alternative_titles`, credits), IMDb `title.akas` (slice-filtered), Wikipedia
