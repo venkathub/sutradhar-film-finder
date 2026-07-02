@@ -103,6 +103,9 @@ retrieval-eval: ## P2: run the retrieval eval + ablation grid; write the committ
 calibrate-no-match: ## P2: tune the NO_MATCH abstention threshold from the committed artifact
 	uv run python evals/calibrate_no_match.py
 
+rag-demo: ## P2: 30-second demo — recorded golden queries -> cited, labelled version sets (GPU off)
+	uv run python rag-engine/demo.py
+
 golden-validate: ## Validate golden fixtures against the live graph (task 14)
 	uv run python evals/build_golden.py
 

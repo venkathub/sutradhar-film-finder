@@ -191,6 +191,20 @@ A100 session (~10 min ≈ $0.22), sealed artifacts pulled + verified, instance d
 Everything above reproduces `docs/BENCHMARKS.md` Table 1 from the pinned run with no GPU
 and no network beyond Postgres.
 
+## 30-second demo (P2 task 15)
+
+```
+make rag-demo        # GPU OFF — recorded artifacts through the full live pipeline
+```
+
+Replays the Tanglish GS-07a and plot-only GS-03a golden queries end-to-end (title+dense+
+sparse → RRF → rerank → Work → `get_versions`) and prints the **cited,
+relationship-labelled version set** — the Malayalam original flagged ★, every remake
+labelled, each answer citing its revision-pinned Wikipedia source (CC BY-SA). Both
+queries carry the calibrated low-confidence flag (DEC-P2-5's documented trade-off):
+results are shown with honesty, never invented. Working GPU-off from sealed artifacts
+IS the graceful-degradation story.
+
 ## Tests
 
 ```
