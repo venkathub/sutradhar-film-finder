@@ -7,15 +7,26 @@
 > `docs/GOLDEN_SET_SCENARIOS.md` (GS-01..GS-11 + fixture schema), and `docs/phases/TOOL_SCHEMA.md`
 > (v0 seed — **finalized and frozen as part of this phase's exit**).
 >
-> **Status:** **APPROVED — 2026-07-02.** Baseline for P1 execution. §7 open questions resolved
-> (all recommendations accepted); decisions **DEC-P1-1..6 logged** in `docs/DECISIONS.md`
-> (2026-07-02). Source-API contracts, tooling, and seed-slice ground truth **web-verified
-> 2026-07-02** (§2.9); the seed slice was corrected against live sources (Drishyam 2 remake set,
-> Manichitrathazhu transitive chain, Devadasu 1953 + its Tamil dub). Implementation proceeds per
-> the §5 task order on `feature/p1-remake-graph`.
+> **Status:** **✅ COMPLETE — 2026-07-02.** All 16 §5 tasks shipped on `feature/p1-remake-graph`
+> (one conventional commit per task); §6 Definition of Done verified item by item (all boxes
+> checked below). Exit evidence: **flagship graph coverage 1.00 (31/31 versions, all 5
+> franchises)**; curated-relationship edge coverage 19/20 (the Rajmohol proximate edge has no
+> stating source — recorded, not invented); **21 gate-visible edges** (12 wikidata, 3 rule-derived
+> + human-verified dub tracks, **6 created beyond Wikidata** via extraction + human review, incl.
+> the Chandramukhi→Apthamitra proximate edge); candidate precision **0.352** (58 → 19/35/4,
+> honest 4B number); extraction parse failure **7.4%** with vLLM `guided_json` (92.6% free-form —
+> DEC-P1-4 amendment); one ephemeral A100 session ~50 min ≈ $1, destroyed, zero strays;
+> **25 golden fixtures across all 11 GS categories, validator-clean**; TOOL_SCHEMA **FROZEN v0**
+> (zero signature changes needed; DEC-P1-8); **279 tests green** (203 unit + 76 integration).
+> Full numbers + reproducibility stamp: `docs/BENCHMARKS.md` "Graph coverage & extraction lift".
+> Decisions logged during execution: DEC-P1-7 (gate-view predicate: MEDIUM passes; user-resolved
+> spec inconsistency), DEC-P1-8 (freeze), amendments to DEC-P1-3 (`SourceId.rule`), DEC-P1-4
+> (guided decoding, measured), DEC-P1-5 (ITRANS over IAST/ISO, measured 89.7 vs 80.9).
 >
 > _History: DRAFT written at grooming (2026-07-02); web-research pass folded in same day;
-> approved with all proposed defaults accepted._
+> APPROVED with all proposed defaults accepted; §7 open questions resolved and DEC-P1-1..6
+> logged; seed slice web-corrected (Drishyam 2 remake set, Manichitrathazhu transitive chain,
+> Devadasu 1953 + Tamil dub); executed and closed out same day._
 >
 > **Current repo state (grounding):** P0 is complete: `src/sutradhar/{config,serving}` (typed
 > `Settings`, OpenAI-compatible `LLMClient` with the `status:"off"` contract, hf-check),
@@ -644,34 +655,38 @@ Each task = one reviewable conventional commit (or a small stack) on `feature/p1
 
 ---
 
-## 6. Definition of Done (instantiated from CLAUDE.md)
+## 6. Definition of Done (instantiated from CLAUDE.md) — ✅ ALL MET (2026-07-02)
 
-- [ ] Code complete and matching this approved spec (all §5 tasks).
-- [ ] Unit + integration tests passing (ruff, mypy-strict, pytest; Tier-1 CI green incl. the
-      Postgres service container).
-- [ ] **Named regressions green:** `test_gs01_version_set_recall`,
+- [x] Code complete and matching this approved spec (all §5 tasks; 15-commit stack, one per task).
+- [x] Unit + integration tests passing (ruff, mypy-strict, pytest; Tier-1 CI green incl. the
+      Postgres service container). **203 unit + 76 integration = 279 tests.**
+- [x] **Named regressions green:** `test_gs01_version_set_recall` (=1.0),
       `test_gs06_franchise_version_set_recall`, `test_gs02_no_hallucinated_movie`,
       `test_gs04_dub_vs_remake`, `test_gs05_sibling_vs_remake`, `test_gs10_false_merge`,
-      `test_gs09_scoping`, plus the tool-schema conformance tests.
-- [ ] **Verification gate enforced** and proven by tests; conflicts queue populated, never
-      silently resolved; zero unresolved conflicts behind any golden fixture.
-- [ ] **Graph coverage = 1.0** on flagship franchises; **candidate precision + Wikidata lift
-      reported.** Benchmark tables: Table 1 (retrieval) and Table 2 (generation) are **not
-      applicable in P1** — instead `docs/BENCHMARKS.md` gains a **"Graph coverage & extraction
-      lift"** section (P1's evidence row, with the §6.1 reproducibility stamp: code SHA, snapshot
-      hashes, extraction model revision, prompt hash).
-- [ ] Seed golden set for **all GS-01..GS-11** frozen under `/evals/golden/`, validator-clean.
-- [ ] **Tool schema v0 FROZEN** (`.md` + `.v0.json`), logged in `DECISIONS.md`.
-- [ ] `docs/LICENSING.md` created; `DECISIONS.md` updated (DEC-P1-1..6 + freeze entry); module
-      READMEs updated.
-- [ ] Runs from scratch: fresh clone + `.env` → `make up && make db-migrate && make ingest-seed
-      && make graph-report` (extraction step optional/recorded when no GPU).
-- [ ] 30-second demo: `make graph-demo` prints the cited, relationship-labelled Drishyam version
-      set with the original flagged.
-- [ ] GPU hygiene: extraction session ephemeral (create→run→destroy), cost logged against the
-      DEC-0003 envelope (~1–2 h).
-- [ ] Resume-ready quantified bullet drafted in `docs/PORTFOLIO.md` (e.g. edges verified, candidate
-      precision, coverage).
+      `test_gs09_scoping`, `test_gs09_transitive_lineage` (+ strengthened proximate-edge
+      assertion), plus the tool-schema conformance tests.
+- [x] **Verification gate enforced** and proven by tests (schema views + endpoint trigger;
+      mutation-tested fixture rejection); conflicts queue exercised (rule-resolved vs open),
+      never silently resolved; **zero unresolved conflicts** behind any golden fixture.
+- [x] **Graph coverage = 1.0** on flagship franchises (31/31); **candidate precision (0.352) +
+      Wikidata lift (6 edges) reported.** Tables 1/2 untouched — `docs/BENCHMARKS.md` gained the
+      **"Graph coverage & extraction lift"** section with the §6.1 reproducibility stamp
+      (code SHA `4a8eff3`, seed sha, 5 snapshot digests, model + run hash `3e37549f492bd2fc`).
+- [x] Seed golden set for **all GS-01..GS-11** frozen under `/evals/golden/` (25 fixtures),
+      validator-clean (`make golden-validate`).
+- [x] **Tool schema v0 FROZEN** (`.md` + `.v0.json`), logged as **DEC-P1-8** — zero signature
+      changes vs the seed.
+- [x] `docs/LICENSING.md` created (FINAL); `DECISIONS.md` updated (DEC-P1-1..8 + measured
+      amendments); module READMEs updated (`data-pipeline`, `evals`).
+- [x] Runs from scratch: fresh clone + `.env` → `make up && make db-migrate && make ingest-seed
+      && make graph-report` (all connectors replay recorded snapshots via `--offline`; the
+      extraction step replays its artifact; CI proves the chain from an empty DB every run).
+- [x] 30-second demo: `make graph-demo` prints the cited, relationship-labelled Drishyam
+      version set with the original flagged (native-script + NO_MATCH paths included).
+- [x] GPU hygiene: extraction session ephemeral (create→run→destroy + script-quota cleanup),
+      **~50 min ≈ $1** vs the DEC-0003 envelope (~1–2 h); zero running instances verified.
+- [x] Resume-ready quantified bullets drafted in `docs/PORTFOLIO.md` (coverage 31/31, precision
+      0.352, 6 edges beyond Wikidata, parse-failure 92.6→7.4%, ITRANS 89.7 vs 80.9, ~$1 GPU).
 
 ---
 
