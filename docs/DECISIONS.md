@@ -495,3 +495,26 @@ yielded 72 proposals → 58 candidates after the verbatim-evidence guard (14 uns
    `candidate_edges` **by design** — the human gate measures it as precision, not a crash.
 
 The frontier-API fallback stays untriggered pending the task-12 precision measurement.
+
+## DEC-P1-8 — TOOL_SCHEMA v0 FROZEN (2026-07-02, P1 task 15)
+
+**Status:** Accepted. `docs/phases/TOOL_SCHEMA.md` flipped DRAFT → **FROZEN v0**; the
+machine-readable artifact is **`docs/phases/tool_schema.v0.json`** (JSON Schema 2020-12:
+params + results + enums for all five tools).
+
+**What froze.** The v0 seed signatures, unchanged — implementation required zero signature
+breaks (the §2.5 "contract is satisfiable" bet held). Pinned wording-level semantics:
+`resolve_title.score` = rapidfuzz 0–1 (exact = 1.0); `ambiguous` = multi-Work span; `scope` ↔
+`version.country`; `include_sequels` = transitive work-level walk with the sequel work's
+original labelled `is_sequel_of`; unverified relationship = `null`, never guessed;
+`era` pivots on the set's original's year; `sources[].source` includes `rule`.
+
+**Enforcement.** Three CI conformance layers: (1) `test_tool_schema_json_valid` +
+md↔json sync test (doc drift fails CI); (2) `test_golden_expected_tool_calls_validate` —
+no hallucinated tool/param names committable into the golden set (P3/P4 reuse this validator
+against model-emitted calls); (3) `test_repository_matches_tool_schema` (signature drift) +
+integration result-shape round-trips of real repository calls through the frozen schema.
+
+**Consequences.** P4 synthetic data and the tool-call-accuracy metric target this exact
+artifact; any change bumps to v0.1+ with a DECISIONS entry; `search_by_plot` stays
+schema-only until P2 (its absence from the repository is itself asserted by test).

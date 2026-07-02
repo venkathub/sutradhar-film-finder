@@ -5,8 +5,28 @@
 > base-vs-QLoRA **tool-call accuracy** metric. Changes are versioned (v0 → v1 …) and logged in
 > `docs/DECISIONS.md`. All tools are read-only over the P1 Work/Version graph and RAG index.
 >
-> **Status:** DRAFT v0 seed — finalized as part of P1 exit criteria. Signatures below are the seed to
-> verify/refine against the graph schema during P1.
+> **Status:** **FROZEN v0 (2026-07-02, P1 task 15; DEC-P1-8).** The machine-readable contract is
+> **`docs/phases/tool_schema.v0.json`** (JSON Schema: params + results + enums) — the artifact P4
+> synthetic data, the tool-call-accuracy metric, and P5 orchestration validate against. This
+> document remains the prose contract; a CI sync test (`test_tool_schema_json_valid`) fails on
+> drift between the two. The graph-backed tools are implemented as repository functions
+> (`sutradhar.graph.repository`) over the P1 ground-truth views; `search_by_plot` is schema-frozen
+> now and implemented in P2.
+>
+> **v0 semantics pinned at freeze** (wording-level tightenings from implementation; no signature
+> changes — v0 stays v0):
+> - `resolve_title.candidates[].score` = the rapidfuzz-normalized 0–1 value over the match-key
+>   index; an exact key hit scores 1.0. `ambiguous` = candidates span **more than one Work**.
+> - `get_versions.scope` maps to `version.country` (`indian` | `foreign`; `all` = no filter).
+> - `include_sequels` walks work-level `is_sequel_of` edges transitively (both directions — a
+>   franchise walk). A **sequel work's own original** is labelled `is_sequel_of` relative to the
+>   queried work; its remakes keep `is_remake_of`; the queried work's original carries the
+>   derived `is_original_of`. A version with **no verified edge** carries `relationship: null`
+>   (an honest gap, never a guessed label).
+> - `refine_filter.by.era` resolves against the version set's original's year: `newer` =
+>   strictly later, `older` = strictly earlier, `original` = the `is_original` flag.
+> - `sources[].source` ∈ wikidata | tmdb | imdb | wikipedia | human | **rule** (DEC-P1-3
+>   amendment: derived-rule evidence carries honest provenance).
 
 ---
 
@@ -96,7 +116,7 @@ Backs: GS-08 ("the one with Ajay Devgn" → "no, the original one" → "is there
 | `refine_filter` | GS-08 |
 
 ## Versioning
-- **v0** — this seed, frozen at P1 exit.
+- **v0** — **FROZEN at P1 exit (2026-07-02).** Artifact: `tool_schema.v0.json`.
 - Any signature/label change increments the version and is logged in `DECISIONS.md`; P4 synthetic data
   and P5 orchestration always target a single pinned version, recorded in the benchmark reproducibility
   stamp (`ROADMAP.md` §6.1).

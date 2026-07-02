@@ -38,6 +38,7 @@ dev = [
     "jarvislabs>=0.2",
     # Type stubs for mypy-strict (yaml used by sutradhar.pipeline.seed + CI meta-tests).
     "types-pyyaml>=6.0",
+    "jsonschema>=4.26.0",
 ]
 
 [build-system]
