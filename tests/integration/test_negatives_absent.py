@@ -55,6 +55,8 @@ def session(engine: Engine) -> Iterator[Session]:
         outer = conn.begin()
         s = Session(bind=conn, join_transaction_mode="create_savepoint", autoflush=False)
         for table in (
+            "chunk_embeddings",
+            "chunks",
             "candidate_edges",
             "edges",
             "conflicts",

@@ -88,6 +88,9 @@ gpu-validate: ## One-time ephemeral JarvisLabs create->serve->smoke->destroy val
 gpu-nuke: ## Safety: destroy any stray tagged JarvisLabs instance (no leaked GPU)
 	uv run python infra/gpu/jarvis.py nuke
 
+build-corpus: ## P2: gate-visible plot chunks + metadata cards -> chunks table (all ablation configs)
+	uv run python rag-engine/build_corpus.py
+
 golden-validate: ## Validate golden fixtures against the live graph (task 14)
 	uv run python evals/build_golden.py
 
