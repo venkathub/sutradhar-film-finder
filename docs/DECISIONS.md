@@ -411,3 +411,28 @@ P5's API and P6's UI; C has no audit-trail integrity.
 
 **Consequences.** Gate-enforcement integration tests drive the CLI's promotion/rejection paths;
 the review session is part of the P1 exit evidence (candidate precision = confirmed/proposed).
+
+## DEC-P1-7 — Ground-truth view predicate: MEDIUM passes the gate views (2026-07-02)
+
+**Status:** Accepted (P1 task 1; clarifies a P1_SPEC internal inconsistency — user-confirmed).
+
+**Context.** P1_SPEC §1.8 and its SQL sketch gate the `ground_truth_*` views on
+`confidence = 'HIGH' OR human_verified` — but the prose directly beneath the sketch, the
+`DATA_SOURCES.md` tier table ("MEDIUM → the live graph, flagged"), and the §4 test list ("a
+MEDIUM edge **with an open conflict** is excluded") all say MEDIUM rows are live. The two
+readings cannot both be implemented.
+
+**Options.** (A) **MEDIUM passes the views** — predicate = `sources[]` non-empty AND no open
+conflict; the golden-fixture validator (not the view) enforces HIGH/human-verified for fixtures.
+(B) HIGH-or-verified only, per the SQL sketch literally.
+
+**Decision.** **A.** Under B the MEDIUM tier is dead weight (write-only until promoted — nothing
+downstream could ever read it) and the fixture validator's HIGH-only rule would be redundant.
+A matches the tier table's intent: MEDIUM is live-but-flagged; consumers see the `confidence`
+column and can filter. CANDIDATE remains excluded **by construction** (separate
+`candidate_edges` table, never referenced by any view).
+
+**Consequences.** View DDL (initial Alembic migration) implements predicate A;
+`test_medium_edge_passes_gate_views` pins it. The golden-fixture validator (task 14) owns the
+stricter HIGH/human-verified rule. Layered gates: structural exclusion (CANDIDATE) → conflict/
+provenance gate (views) → fixture gate (HIGH only).

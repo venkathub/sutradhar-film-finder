@@ -12,6 +12,10 @@ dependencies = [
     "pydantic-settings>=2.4",
     "openai>=1.40",
     "huggingface-hub>=1.0",
+    # Graph store (P1, DEC-P1-2): typed ORM schema + migrations over Postgres.
+    "sqlalchemy>=2.0",
+    "alembic>=1.13",
+    "psycopg[binary]>=3.2",
 ]
 
 [dependency-groups]
@@ -19,8 +23,8 @@ dev = [
     "pytest>=8.2",
     "ruff>=0.6",
     "mypy>=1.11",
-    # Integration-test clients for the local compose stack (not runtime deps).
-    "psycopg[binary]>=3.2",
+    # Integration-test client for Redis in the local compose stack (not a runtime dep).
+    # (psycopg moved to runtime deps in P1: the graph store is application code.)
     "redis>=5.0",
     # On-demand GPU lifecycle (infra/gpu/jarvis.py) — used only by make gpu-validate/nuke.
     "jarvislabs>=0.2",

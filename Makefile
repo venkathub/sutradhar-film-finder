@@ -8,7 +8,7 @@
 COMPOSE ?= docker compose -f infra/docker-compose.yml
 
 .DEFAULT_GOAL := help
-.PHONY: help setup fmt lint typecheck test test-int check up down down-v \
+.PHONY: help setup fmt lint typecheck test test-int check up down down-v db-migrate \
         smoke hf-check gpu-validate gpu-nuke
 
 help: ## List available targets
@@ -43,6 +43,9 @@ down: ## Stop the local stack (keeps the pgdata volume)
 
 down-v: ## Stop the local stack and DROP the pgdata volume
 	$(COMPOSE) down -v
+
+db-migrate: ## Apply graph-schema migrations (alembic upgrade head; needs `make up`)
+	uv run alembic upgrade head
 
 smoke: ## LLM connectivity smoke test (green whether the GPU endpoint is up or off)
 	uv run python -m sutradhar.serving.smoke

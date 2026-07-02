@@ -23,9 +23,25 @@ without one):
 | `redis` | `redis:7-alpine` | `${REDIS_PORT:-6379}` | `redis-cli ping` |
 
 Postgres data persists in the named volume `pgdata` (git-ignored). The pgvector tag was verified on
-Docker Hub on 2026-07-01 (P0_SPEC §2.7); pinned exactly for reproducibility. **No schema is created
-here** — the Work/Version schema is P1. P0 only proves the pgvector image works
-(`CREATE EXTENSION vector`).
+Docker Hub on 2026-07-01 (P0_SPEC §2.7); pinned exactly for reproducibility. The Work/Version graph
+schema is applied on top with `make db-migrate` (P1; Alembic — see `data-pipeline/README.md`).
+
+### Snap-confined Docker workaround (repo outside `$HOME`)
+
+Snap-packaged Docker can only read files under `$HOME` (non-hidden paths) — if the repo lives
+elsewhere (e.g. `/data/...`), `make up` fails with `open /var/lib/snapd/void/...: no such file`.
+Workaround: stage the compose inputs into a visible `$HOME` dir, preserving the repo layout so the
+compose file's `../.env` reference resolves:
+
+```bash
+mkdir -p ~/sutradhar-stack/infra
+cp infra/docker-compose.yml ~/sutradhar-stack/infra/
+cp .env ~/sutradhar-stack/.env      # or: touch ~/sutradhar-stack/.env
+cd ~/sutradhar-stack && docker compose -f infra/docker-compose.yml up -d --wait
+```
+
+Re-copy after editing either file. (`make db-migrate` and the tests are unaffected — they reach
+Postgres over localhost.)
 
 Bring it up / down (the `make up` / `make down` wrappers land in P0 task 5):
 
