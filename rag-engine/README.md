@@ -164,6 +164,17 @@ flagged `abstain=true` **with their correct results** (all still Recall@5 = 1.0)
 degrade to "low confidence", never to a hallucinated match. This interleave is a named
 P4 headroom target. Full curve: `evals/retrieval_runs/<run>.calibration.json`.
 
+### Named golden regressions = the Tier-1 CI gate (P2 task 12, DEC-P2-6)
+
+`tests/test_golden_retrieval_regressions.py` — the P2_SPEC §4 table, recomputed from the
+**committed** run artifact on every PR (no DB, no GPU, plain `uv run pytest`):
+version-set recall GS-01/GS-06 = 1.0 · no-hallucinated-movie (GS-02 + test negatives,
+0 false accepts) · dub-vs-remake GS-04 (incl. the bilingual double-original) ·
+sibling-vs-remake GS-05 · false-merge GS-10 (two distinct Vikram works) · tool-call v0
+validation (GS-07 calls + every recorded result) · **the Recall@10 ≥ 0.90 gate** with a
+recomputation-vs-committed-metrics drift check (negative-control verified: a doctored
+ranking fails). GS-11 fuzzy titles held through the full pipeline.
+
 ## Tests
 
 ```
