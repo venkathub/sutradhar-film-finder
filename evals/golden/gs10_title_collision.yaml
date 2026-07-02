@@ -1,0 +1,18 @@
+# GS-10 — Same title + same lead actor, unrelated works (false-merge guard).
+fixtures:
+  - id: GS-10a
+    name: Vikram collision disambiguates
+    category: title-collision
+    subsystem: graph
+    query: Vikram Kamal Haasan
+    query_lang: en
+    expected:
+      works: [Vikram]
+      ambiguous: true
+      versions:
+        - {title: Vikram, language: ta, year: 1986, is_original: true}
+        - {title: Vikram, language: ta, year: 2022, is_original: true}
+    gating_metric: false-merge rate (=0)
+    must_not:
+      - merge the two films into one record or one version set
+    verify_source: [Q7929545, Q102147287]

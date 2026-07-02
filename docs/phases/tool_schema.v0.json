@@ -1,0 +1,242 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://github.com/sutradhar/sutradhar/docs/phases/tool_schema.v0.json",
+ "title": "Sutradhar tool schema",
+ "version": "v0",
+ "status": "FROZEN",
+ "frozen_at": "2026-07-02",
+ "description": "Machine-readable contract for the read-only graph/RAG tools. P4 synthetic tool-calling data, the tool-call-accuracy metric, and P5 orchestration validate against this artifact. TOOL_SCHEMA.md is the prose contract; a sync test keeps them consistent.",
+ "$defs": {
+  "relationship": {
+   "enum": [
+    "is_original_of",
+    "is_remake_of",
+    "is_official_dub_of",
+    "is_unofficial_remake_of",
+    "is_sequel_of"
+   ]
+  },
+  "relationship_or_null": {
+   "oneOf": [{"$ref": "#/$defs/relationship"}, {"type": "null"}]
+  },
+  "scope": {"enum": ["indian", "all", "foreign"]},
+  "era": {"enum": ["original", "newer", "older"]},
+  "score": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+  "sources": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "properties": {
+     "source": {"enum": ["wikidata", "tmdb", "imdb", "wikipedia", "human", "rule"]},
+     "ref": {"type": "string", "minLength": 1},
+     "field": {"type": "string"},
+     "retrieved_at": {"type": "string"}
+    },
+    "required": ["source", "ref"],
+    "additionalProperties": false
+   }
+  },
+  "confidence": {"enum": ["HIGH", "MEDIUM"]},
+  "version_entry": {
+   "type": "object",
+   "properties": {
+    "version_id": {"type": "string"},
+    "title": {"type": "string"},
+    "language": {"type": "string"},
+    "year": {"type": ["integer", "null"]},
+    "cast_lead": {"type": "array", "items": {"type": "string"}},
+    "relationship": {"$ref": "#/$defs/relationship_or_null"},
+    "is_original": {"type": "boolean"},
+    "sources": {"$ref": "#/$defs/sources"},
+    "confidence": {"$ref": "#/$defs/confidence"}
+   },
+   "required": ["version_id", "title", "language", "year", "cast_lead", "relationship", "is_original", "sources", "confidence"],
+   "additionalProperties": false
+  }
+ },
+ "tools": {
+  "resolve_title": {
+   "description": "Resolve a (possibly transliterated / misspelled / code-mixed) title to candidate Works/Versions. score = rapidfuzz-normalized 0-1 over the match-key index (exact key hit = 1.0); ambiguous = candidates span more than one Work.",
+   "params": {
+    "type": "object",
+    "properties": {
+     "title": {"type": "string", "minLength": 1},
+     "language": {"type": ["string", "null"]}
+    },
+    "required": ["title"],
+    "additionalProperties": false
+   },
+   "result": {
+    "type": "object",
+    "properties": {
+     "candidates": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "work_id": {"type": "string"},
+        "version_id": {"type": ["string", "null"]},
+        "matched_title": {"type": "string"},
+        "language": {"type": ["string", "null"]},
+        "year": {"type": ["integer", "null"]},
+        "score": {"$ref": "#/$defs/score"},
+        "sources": {"$ref": "#/$defs/sources"}
+       },
+       "required": ["work_id", "matched_title", "score", "sources"],
+       "additionalProperties": false
+      }
+     },
+     "ambiguous": {"type": "boolean"}
+    },
+    "required": ["candidates", "ambiguous"],
+    "additionalProperties": false
+   }
+  },
+  "search_by_plot": {
+   "description": "Semantic retrieval of Works from a plot/story description (P2 implements; schema frozen now). abstain=true below the calibrated NO_MATCH threshold (GS-02).",
+   "params": {
+    "type": "object",
+    "properties": {
+     "description": {"type": "string", "minLength": 1},
+     "top_k": {"type": "integer", "minimum": 1, "default": 10}
+    },
+    "required": ["description"],
+    "additionalProperties": false
+   },
+   "result": {
+    "type": "object",
+    "properties": {
+     "results": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "work_id": {"type": "string"},
+        "canonical_title": {"type": "string"},
+        "language": {"type": ["string", "null"]},
+        "year": {"type": ["integer", "null"]},
+        "score": {"$ref": "#/$defs/score"}
+       },
+       "required": ["work_id", "canonical_title", "score"],
+       "additionalProperties": false
+      }
+     },
+     "abstain": {"type": "boolean"}
+    },
+    "required": ["results", "abstain"],
+    "additionalProperties": false
+   }
+  },
+  "get_work": {
+   "description": "Canonical Work node + metadata, incl. the literary source_work when one exists (GS-05).",
+   "params": {
+    "type": "object",
+    "properties": {
+     "work_id": {"type": "string", "minLength": 1}
+    },
+    "required": ["work_id"],
+    "additionalProperties": false
+   },
+   "result": {
+    "type": "object",
+    "properties": {
+     "work_id": {"type": "string"},
+     "canonical_title": {"type": "string"},
+     "work_type": {"enum": ["film", "literary_source"]},
+     "original_language": {"type": ["string", "null"]},
+     "first_release_year": {"type": ["integer", "null"]},
+     "source_work": {
+      "oneOf": [
+       {"type": "null"},
+       {
+        "type": "object",
+        "properties": {
+         "work_id": {"type": "string"},
+         "canonical_title": {"type": "string"},
+         "work_type": {"enum": ["film", "literary_source"]}
+        },
+        "required": ["work_id", "canonical_title", "work_type"],
+        "additionalProperties": false
+       }
+      ]
+     },
+     "based_on": {"type": "array", "items": {"type": "string"}},
+     "sources": {"$ref": "#/$defs/sources"},
+     "confidence": {"$ref": "#/$defs/confidence"}
+    },
+    "required": ["work_id", "canonical_title", "work_type", "source_work", "based_on", "sources", "confidence"],
+    "additionalProperties": false
+   }
+  },
+  "get_versions": {
+   "description": "All gate-visible Versions of a Work with typed relationship labels and the original flagged. scope maps to version.country; include_sequels walks work-level is_sequel_of edges transitively; a sequel work's own original is labelled is_sequel_of relative to the queried work; a version with no verified edge carries relationship=null.",
+   "params": {
+    "type": "object",
+    "properties": {
+     "work_id": {"type": "string", "minLength": 1},
+     "scope": {"$ref": "#/$defs/scope", "default": "indian"},
+     "include_sequels": {"type": "boolean", "default": false}
+    },
+    "required": ["work_id"],
+    "additionalProperties": false
+   },
+   "result": {
+    "type": "object",
+    "properties": {
+     "original": {
+      "oneOf": [{"type": "null"}, {"$ref": "#/$defs/version_entry"}]
+     },
+     "versions": {"type": "array", "items": {"$ref": "#/$defs/version_entry"}}
+    },
+    "required": ["original", "versions"],
+    "additionalProperties": false
+   }
+  },
+  "refine_filter": {
+   "description": "Narrow a conversational version set (GS-08 backtracking). era resolves against the set's original version's year: newer = strictly later, older = strictly earlier, original = the is_original flag.",
+   "params": {
+    "type": "object",
+    "properties": {
+     "version_set": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+     "by": {
+      "type": "object",
+      "properties": {
+       "actor": {"type": "string"},
+       "language": {"type": "string"},
+       "year": {"type": "integer"},
+       "era": {"$ref": "#/$defs/era"},
+       "relationship": {"$ref": "#/$defs/relationship"}
+      },
+      "additionalProperties": false
+     }
+    },
+    "required": ["version_set", "by"],
+    "additionalProperties": false
+   },
+   "result": {
+    "type": "object",
+    "properties": {
+     "versions": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "version_id": {"type": "string"},
+        "title": {"type": "string"},
+        "language": {"type": "string"},
+        "year": {"type": ["integer", "null"]},
+        "relationship": {"$ref": "#/$defs/relationship_or_null"},
+        "is_original": {"type": "boolean"}
+       },
+       "required": ["version_id", "title", "language", "year", "relationship", "is_original"],
+       "additionalProperties": false
+      }
+     }
+    },
+    "required": ["versions"],
+    "additionalProperties": false
+   }
+  }
+ }
+}

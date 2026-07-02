@@ -1,0 +1,280 @@
+# Review decisions for extraction run 3e37549f492bd2fc (2026-07-02).
+# Generated from curated seed truth; applied via review_candidates.py --decisions.
+decisions:
+- candidate_id: 6ef98035-c7ee-46b8-b887-7e42d2c52f50
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: a10de6f2-da25-4a17-a1e5-c43584e5d01e
+  verdict: confirm
+  src:
+    title: Devadasu
+    language: te
+  dst:
+    title: Devdas
+    year: 1917
+    work: true
+- candidate_id: e6771f5f-60c1-4e06-8679-f5e493e72b6d
+  verdict: confirm
+  src:
+    title: Devdas
+    language: hi
+    year: 2002
+  dst:
+    title: Devdas
+    year: 1917
+    work: true
+- candidate_id: d77f1962-4f91-4cbf-91c3-53ef0d96b9f6
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 508a336f-bf68-488e-8c6a-b8cc4775ac8f
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 9810eecc-5d5a-47fb-a12f-0bf9e4d8de64
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: e04521d2-5483-47e5-9589-bcfc18d51e3b
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 320b0cd6-1f16-4a49-bd99-afb4a03437b5
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 286d1d22-1b62-4ccc-85f9-7035133fd95a
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 25e9f3cf-52bd-4a0f-92ea-a731bab588ea
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 089cabc6-1c9c-41dc-97a3-43dac9071374
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 3c048a3c-ab19-4698-bf15-c31a77ffac91
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 8819a881-fe40-44ff-a8ff-531e93976ac3
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: fc20609c-4cb5-4f78-9626-74099d48e93b
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 3744b819-ce4c-4640-afa7-6942d4090e4b
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 95e19ffd-5efa-4218-a591-c52d95272dd6
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 78e44a0c-c364-48fc-838f-aa19319c01c3
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 80328840-0137-4c3c-83b1-11e20cd55fcf
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 2e153f16-5f4a-4a7a-a868-1afa23f89444
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 75da677c-f980-42c3-a458-26464684e627
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: f4df877f-b180-4721-9241-2f5125f0aeeb
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 7c0162ac-4fad-4bb9-b8e9-584ac690901f
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 88fc77b4-b1c0-4942-9b29-9f96a797491d
+  verdict: confirm
+  src:
+    title: Apthamitra
+    language: kn
+  dst:
+    title: Manichitrathazhu
+    language: ml
+- candidate_id: 2756d1ab-f716-4a1b-b55f-631b0eb037db
+  verdict: confirm
+  src:
+    title: Apthamitra
+    language: kn
+  dst:
+    title: Manichitrathazhu
+    language: ml
+- candidate_id: 98acfdd9-4c20-4023-9507-7b17203882ff
+  verdict: confirm
+  src:
+    title: Bhool Bhulaiyaa
+    language: hi
+  dst:
+    title: Manichitrathazhu
+    language: ml
+- candidate_id: 3b21e4d9-7155-435c-9e8e-7f55a7579a3e
+  verdict: confirm
+  src:
+    title: Bhool Bhulaiyaa
+    language: hi
+  dst:
+    title: Manichitrathazhu
+    language: ml
+- candidate_id: f609aaf3-00b4-4c26-8357-79160aac623f
+  verdict: confirm
+  src:
+    title: Chandramukhi
+    language: ta
+  dst:
+    title: Apthamitra
+    language: kn
+  note: THE proximate edge (GS-09B)
+- candidate_id: 50a280d6-7c82-46a0-8f63-e302c94d3f7c
+  verdict: confirm
+  src:
+    title: Chandramukhi
+    language: ta
+  dst:
+    title: Manichitrathazhu
+    language: ml
+  note: direct lineage also stated; corroborates wikidata
+- candidate_id: b244fb01-8e5c-471f-940a-f26d2c44b399
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: f3c8f2ba-8b1e-4e72-8eb8-35ccee9149e6
+  verdict: skip
+  note: out-of-slice entity (breadth backlog)
+- candidate_id: 1a6d1424-54e8-462d-93d0-52754da2da00
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 8672cb35-c0ac-4be0-b8e8-15a0a439173f
+  verdict: confirm
+  src:
+    title: Dharmayuddhaya
+    language: si
+  dst:
+    title: Drishyam
+    language: ml
+- candidate_id: 083e4421-c0d8-4058-ac1a-13249ceb7dca
+  verdict: confirm
+  src:
+    title: Drishya
+    language: kn
+  dst:
+    title: Drishyam
+    language: ml
+- candidate_id: 08d88d3f-a097-4c32-9376-16cd3cec4c68
+  verdict: confirm
+  src:
+    title: Drishya 2
+    language: kn
+  dst:
+    title: Drishyam 2
+    language: ml
+- candidate_id: 4f15256e-7758-4f91-a234-f9877f50d271
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 3c0bf709-2835-4f54-b8b3-24218ec2ac06
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 4a1a461e-7045-4d76-8dd1-2c309bf6cfcf
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 5b0389ca-301b-4676-8613-0200da7b5cac
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 750de79a-a889-4191-bd7c-de4c89eaf641
+  verdict: confirm
+  src:
+    title: Drishyam 2
+    language: hi
+  dst:
+    title: Drishyam 2
+    language: ml
+  note: sentence says remake of the 2021 Malayalam film of the same name -> dst is
+    Drishyam 2 ml
+- candidate_id: 860b3881-feab-42be-8119-350d94dbbe98
+  verdict: confirm
+  src:
+    title: Drushyam
+    language: te
+  dst:
+    title: Drishyam
+    language: ml
+- candidate_id: 49d8a2a9-46ef-4d0a-8f42-7f5970e8dbca
+  verdict: confirm
+  src:
+    title: Drushyam 2
+    language: te
+  dst:
+    title: Drishyam 2
+    language: ml
+- candidate_id: 505193e5-6e8e-4674-a7ab-9e75816efb3e
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 387a40cb-6361-4fe5-9481-71b850d66376
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: accffc5e-1ae0-49e9-bd49-1fed73cfa6ba
+  verdict: skip
+  note: out-of-slice entity (breadth backlog)
+- candidate_id: 919eeca9-a8df-424f-b91a-5e6f9b675655
+  verdict: confirm
+  src:
+    title: Papanasam
+    language: ta
+  dst:
+    title: Drishyam
+    language: ml
+- candidate_id: 3c264967-bcf3-4dd8-becb-e19bc5da87fc
+  verdict: confirm
+  src:
+    title: Rajmohol
+    language: bn
+  dst:
+    title: Manichitrathazhu
+    language: ml
+- candidate_id: 83ec336a-d9c0-4939-b193-98092a358b51
+  verdict: confirm
+  src:
+    title: Rajmohol
+    language: bn
+  dst:
+    title: Manichitrathazhu
+    language: ml
+- candidate_id: 63ba0d0d-2f77-418c-98c1-1a4e17e515b5
+  verdict: confirm
+  src:
+    title: Sheep Without a Shepherd
+    language: zh
+  dst:
+    title: Drishyam
+    language: ml
+- candidate_id: 396f6e9c-76d1-429d-8b1f-fd7e180262e0
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: 77ff6531-e96a-4d0e-8ac1-34a8d673647a
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: bdb72135-f8ed-451a-a740-6adce797eb68
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: d9d0ac57-4427-459a-8ebf-fe8f1d2e3ba9
+  verdict: skip
+  note: out-of-slice entity (breadth backlog)
+- candidate_id: 4ed7b056-4593-46a3-90f5-fd10e2b45870
+  verdict: skip
+  note: out-of-slice entity (breadth backlog)
+- candidate_id: a799b75b-d203-4c23-b85d-de1fe76e5695
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: c37da6cf-7e8d-4e56-9d20-9f287c403d03
+  verdict: confirm
+  src:
+    title: Drushyam 2
+    language: te
+  dst:
+    title: Drushyam
+    language: te
+  note: te sequel chain, stated; promotes at work level
+- candidate_id: abcaf2be-f3d6-4dd9-864b-fcc672b19981
+  verdict: reject
+  note: direction inverted (Ch.1 is followed BY Ch.2); also dst out of slice
+- candidate_id: ab41621b-a7d7-4d9d-88da-a65cd8e9ee55
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources
+- candidate_id: cb4c363b-c482-4eb5-8d88-9f760fd0f0c7
+  verdict: reject
+  note: wrong type/direction/self-pair vs sources

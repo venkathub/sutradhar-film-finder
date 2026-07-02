@@ -8,7 +8,7 @@
 COMPOSE ?= docker compose -f infra/docker-compose.yml
 
 .DEFAULT_GOAL := help
-.PHONY: help setup fmt lint typecheck test test-int check up down down-v \
+.PHONY: help setup fmt lint typecheck test test-int check up down down-v db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
         smoke hf-check gpu-validate gpu-nuke
 
 help: ## List available targets
@@ -44,6 +44,38 @@ down: ## Stop the local stack (keeps the pgdata volume)
 down-v: ## Stop the local stack and DROP the pgdata volume
 	$(COMPOSE) down -v
 
+db-migrate: ## Apply graph-schema migrations (alembic upgrade head; needs `make up`)
+	uv run alembic upgrade head
+
+ingest-spine: ## Ingest the Wikidata spine for the seed slice (snapshot-first; needs db-migrate)
+	uv run python data-pipeline/ingest_spine.py
+
+enrich-tmdb: ## Enrich versions from TMDB (titles/credits; needs ingest-spine + TMDB_API_KEY)
+	uv run python data-pipeline/enrich_tmdb.py
+
+load-akas: ## Load slice-filtered IMDb title.akas into version_title (needs ingest-spine)
+	uv run python data-pipeline/load_akas.py
+
+fetch-plots: ## Fetch revision-pinned Wikipedia plots into plot_texts (needs ingest-spine)
+	uv run python data-pipeline/fetch_plots.py
+
+rekey-titles: ## Re-key version_title with full transliteration + script detection (task 8)
+	uv run python data-pipeline/rekey_titles.py
+
+build-graph: ## Dub-vs-remake rule cross-check + dub-track edges + integrity report (task 9)
+	uv run python data-pipeline/build_graph.py
+
+extract-candidates: ## LLM candidate-edge extraction (GPU session; --offline replays artifact)
+	uv run python data-pipeline/extract_candidates.py
+
+review-candidates: ## Human review gate: confirm/reject candidates -> promotion (DEC-P1-6)
+	uv run python data-pipeline/review_candidates.py --reviewer $${USER}
+
+graph-report: ## Coverage per franchise + extraction lift + reproducibility stamp (task 13)
+	uv run python data-pipeline/graph_report.py
+
+ingest-seed: ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ## Full seed-slice ingestion chain (needs up + db-migrate + TMDB_API_KEY)
+
 smoke: ## LLM connectivity smoke test (green whether the GPU endpoint is up or off)
 	uv run python -m sutradhar.serving.smoke
 
@@ -55,3 +87,9 @@ gpu-validate: ## One-time ephemeral JarvisLabs create->serve->smoke->destroy val
 
 gpu-nuke: ## Safety: destroy any stray tagged JarvisLabs instance (no leaked GPU)
 	uv run python infra/gpu/jarvis.py nuke
+
+golden-validate: ## Validate golden fixtures against the live graph (task 14)
+	uv run python evals/build_golden.py
+
+graph-demo: ## 30-second demo: cited, relationship-labelled Drishyam version set
+	uv run python data-pipeline/graph_demo.py

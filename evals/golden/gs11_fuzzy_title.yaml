@@ -1,0 +1,62 @@
+# GS-11 — Fuzzy / cross-script title match (perturbations must resolve).
+fixtures:
+  - id: GS-11a
+    name: Vowel-stretched Papanasam
+    category: fuzzy-title
+    subsystem: intent/translit
+    query: Papanaasam
+    query_lang: ta-latin
+    expected:
+      canonical_work: Drishyam
+      canonical_year: 2013
+      versions:
+        - {title: Papanasam, language: ta, year: 2015, relationship: is_remake_of}
+    gating_metric: title-match recall under perturbation
+    must_not:
+      - fail on a one- or two-character spelling variation
+    verify_source: [Q18129183]
+  - id: GS-11b
+    name: Telugu popular spelling
+    category: fuzzy-title
+    subsystem: intent/translit
+    query: Drushyam
+    query_lang: te-latin
+    expected:
+      canonical_work: Drishyam
+      canonical_year: 2013
+      versions:
+        - {title: Drushyam, language: te, year: 2014, relationship: is_remake_of}
+    gating_metric: title-match recall under perturbation
+    must_not:
+      - resolve only to the Malayalam original and drop the Telugu film
+    verify_source: [Q16248158]
+  - id: GS-11c
+    name: Native Malayalam script query
+    category: fuzzy-title
+    subsystem: intent/translit
+    query: ദൃശ്യം
+    query_lang: ml
+    expected:
+      canonical_work: Drishyam
+      canonical_year: 2013
+      versions:
+        - {title: Drishyam, language: ml, year: 2013, is_original: true, relationship: is_original_of}
+    gating_metric: title-match recall across scripts
+    must_not:
+      - fail because the query is in native script
+    verify_source: [Q15401703]
+  - id: GS-11d
+    name: One-char typo Chandramuki
+    category: fuzzy-title
+    subsystem: intent/translit
+    query: Chandramuki
+    query_lang: ta-latin
+    expected:
+      canonical_work: Manichitrathazhu
+      canonical_year: 1993
+      versions:
+        - {title: Chandramukhi, language: ta, year: 2005, relationship: is_remake_of}
+    gating_metric: title-match recall under perturbation
+    must_not:
+      - return no match for a 1-char typo
+    verify_source: [Q1193810]

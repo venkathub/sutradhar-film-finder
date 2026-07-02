@@ -1,0 +1,42 @@
+# GS-01 — Drishyam family (flagship: story → remake chain, original flagged)
+# All facts verified in-graph 2026-07-02 (QIDs in verify_source; edges human-verified
+# via review run 3e37549f492bd2fc where Wikidata lacked them).
+fixtures:
+  - id: GS-01a
+    name: Drishyam family from plot
+    category: flagship
+    subsystem: graph
+    query: >
+      the movie where a man fabricates an alibi to protect his family after his
+      daughter kills a blackmailer
+    query_lang: en
+    expected:
+      canonical_work: Drishyam
+      canonical_year: 2013
+      versions:
+        - {title: Drishyam, language: ml, year: 2013, is_original: true, relationship: is_original_of}
+        - {title: Drishya, language: kn, year: 2014, relationship: is_remake_of}
+        - {title: Drushyam, language: te, year: 2014, relationship: is_remake_of}
+        - {title: Papanasam, language: ta, year: 2015, relationship: is_remake_of}
+        - {title: Drishyam, language: hi, year: 2015, relationship: is_remake_of}
+    gating_metric: version-set recall (=1.0)
+    must_not:
+      - mislabel any remake as the original
+      - omit a known Indian version
+    verify_source: [Q15401703, Q17052094, Q16248158, Q18129183, Q19824636]
+  - id: GS-01b
+    name: Drishyam family from a remake title
+    category: flagship
+    subsystem: graph
+    query: show me Papanasam
+    query_lang: en
+    expected:
+      canonical_work: Drishyam
+      canonical_year: 2013
+      versions:
+        - {title: Papanasam, language: ta, year: 2015, relationship: is_remake_of}
+        - {title: Drishyam, language: ml, year: 2013, is_original: true, relationship: is_original_of}
+    gating_metric: version-set recall; MRR for canonical match
+    must_not:
+      - present Papanasam as the original
+    verify_source: [Q18129183, Q15401703]

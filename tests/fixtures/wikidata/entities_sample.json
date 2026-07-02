@@ -1,0 +1,2259 @@
+{
+ "Q15401703": {
+  "id": "Q15401703",
+  "labels": {
+   "en": {
+    "language": "en",
+    "value": "Drishyam"
+   }
+  },
+  "descriptions": {
+   "en": {
+    "language": "en",
+    "value": "2013 malayalam film directed by Jeethu Joseph"
+   }
+  },
+  "claims": {
+   "P4969": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q18129183",
+        "numeric-id": 18129183
+       }
+      },
+      "property": "P4969",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P345": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "tt3417422"
+      },
+      "property": "P345",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P364": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q36236",
+        "numeric-id": 36236
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P577": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 11,
+        "time": "+2013-12-19T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P57": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q14566057",
+        "numeric-id": 14566057
+       }
+      },
+      "property": "P57",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P156": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q102036246",
+        "numeric-id": 102036246
+       }
+      },
+      "property": "P156",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P495": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q668",
+        "numeric-id": 668
+       }
+      },
+      "property": "P495",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P4947": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "244049"
+      },
+      "property": "P4947",
+      "snaktype": "value"
+     }
+    }
+   ]
+  }
+ },
+ "Q19824636": {
+  "id": "Q19824636",
+  "labels": {
+   "en": {
+    "language": "en",
+    "value": "Drishyam"
+   }
+  },
+  "descriptions": {
+   "en": {
+    "language": "en",
+    "value": "2015 film directed by Nishikant Kamat"
+   }
+  },
+  "claims": {
+   "P345": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "tt4430212"
+      },
+      "property": "P345",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P364": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q1568",
+        "numeric-id": 1568
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P577": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 11,
+        "time": "+2015-07-31T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P57": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q13118344",
+        "numeric-id": 13118344
+       }
+      },
+      "property": "P57",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P156": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q112665700",
+        "numeric-id": 112665700
+       }
+      },
+      "property": "P156",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P144": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q15401703",
+        "numeric-id": 15401703
+       }
+      },
+      "property": "P144",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P495": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q668",
+        "numeric-id": 668
+       }
+      },
+      "property": "P495",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P4947": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "352173"
+      },
+      "property": "P4947",
+      "snaktype": "value"
+     }
+    }
+   ]
+  }
+ },
+ "Q18129183": {
+  "id": "Q18129183",
+  "labels": {
+   "en": {
+    "language": "en",
+    "value": "Papanasam"
+   }
+  },
+  "descriptions": {
+   "en": {
+    "language": "en",
+    "value": "2015 Tamil film directed by Jeethu Joseph"
+   }
+  },
+  "claims": {
+   "P345": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "tt4429128"
+      },
+      "property": "P345",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P364": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q5885",
+        "numeric-id": 5885
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P577": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 9,
+        "time": "+2015-00-00T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P57": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q14566057",
+        "numeric-id": 14566057
+       }
+      },
+      "property": "P57",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P495": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q668",
+        "numeric-id": 668
+       }
+      },
+      "property": "P495",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P4947": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "330421"
+      },
+      "property": "P4947",
+      "snaktype": "value"
+     }
+    }
+   ]
+  }
+ },
+ "Q102036246": {
+  "id": "Q102036246",
+  "labels": {
+   "en": {
+    "language": "en",
+    "value": "Drishyam 2"
+   }
+  },
+  "descriptions": {
+   "en": {
+    "language": "en",
+    "value": "2021 film directed by Jeethu Joseph"
+   }
+  },
+  "claims": {
+   "P155": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q15401703",
+        "numeric-id": 15401703
+       }
+      },
+      "property": "P155",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P345": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "tt12361178"
+      },
+      "property": "P345",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P364": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q36236",
+        "numeric-id": 36236
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P577": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 11,
+        "time": "+2021-02-19T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P57": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q14566057",
+        "numeric-id": 14566057
+       }
+      },
+      "property": "P57",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P495": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q668",
+        "numeric-id": 668
+       }
+      },
+      "property": "P495",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P4947": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "706872"
+      },
+      "property": "P4947",
+      "snaktype": "value"
+     }
+    }
+   ]
+  }
+ },
+ "Q112665700": {
+  "id": "Q112665700",
+  "labels": {
+   "en": {
+    "language": "en",
+    "value": "Drishyam 2"
+   }
+  },
+  "descriptions": {
+   "en": {
+    "language": "en",
+    "value": "film directed by Abhishek Pathak"
+   }
+  },
+  "claims": {
+   "P155": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q19824636",
+        "numeric-id": 19824636
+       }
+      },
+      "property": "P155",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P345": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "tt15501640"
+      },
+      "property": "P345",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P364": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q1568",
+        "numeric-id": 1568
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P577": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 11,
+        "time": "+2022-11-18T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P57": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q121610326",
+        "numeric-id": 121610326
+       }
+      },
+      "property": "P57",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P144": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q102036246",
+        "numeric-id": 102036246
+       }
+      },
+      "property": "P144",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P495": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q668",
+        "numeric-id": 668
+       }
+      },
+      "property": "P495",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P4947": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "1029827"
+      },
+      "property": "P4947",
+      "snaktype": "value"
+     }
+    }
+   ]
+  }
+ },
+ "Q11169650": {
+  "id": "Q11169650",
+  "labels": {
+   "en": {
+    "language": "en",
+    "value": "Devdas"
+   }
+  },
+  "descriptions": {
+   "en": {
+    "language": "en",
+    "value": "1917 novel by Sarat Chandra Chattopadhyay"
+   }
+  },
+  "claims": {
+   "P4969": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q3025388",
+        "numeric-id": 3025388
+       }
+      },
+      "property": "P4969",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q1206661",
+        "numeric-id": 1206661
+       }
+      },
+      "property": "P4969",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q846889",
+        "numeric-id": 846889
+       }
+      },
+      "property": "P4969",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q5266623",
+        "numeric-id": 5266623
+       }
+      },
+      "property": "P4969",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q3025390",
+        "numeric-id": 3025390
+       }
+      },
+      "property": "P4969",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q771754",
+        "numeric-id": 771754
+       }
+      },
+      "property": "P4969",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q16247933",
+        "numeric-id": 16247933
+       }
+      },
+      "property": "P4969",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q12999983",
+        "numeric-id": 12999983
+       }
+      },
+      "property": "P4969",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q3025393",
+        "numeric-id": 3025393
+       }
+      },
+      "property": "P4969",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q13058263",
+        "numeric-id": 13058263
+       }
+      },
+      "property": "P4969",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q5266417",
+        "numeric-id": 5266417
+       }
+      },
+      "property": "P4969",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q5266626",
+        "numeric-id": 5266626
+       }
+      },
+      "property": "P4969",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q247854",
+        "numeric-id": 247854
+       }
+      },
+      "property": "P4969",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q3506295",
+        "numeric-id": 3506295
+       }
+      },
+      "property": "P4969",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q16247941",
+        "numeric-id": 16247941
+       }
+      },
+      "property": "P4969",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q4454117",
+        "numeric-id": 4454117
+       }
+      },
+      "property": "P4969",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P577": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 9,
+        "time": "+1917-00-00T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P495": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q668",
+        "numeric-id": 668
+       }
+      },
+      "property": "P495",
+      "snaktype": "value"
+     }
+    }
+   ]
+  }
+ },
+ "Q247854": {
+  "id": "Q247854",
+  "labels": {
+   "en": {
+    "language": "en",
+    "value": "Devdas"
+   }
+  },
+  "descriptions": {
+   "en": {
+    "language": "en",
+    "value": "2002 Hindi film by Sanjay Leela Bhansali"
+   }
+  },
+  "claims": {
+   "P345": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "tt0238936"
+      },
+      "property": "P345",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P364": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q1568",
+        "numeric-id": 1568
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P577": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 11,
+        "time": "+2002-05-23T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P57": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q633252",
+        "numeric-id": 633252
+       }
+      },
+      "property": "P57",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P144": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q11169650",
+        "numeric-id": 11169650
+       }
+      },
+      "property": "P144",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P495": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q668",
+        "numeric-id": 668
+       }
+      },
+      "property": "P495",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P4947": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "15917"
+      },
+      "property": "P4947",
+      "snaktype": "value"
+     }
+    }
+   ]
+  }
+ },
+ "Q3530081": {
+  "id": "Q3530081",
+  "labels": {
+   "en": {
+    "language": "en",
+    "value": "Manichitrathazhu"
+   }
+  },
+  "descriptions": {
+   "en": {
+    "language": "en",
+    "value": "1993 film by Fazil"
+   }
+  },
+  "claims": {
+   "P345": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "tt0214915"
+      },
+      "property": "P345",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P364": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q36236",
+        "numeric-id": 36236
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P577": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 9,
+        "time": "+1993-01-01T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P57": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q3534902",
+        "numeric-id": 3534902
+       }
+      },
+      "property": "P57",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P495": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q668",
+        "numeric-id": 668
+       }
+      },
+      "property": "P495",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P4947": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "84368"
+      },
+      "property": "P4947",
+      "snaktype": "value"
+     }
+    }
+   ]
+  }
+ },
+ "Q1193810": {
+  "id": "Q1193810",
+  "labels": {
+   "en": {
+    "language": "en",
+    "value": "Chandramukhi"
+   }
+  },
+  "descriptions": {
+   "en": {
+    "language": "en",
+    "value": "2005 Indian Tamil-language film directed by P. Vasu"
+   }
+  },
+  "claims": {
+   "P345": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "tt0449869"
+      },
+      "property": "P345",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P364": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q5885",
+        "numeric-id": 5885
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P577": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 9,
+        "time": "+2005-01-01T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P57": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q3535762",
+        "numeric-id": 3535762
+       }
+      },
+      "property": "P57",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P144": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q3530081",
+        "numeric-id": 3530081
+       }
+      },
+      "property": "P144",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P495": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q668",
+        "numeric-id": 668
+       }
+      },
+      "property": "P495",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P4947": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "53122"
+      },
+      "property": "P4947",
+      "snaktype": "value"
+     }
+    }
+   ]
+  }
+ },
+ "Q13897247": {
+  "id": "Q13897247",
+  "labels": {
+   "en": {
+    "language": "en",
+    "value": "Baahubali: The Beginning"
+   }
+  },
+  "descriptions": {
+   "en": {
+    "language": "en",
+    "value": "2015 film by S. S. Rajamouli"
+   }
+  },
+  "claims": {
+   "P495": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q668",
+        "numeric-id": 668
+       }
+      },
+      "property": "P495",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P156": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q21001674",
+        "numeric-id": 21001674
+       }
+      },
+      "property": "P156",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P364": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q8097",
+        "numeric-id": 8097
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q5885",
+        "numeric-id": 5885
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P345": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "tt2631186"
+      },
+      "property": "P345",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P4947": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "256040"
+      },
+      "property": "P4947",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P577": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 11,
+        "time": "+2015-07-10T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 11,
+        "time": "+2016-04-28T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 11,
+        "time": "+2016-07-22T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 11,
+        "time": "+2017-04-08T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P57": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q3521531",
+        "numeric-id": 3521531
+       }
+      },
+      "property": "P57",
+      "snaktype": "value"
+     }
+    }
+   ]
+  }
+ },
+ "Q3025390": {
+  "id": "Q3025390",
+  "labels": {
+   "en": {
+    "language": "en",
+    "value": "Devadasu"
+   }
+  },
+  "descriptions": {
+   "en": {
+    "language": "en",
+    "value": "1953 Tamil film directed by Vedantam Raghavaiah"
+   }
+  },
+  "claims": {
+   "P495": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q668",
+        "numeric-id": 668
+       }
+      },
+      "property": "P495",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P364": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q8097",
+        "numeric-id": 8097
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q5885",
+        "numeric-id": 5885
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P345": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "tt0256718"
+      },
+      "property": "P345",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "tt0256719"
+      },
+      "property": "P345",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P144": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q11169650",
+        "numeric-id": 11169650
+       }
+      },
+      "property": "P144",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P4947": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "306373"
+      },
+      "property": "P4947",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P577": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 9,
+        "time": "+1953-01-01T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P57": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q14478904",
+        "numeric-id": 14478904
+       }
+      },
+      "property": "P57",
+      "snaktype": "value"
+     }
+    }
+   ]
+  }
+ },
+ "Q79325356": {
+  "id": "Q79325356",
+  "labels": {
+   "en": {
+    "language": "en",
+    "value": "Sheep Without a Shepherd"
+   }
+  },
+  "descriptions": {
+   "en": {
+    "language": "en",
+    "value": "2019 Chinese film"
+   }
+  },
+  "claims": {
+   "P495": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q148",
+        "numeric-id": 148
+       }
+      },
+      "property": "P495",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P577": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 11,
+        "time": "+2019-12-13T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P364": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q727694",
+        "numeric-id": 727694
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q9217",
+        "numeric-id": 9217
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P345": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "tt11210032"
+      },
+      "property": "P345",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P57": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q85881417",
+        "numeric-id": 85881417
+       }
+      },
+      "property": "P57",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P144": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q15401703",
+        "numeric-id": 15401703
+       }
+      },
+      "property": "P144",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P4947": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "652783"
+      },
+      "property": "P4947",
+      "snaktype": "value"
+     }
+    }
+   ]
+  }
+ },
+ "Q30647147": {
+  "id": "Q30647147",
+  "labels": {
+   "en": {
+    "language": "en",
+    "value": "Dharmayudhaya"
+   }
+  },
+  "descriptions": {
+   "en": {
+    "language": "en",
+    "value": "2017 film by Cheyyar Ravi"
+   }
+  },
+  "claims": {
+   "P495": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q854",
+        "numeric-id": 854
+       }
+      },
+      "property": "P495",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P577": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 9,
+        "time": "+2017-00-00T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P364": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q13267",
+        "numeric-id": 13267
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P345": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "tt7051292"
+      },
+      "property": "P345",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P57": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q21932318",
+        "numeric-id": 21932318
+       }
+      },
+      "property": "P57",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P4947": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "506576"
+      },
+      "property": "P4947",
+      "snaktype": "value"
+     }
+    }
+   ]
+  }
+ },
+ "Q4782241": {
+  "id": "Q4782241",
+  "labels": {
+   "en": {
+    "language": "en",
+    "value": "Apthamitra"
+   }
+  },
+  "descriptions": {
+   "en": {
+    "language": "en",
+    "value": "2004 film directed by P. Vasu"
+   }
+  },
+  "claims": {
+   "P57": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q3535762",
+        "numeric-id": 3535762
+       }
+      },
+      "property": "P57",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P364": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q33673",
+        "numeric-id": 33673
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P577": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 9,
+        "time": "+2004-01-01T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P345": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "tt1339248"
+      },
+      "property": "P345",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P144": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q3530081",
+        "numeric-id": 3530081
+       }
+      },
+      "property": "P144",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P495": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q668",
+        "numeric-id": 668
+       }
+      },
+      "property": "P495",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P4947": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "282554"
+      },
+      "property": "P4947",
+      "snaktype": "value"
+     }
+    }
+   ]
+  }
+ },
+ "Q3764588": {
+  "id": "Q3764588",
+  "labels": {
+   "en": {
+    "language": "en",
+    "value": "Bhool Bhulaiyaa"
+   }
+  },
+  "descriptions": {
+   "en": {
+    "language": "en",
+    "value": "2007 Indian film directed by Priyadarshan"
+   }
+  },
+  "claims": {
+   "P57": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q3115713",
+        "numeric-id": 3115713
+       }
+      },
+      "property": "P57",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P364": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q1568",
+        "numeric-id": 1568
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P577": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 11,
+        "time": "+2007-10-12T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P345": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "tt0995031"
+      },
+      "property": "P345",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P156": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q67200799",
+        "numeric-id": 67200799
+       }
+      },
+      "property": "P156",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P144": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q3530081",
+        "numeric-id": 3530081
+       }
+      },
+      "property": "P144",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P495": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q668",
+        "numeric-id": 668
+       }
+      },
+      "property": "P495",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P4947": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "19025"
+      },
+      "property": "P4947",
+      "snaktype": "value"
+     }
+    }
+   ]
+  }
+ },
+ "Q7286314": {
+  "id": "Q7286314",
+  "labels": {
+   "en": {
+    "language": "en",
+    "value": "Rajmohol"
+   }
+  },
+  "descriptions": {
+   "en": {
+    "language": "en",
+    "value": "2005 film by Swapan Saha"
+   }
+  },
+  "claims": {
+   "P57": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q7653795",
+        "numeric-id": 7653795
+       }
+      },
+      "property": "P57",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P364": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q9610",
+        "numeric-id": 9610
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P577": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 9,
+        "time": "+2005-01-01T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P345": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "tt1339353"
+      },
+      "property": "P345",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P144": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q3530081",
+        "numeric-id": 3530081
+       }
+      },
+      "property": "P144",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P495": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q668",
+        "numeric-id": 668
+       }
+      },
+      "property": "P495",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P4947": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "609956"
+      },
+      "property": "P4947",
+      "snaktype": "value"
+     }
+    }
+   ]
+  }
+ }
+}

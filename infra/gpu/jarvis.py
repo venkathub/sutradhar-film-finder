@@ -123,6 +123,7 @@ class Deps:
     list_instances: Callable[[Any], list[Any]]
     probe_health: Callable[[str, float], bool]
     run_smoke: Callable[[str, Settings], EndpointStatus]
+    remove_scripts: Callable[[Any], int] = lambda client: 0
     monotonic: Callable[[], float] = time.monotonic
     sleep: Callable[[float], None] = time.sleep
     log: Callable[[str], None] = lambda msg: print(msg, flush=True)
@@ -164,6 +165,13 @@ def _default_deps() -> Deps:
         probe_settings = settings.model_copy(update={"llm_base_url": base_url})
         return LLMClient(probe_settings).health()
 
+    def remove_scripts(client: Any) -> int:
+        removed = 0
+        for s in list(client.scripts.list()):
+            if s.script_name == INSTANCE_NAME and client.scripts.remove(s.script_id):
+                removed += 1
+        return removed
+
     return Deps(
         create_client=create_client,
         close_client=lambda c: c.close(),
@@ -172,6 +180,7 @@ def _default_deps() -> Deps:
         list_instances=lambda c: list(c.instances.list()),
         probe_health=probe_health,
         run_smoke=run_smoke,
+        remove_scripts=remove_scripts,
     )
 
 
@@ -250,6 +259,89 @@ def validate(
             except Exception as exc:  # noqa: BLE001
                 ev.detail += f" | TEARDOWN FAILED: {exc} — run `make gpu-nuke`"
                 deps.log(f"  TEARDOWN FAILED for {ev.machine_id}: {exc}")
+        try:  # script-quota hygiene: a leaked startup script blocks future runs (3-slot cap)
+            deps.remove_scripts(client)
+        except Exception as exc:  # noqa: BLE001
+            deps.log(f"  script cleanup failed (non-fatal): {exc}")
+        deps.close_client(client)
+
+
+def extract_session(
+    settings: Settings | None = None,
+    deps: Deps | None = None,
+    *,
+    health_timeout_s: float = DEFAULT_HEALTH_TIMEOUT_S,
+    poll_interval_s: float = DEFAULT_POLL_INTERVAL_S,
+) -> Evidence:
+    """P1 task 11: create -> serve -> run candidate-edge extraction -> destroy (DEC-P1-4).
+
+    Reuses the validated P0 lifecycle; the extraction batch runs in a subprocess with
+    ``LLM_BASE_URL`` pointed at the fresh instance, so the pipeline code stays
+    provider-agnostic. Teardown guaranteed in ``finally``; artifact + candidate_edges
+    persist before destroy.
+    """
+    settings = settings or get_settings()
+    deps = deps or _default_deps()
+    ev = Evidence(requested_model=settings.llm_model, gpu_type=settings.gpu_type)
+
+    client = deps.create_client(settings)
+    instance: Any = None
+    try:
+        deps.log(f"[gpu-extract] creating {settings.gpu_type} to serve {settings.llm_model} …")
+        t0 = deps.monotonic()
+        script = build_startup_script(settings.llm_model)
+        instance = deps.create_instance(client, settings, script)
+        ev.machine_id = getattr(instance, "machine_id", None)
+        deps.log(f"  instance {ev.machine_id} running; waiting for vLLM /health …")
+
+        base_url = _wait_for_endpoint(
+            instance, deps, timeout_s=health_timeout_s, poll_interval_s=poll_interval_s
+        )
+        if base_url is None:
+            ev.status = "off"
+            ev.detail = f"vLLM did not become healthy within {health_timeout_s}s"
+            return ev
+        ev.create_to_up_s = round(deps.monotonic() - t0, 1)
+        ev.booted = True
+
+        deps.log(f"  running extraction batch against {base_url} …")
+        import os
+        import subprocess
+
+        env = {**os.environ, "LLM_BASE_URL": base_url, "LLM_TIMEOUT_S": "180"}
+        proc = subprocess.run(  # noqa: S603 — our own entrypoint, controlled args
+            [sys.executable, "data-pipeline/extract_candidates.py"],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=3600,
+        )
+        deps.log(proc.stdout)
+        if proc.stderr:
+            deps.log(proc.stderr)
+        ev.status = "up" if proc.returncode == 0 else "error"
+        ev.detail = (
+            "extraction batch complete (artifact + candidate_edges persisted)"
+            if proc.returncode == 0
+            else f"extraction exited {proc.returncode}"
+        )
+        return ev
+    except Exception as exc:  # noqa: BLE001 — record, then guarantee teardown in finally
+        ev.status = "error"
+        ev.detail = f"{type(exc).__name__}: {exc}"
+        return ev
+    finally:
+        if instance is not None and ev.machine_id is not None:
+            try:
+                ev.destroyed = deps.destroy_instance(client, ev.machine_id)
+                deps.log(f"  destroyed instance {ev.machine_id}: {ev.destroyed}")
+            except Exception as exc:  # noqa: BLE001
+                ev.detail += f" | TEARDOWN FAILED: {exc} — run `make gpu-nuke`"
+                deps.log(f"  TEARDOWN FAILED for {ev.machine_id}: {exc}")
+        try:  # script-quota hygiene: a leaked startup script blocks future runs (3-slot cap)
+            deps.remove_scripts(client)
+        except Exception as exc:  # noqa: BLE001
+            deps.log(f"  script cleanup failed (non-fatal): {exc}")
         deps.close_client(client)
 
 
@@ -287,10 +379,14 @@ def main(argv: list[str] | None = None) -> int:
         ev = validate()
         _write_evidence(ev)
         return 0 if ev.booted and ev.destroyed else 1
+    if cmd == "extract":
+        ev = extract_session()
+        _write_evidence(ev)
+        return 0 if ev.status == "up" and ev.destroyed else 1
     if cmd == "nuke":
         nuke()
         return 0
-    print(f"usage: jarvis.py [validate|nuke]  (got {cmd!r})")
+    print(f"usage: jarvis.py [validate|extract|nuke]  (got {cmd!r})")
     return 2
 
 

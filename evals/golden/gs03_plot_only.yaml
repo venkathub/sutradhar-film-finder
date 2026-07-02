@@ -1,0 +1,54 @@
+# GS-03 — Plot-only retrieval (no title/actor anchor). Retrieval scoring is P2;
+# P1 freezes the fixtures (expected works verified in-graph).
+fixtures:
+  - id: GS-03a
+    name: Drishyam from plot semantics
+    category: plot-only
+    subsystem: retrieval
+    query: >
+      a schoolteacher with no formal education outwits the police investigating
+      a death in his household
+    query_lang: en
+    expected:
+      canonical_work: Drishyam
+      canonical_year: 2013
+      versions:
+        - {title: Drishyam, language: ml, year: 2013, is_original: true}
+    gating_metric: Recall@k / MRR (plot-only slice)
+    must_not:
+      - rely on a title token being present
+    verify_source: [Q15401703]
+  - id: GS-03b
+    name: Sholay from plot semantics
+    category: plot-only
+    subsystem: retrieval
+    query: >
+      two small-time crooks are hired by a retired policeman to capture the
+      bandit who massacred his family
+    query_lang: en
+    expected:
+      canonical_work: Sholay
+      canonical_year: 1975
+      versions:
+        - {title: Sholay, language: hi, year: 1975, is_original: true}
+    gating_metric: Recall@k / MRR (plot-only slice)
+    must_not:
+      - surface a Drishyam-family film (set must not be single-franchise-biased)
+    verify_source: [Q949228]
+  - id: GS-03c
+    name: Baahubali from plot semantics
+    category: plot-only
+    subsystem: retrieval
+    query: >
+      a man raised in a village below a waterfall climbs it and discovers he is
+      heir to a warring kingdom
+    query_lang: en
+    expected:
+      canonical_work: "Baahubali: The Beginning"
+      canonical_year: 2015
+      versions:
+        - {title: "Baahubali: The Beginning", language: te, year: 2015, is_original: true}
+    gating_metric: Recall@k / MRR (plot-only slice)
+    must_not:
+      - rely on the title token Baahubali
+    verify_source: [Q13897247]

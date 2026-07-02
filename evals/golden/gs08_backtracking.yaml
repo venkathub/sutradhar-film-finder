@@ -1,0 +1,41 @@
+# GS-08 — Backtracking refinement (multi-turn). Ordered queries; expected_tool_calls
+# mirror the turn sequence (refine_filter over the standing version set).
+fixtures:
+  - id: GS-08a
+    name: Refine by actor, backtrack to original, then Telugu
+    category: backtracking
+    subsystem: generation/backtrack
+    query:
+      - the Drishyam with Ajay Devgn
+      - no, the original one
+      - is there a Telugu one?
+    query_lang: en
+    expected:
+      canonical_work: Drishyam
+      canonical_year: 2013
+      versions:  # expected answer per turn, in order
+        - {title: Drishyam, language: hi, year: 2015, relationship: is_remake_of}
+        - {title: Drishyam, language: ml, year: 2013, is_original: true, relationship: is_original_of}
+        - {title: Drushyam, language: te, year: 2014, relationship: is_remake_of}
+    gating_metric: backtracking coherence
+    must_not:
+      - lose context between turns
+      - re-answer turn 1 after the correction
+    verify_source: [Q19824636, Q15401703, Q16248158]
+    expected_tool_calls:
+      - tool: resolve_title
+        arguments: {title: Drishyam}
+      - tool: get_versions
+        arguments: {work_id: $work_id, scope: indian}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {actor: Ajay Devgn}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {era: original}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {language: te}

@@ -9,9 +9,21 @@ authors = [{ name = "Sutradhar" }]
 # Runtime dependencies are added by the tasks that introduce them (config/serving/hf),
 # keeping each P0 commit small and focused.
 dependencies = [
+    "pydantic>=2.7",
     "pydantic-settings>=2.4",
     "openai>=1.40",
     "huggingface-hub>=1.0",
+    # Graph store (P1, DEC-P1-2): typed ORM schema + migrations over Postgres.
+    "sqlalchemy>=2.0",
+    "alembic>=1.13",
+    "psycopg[binary]>=3.2",
+    # Seed-slice loading (P1 task 3).
+    "pyyaml>=6.0",
+    # Ingestion connectors + CLIs (P1 task 4+): httpx per P1_SPEC §2.8, typer per DEC-P1-6.
+    "httpx>=0.27",
+    "typer>=0.12",
+    "indic-transliteration>=2.3.82",
+    "rapidfuzz>=3.14.5",
 ]
 
 [dependency-groups]
@@ -19,13 +31,14 @@ dev = [
     "pytest>=8.2",
     "ruff>=0.6",
     "mypy>=1.11",
-    # Integration-test clients for the local compose stack (not runtime deps).
-    "psycopg[binary]>=3.2",
+    # Integration-test client for Redis in the local compose stack (not a runtime dep).
+    # (psycopg moved to runtime deps in P1: the graph store is application code.)
     "redis>=5.0",
     # On-demand GPU lifecycle (infra/gpu/jarvis.py) — used only by make gpu-validate/nuke.
     "jarvislabs>=0.2",
-    # CI workflow meta-tests (parse .github/workflows/*.yml).
-    "pyyaml>=6.0",
+    # Type stubs for mypy-strict (yaml used by sutradhar.pipeline.seed + CI meta-tests).
+    "types-pyyaml>=6.0",
+    "jsonschema>=4.26.0",
 ]
 
 [build-system]
@@ -54,6 +67,11 @@ disallow_untyped_defs = true
 [[tool.mypy.overrides]]
 # Third-party SDK without type stubs (used only by infra/gpu/jarvis.py).
 module = ["jarvislabs.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Pure-Python transliteration lib without py.typed (DEC-P1-5; sutradhar.pipeline.normalize).
+module = ["indic_transliteration.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
