@@ -60,6 +60,34 @@ make up && uv run pytest -m integration        # constraints + gate views on rea
 Integration tests apply migrations themselves and roll back per-test; CI runs them in the Tier-1
 compose job.
 
+## Seed slice (P1 task 3 — built)
+
+`data-pipeline/seed_slice.yaml` is the committed vertical slice (P1_SPEC §2.7): 15 works /
+31 versions covering every flagship chain — Drishyam (5 Indian + 2 foreign versions), Drishyam 2
+(`is_sequel_of` work), Baahubali (bilingual double-original + hi/ml dub tracks), Devdas novella +
+3 sibling adaptations (`based_on`, with the Tamil dub composing inside Devadasu), Vikram 1986/2022
+(false-merge pair), the Manichitrathazhu transitive chain (Chandramukhi → Apthamitra proximate
+edge), and 5 distractors. It is both the ingestion input **and** the curated-truth denominator for
+the graph-coverage metric.
+
+Every QID was confirmed against live Wikidata (2026-07-02; evidence per row in the YAML notes).
+Notable curation findings, encoded not smoothed over:
+
+- **Wikidata's P144 spine is incomplete:** only the hi-2015 and zh-2019 Drishyam remakes carry
+  `based on` edges — the kn/te/ta/si remakes don't. That gap is the extraction layer's measured
+  lift target.
+- **Bilingual originals share one Wikidata item:** `version.wikidata_qid` is UNIQUE, so the QID
+  sits on the primary original (Baahubali te) and the co-original (ta) carries none.
+- **Devadasu 1953 dub-vs-bilingual is contested** (spec says Tamil dub; Wikidata P364 lists both
+  te+ta) — flagged for the conflicts queue at ingestion, not silently picked.
+- **Reported-but-unconfirmed versions** (Korean/Indonesian/US Drishyam, Dharmayuddhaya 2 — whose
+  Wikidata item exists but is vandalized) live in a `backlog` list: name + reason only, no
+  invented records, excluded from every denominator (§7 Q1).
+
+Loader: `sutradhar.pipeline.seed.load_seed_slice()` — typed pydantic validation (dangling
+relationship targets, works without originals, duplicate QIDs, literary sources with versions all
+rejected at load).
+
 ## Planned (remaining P1 tasks)
 - Ingest from Wikidata SPARQL (relationship spine: P144/P1877/P4969, P155/P156/P179), TMDB
   (`translations`, `alternative_titles`, credits), IMDb `title.akas` (slice-filtered), Wikipedia

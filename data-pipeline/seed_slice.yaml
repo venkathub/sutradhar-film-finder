@@ -1,0 +1,406 @@
+# Sutradhar P1 seed slice (P1_SPEC §2.7, resolved §7 Q1) — the vertical slice every golden
+# scenario stands on. ~30 records: every flagship chain + distractor noise floor.
+#
+# Ground truth curated 2026-07-02: QIDs confirmed against live Wikidata (wbsearchentities +
+# wbgetentities; evidence = description, P577 publication date, P364 original language, director).
+# Every row remains a CLAIM to re-verify during ingestion (GOLDEN_SET_SCENARIOS.md data-accuracy
+# note); disagreements go to the conflicts queue, never silently resolved.
+#
+# Modelling notes (P1_SPEC §2.2/§2.7):
+# - `relationship.of` records the PROXIMATE source (Chandramukhi -> Apthamitra, not the ml
+#   original); the Work groups the whole lineage and derives the ultimate original.
+# - Bilingual originals are ONE Wikidata item but TWO version rows; the QID sits on the primary
+#   original because version.wikidata_qid is UNIQUE (Baahubali te carries Q13897247, ta carries
+#   none).
+# - The `backlog` list holds reported-but-unconfirmed versions (§7 Q1 conditional adds): no clean
+#   structured record on 2026-07-02, so they are NOT versions and NOT in any coverage denominator.
+#   Never hand-invented.
+
+meta:
+  verified_at: "2026-07-02"
+  description: >
+    P1 vertical seed slice: Drishyam family (incl. sequel + foreign), Baahubali, Devdas
+    novella + sibling adaptations, Vikram pair, Manichitrathazhu transitive chain, and
+    distractors. Curated truth = the version sets below (graph-coverage denominators).
+
+works:
+  # --- Drishyam family (GS-01/03/07/08/09A/11) -------------------------------------------
+  drishyam:
+    franchise: drishyam
+    work_type: film
+    primary_title: Drishyam
+    original_language: ml
+    first_release_year: 2013
+    versions:
+      drishyam_ml:
+        title: Drishyam
+        language: ml
+        release_year: 2013
+        country: indian
+        is_original: true
+        wikidata_qid: Q15401703
+      drishya_kn:
+        title: Drishya
+        language: kn
+        release_year: 2014
+        country: indian
+        wikidata_qid: Q17052094
+        relationship: { type: is_remake_of, of: drishyam_ml }
+        note: no P144 edge on Wikidata as of 2026-07-02 — extraction-layer lift candidate
+      drushyam_te:
+        title: Drushyam
+        language: te
+        release_year: 2014
+        country: indian
+        wikidata_qid: Q16248158
+        relationship: { type: is_remake_of, of: drishyam_ml }
+        note: no P144 edge on Wikidata as of 2026-07-02 — extraction-layer lift candidate
+      papanasam_ta:
+        title: Papanasam
+        language: ta
+        release_year: 2015
+        country: indian
+        wikidata_qid: Q18129183
+        relationship: { type: is_remake_of, of: drishyam_ml }
+        note: no P144 edge on Wikidata as of 2026-07-02 — extraction-layer lift candidate
+      drishyam_hi:
+        title: Drishyam
+        language: hi
+        release_year: 2015
+        country: indian
+        wikidata_qid: Q19824636
+        relationship: { type: is_remake_of, of: drishyam_ml }
+        note: P144 -> Q15401703 present on Wikidata
+      dharmayuddhaya_si:
+        title: Dharmayuddhaya
+        language: si
+        release_year: 2017
+        country: foreign
+        wikidata_qid: Q30647147
+        relationship: { type: is_remake_of, of: drishyam_ml }
+        note: no P144 edge on Wikidata as of 2026-07-02 — extraction-layer lift candidate
+      sheep_without_a_shepherd_zh:
+        title: Sheep Without a Shepherd
+        language: zh
+        release_year: 2019
+        country: foreign
+        wikidata_qid: Q79325356
+        relationship: { type: is_remake_of, of: drishyam_ml }
+        note: P144 -> Q15401703 present on Wikidata; altered ending
+
+  drishyam_2: # sequel = separate Work with its own version set (GS-06)
+    franchise: drishyam
+    work_type: film
+    primary_title: Drishyam 2
+    original_language: ml
+    first_release_year: 2021
+    is_sequel_of: drishyam
+    versions:
+      drishyam2_ml:
+        title: Drishyam 2
+        language: ml
+        release_year: 2021
+        country: indian
+        is_original: true
+        wikidata_qid: Q102036246
+      drishya2_kn:
+        title: Drishya 2
+        language: kn
+        release_year: 2021
+        country: indian
+        wikidata_qid: Q110555107
+        relationship: { type: is_remake_of, of: drishyam2_ml }
+        note: thin Wikidata item (no P577) — identity via description + director P. Vasu
+      drushyam2_te:
+        title: Drushyam 2
+        language: te
+        release_year: 2021
+        country: indian
+        wikidata_qid: Q105984608
+        relationship: { type: is_remake_of, of: drishyam2_ml }
+        note: thin Wikidata item — identity via description + director Jeethu Joseph + enwiki
+      drishyam2_hi:
+        title: Drishyam 2
+        language: hi
+        release_year: 2022
+        country: indian
+        wikidata_qid: Q112665700
+        relationship: { type: is_remake_of, of: drishyam2_ml }
+        note: P144 -> Q102036246 present on Wikidata
+
+  # --- Baahubali: bilingual double-original + dub tracks (GS-04) -------------------------
+  baahubali_1:
+    franchise: baahubali
+    work_type: film
+    primary_title: "Baahubali: The Beginning"
+    original_language: te
+    first_release_year: 2015
+    versions:
+      baahubali_te:
+        title: "Baahubali: The Beginning"
+        language: te
+        release_year: 2015
+        country: indian
+        is_original: true
+        wikidata_qid: Q13897247
+        note: Wikidata P364 lists both te and ta (bilingual shoot, S. S. Rajamouli)
+      baahubali_ta:
+        title: Baahubali
+        language: ta
+        release_year: 2015
+        country: indian
+        is_original: true # shot simultaneously — second original, same Wikidata item
+        note: shares Q13897247 with the te original; QID unset (version.wikidata_qid UNIQUE)
+      baahubali_hi:
+        title: Baahubali - The Beginning
+        language: hi
+        release_year: 2015
+        country: indian
+        relationship: { type: is_official_dub_of, of: baahubali_te }
+      baahubali_ml:
+        title: Baahubali
+        language: ml
+        release_year: 2015
+        country: indian
+        relationship: { type: is_official_dub_of, of: baahubali_te }
+
+  # --- Devdas: sibling adaptations of one literary source (GS-05) ------------------------
+  devdas_novella:
+    franchise: devdas
+    work_type: literary_source
+    primary_title: Devdas
+    first_release_year: 1917
+    wikidata_qid: Q11169650
+    note: 1917 Bengali novella by Sarat Chandra Chattopadhyay (P31 = literary work)
+
+  devadasu_1953:
+    franchise: devdas
+    work_type: film
+    primary_title: Devadasu
+    original_language: te
+    first_release_year: 1953
+    based_on: devdas_novella
+    versions:
+      devadasu_te:
+        title: Devadasu
+        language: te
+        release_year: 1953
+        country: indian
+        is_original: true
+        wikidata_qid: Q3025390
+      devadas_ta:
+        title: Devadas
+        language: ta
+        release_year: 1953
+        country: indian
+        relationship: { type: is_official_dub_of, of: devadasu_te }
+        note: >
+          spec records ta as an official dub of the te original, but Wikidata P364 on Q3025390
+          lists BOTH te and ta — dub-vs-bilingual must be verified at ingestion; on disagreement
+          this is a conflicts-queue row, not a silent pick.
+
+  devdas_1955:
+    franchise: devdas
+    work_type: film
+    primary_title: Devdas
+    original_language: hi
+    first_release_year: 1955
+    based_on: devdas_novella
+    versions:
+      devdas_1955_hi:
+        title: Devdas
+        language: hi
+        release_year: 1955
+        country: indian
+        is_original: true
+        wikidata_qid: Q771754
+        note: dir. Bimal Roy — sibling adaptation, NOT a remake of Devadasu (GS-05)
+
+  devdas_2002:
+    franchise: devdas
+    work_type: film
+    primary_title: Devdas
+    original_language: hi
+    first_release_year: 2002
+    based_on: devdas_novella
+    versions:
+      devdas_2002_hi:
+        title: Devdas
+        language: hi
+        release_year: 2002
+        country: indian
+        is_original: true
+        wikidata_qid: Q247854
+        note: dir. Sanjay Leela Bhansali — sibling adaptation (GS-05)
+
+  # --- Vikram pair: same title + same lead actor, unrelated Works (GS-10) ----------------
+  vikram_1986:
+    franchise: vikram
+    work_type: film
+    primary_title: Vikram
+    original_language: ta
+    first_release_year: 1986
+    versions:
+      vikram_1986_ta:
+        title: Vikram
+        language: ta
+        release_year: 1986
+        country: indian
+        is_original: true
+        wikidata_qid: Q7929545
+        note: Kamal Haasan — must NOT merge with Vikram 2022 (false-merge test)
+
+  vikram_2022:
+    franchise: vikram
+    work_type: film
+    primary_title: Vikram
+    original_language: ta
+    first_release_year: 2022
+    versions:
+      vikram_2022_ta:
+        title: Vikram
+        language: ta
+        release_year: 2022
+        country: indian
+        is_original: true
+        wikidata_qid: Q102147287
+        note: Kamal Haasan, dir. Lokesh Kanagaraj — unrelated to Vikram 1986
+
+  # --- Manichitrathazhu: transitive remake chain (GS-09B) --------------------------------
+  manichitrathazhu:
+    franchise: manichitrathazhu
+    work_type: film
+    primary_title: Manichitrathazhu
+    original_language: ml
+    first_release_year: 1993
+    versions:
+      manichitrathazhu_ml:
+        title: Manichitrathazhu
+        language: ml
+        release_year: 1993
+        country: indian
+        is_original: true
+        wikidata_qid: Q3530081
+      apthamitra_kn:
+        title: Apthamitra
+        language: kn
+        release_year: 2004
+        country: indian
+        wikidata_qid: Q4782241
+        relationship: { type: is_remake_of, of: manichitrathazhu_ml }
+      chandramukhi_ta:
+        title: Chandramukhi
+        language: ta
+        release_year: 2005
+        country: indian
+        wikidata_qid: Q1193810
+        relationship: { type: is_remake_of, of: apthamitra_kn }
+        note: remake of Apthamitra, NOT of the ml original — proximate edge preserved (§2.7)
+      rajmohol_bn:
+        title: Rajmohol
+        language: bn
+        release_year: 2005
+        country: indian
+        wikidata_qid: Q7286314
+        relationship: { type: is_remake_of, of: chandramukhi_ta }
+        note: proximate source reported as Chandramukhi (dir. Swapan Saha) — verify at ingestion
+      bhool_bhulaiyaa_hi:
+        title: Bhool Bhulaiyaa
+        language: hi
+        release_year: 2007
+        country: indian
+        wikidata_qid: Q3764588
+        relationship: { type: is_remake_of, of: manichitrathazhu_ml }
+        note: dir. Priyadarshan (also dir. of a Manichitrathazhu segment) — direct ml remake
+
+  # --- Distractors: noise floor so GS-02/GS-03 negatives aren't trivially empty ----------
+  lucifer_2019:
+    franchise: distractors
+    work_type: film
+    primary_title: Lucifer
+    original_language: ml
+    first_release_year: 2019
+    versions:
+      lucifer_ml:
+        title: Lucifer
+        language: ml
+        release_year: 2019
+        country: indian
+        is_original: true
+        wikidata_qid: Q55621418
+        note: Mohanlal — second Mohanlal title (shared-cast noise vs Drishyam)
+
+  anbe_sivam_2003:
+    franchise: distractors
+    work_type: film
+    primary_title: Anbe Sivam
+    original_language: ta
+    first_release_year: 2003
+    versions:
+      anbe_sivam_ta:
+        title: Anbe Sivam
+        language: ta
+        release_year: 2003
+        country: indian
+        is_original: true
+        wikidata_qid: Q3418126
+        note: Kamal Haasan — second Kamal Haasan title (shared-cast noise vs Papanasam/Vikram)
+
+  sholay_1975:
+    franchise: distractors
+    work_type: film
+    primary_title: Sholay
+    original_language: hi
+    first_release_year: 1975
+    versions:
+      sholay_hi:
+        title: Sholay
+        language: hi
+        release_year: 1975
+        country: indian
+        is_original: true
+        wikidata_qid: Q949228
+
+  magadheera_2009:
+    franchise: distractors
+    work_type: film
+    primary_title: Magadheera
+    original_language: te
+    first_release_year: 2009
+    versions:
+      magadheera_te:
+        title: Magadheera
+        language: te
+        release_year: 2009
+        country: indian
+        is_original: true
+        wikidata_qid: Q1134677
+
+  kgf_chapter_1:
+    franchise: distractors
+    work_type: film
+    primary_title: "K.G.F: Chapter 1"
+    original_language: kn
+    first_release_year: 2018
+    versions:
+      kgf1_kn:
+        title: "K.G.F: Chapter 1"
+        language: kn
+        release_year: 2018
+        country: indian
+        is_original: true
+        wikidata_qid: Q21646605
+
+# Reported versions with NO clean structured record on 2026-07-02 (§7 Q1 conditional adds):
+# breadth backlog, never hand-invented, excluded from every coverage denominator.
+backlog:
+  - name: Drishyam Korean remake (reported)
+    reason: no Wikidata entity; not in P144 backlinks of Q15401703
+  - name: Drishyam Indonesian remake (reported)
+    reason: no Wikidata entity; not in P144 backlinks of Q15401703
+  - name: Drishyam US remake (reported)
+    reason: no Wikidata entity; not in P144 backlinks of Q15401703
+  - name: Dharmayuddhaya 2 (Sinhala Drishyam 2 remake, reported)
+    reason: >
+      Q137599605 exists but its claims are vandalized/junk (IMDb tt0000000 placeholder,
+      unrelated Letterboxd id, no P577/P364/P144) — fails the clean-structured-record bar.

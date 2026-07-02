@@ -17,6 +17,8 @@ dependencies = [
     "sqlalchemy>=2.0",
     "alembic>=1.13",
     "psycopg[binary]>=3.2",
+    # Seed-slice loading (P1 task 3).
+    "pyyaml>=6.0",
 ]
 
 [dependency-groups]
@@ -29,8 +31,8 @@ dev = [
     "redis>=5.0",
     # On-demand GPU lifecycle (infra/gpu/jarvis.py) — used only by make gpu-validate/nuke.
     "jarvislabs>=0.2",
-    # CI workflow meta-tests (parse .github/workflows/*.yml).
-    "pyyaml>=6.0",
+    # Type stubs for mypy-strict (yaml used by sutradhar.pipeline.seed + CI meta-tests).
+    "types-pyyaml>=6.0",
 ]
 
 [build-system]
