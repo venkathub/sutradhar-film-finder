@@ -202,6 +202,31 @@ skipped and reported (their story lives in the parent film's article — extract
   recomputes all interim keys, populates `version_title.script`. Live 2026-07-02: +8 canonical
   rows, 88 keys recomputed, 278 scripts populated (index: 209 latn / 69 native-script rows).
 
+## Graph builder (P1 task 9 — built)
+
+`sutradhar.pipeline.build` + `data-pipeline/build_graph.py` (`make build-graph`;
+`make ingest-seed` now chains the whole flow: spine → tmdb → akas → plots → rekey → build):
+
+- **Dub-vs-remake rule as a pure function** (DATA_SOURCES.md): lead-cast overlap (relative to
+  the smaller lead set) ≥ 0.5 → `is_official_dub_of`; disjoint → `is_remake_of`; missing
+  evidence → abstain. Every version-level edge is **cross-checked**: agreement is counted as
+  corroboration; disagreement opens an `edge_type` conflict — **never a silent re-type** —
+  hiding the edge from the gate views until human resolution.
+- **Dub-track edge derivation:** QID-less, non-original tracks (they exist only as tracks of
+  their film — no external record of their own) get `is_official_dub_of` → primary original,
+  `confidence=MEDIUM` with an honest `rule` source ref (DEC-P1-3 amendment). The human gate
+  (task 12) promotes them.
+- **What the builder never does:** write remake edges from seed curation — the Wikidata gap
+  stays visible for extraction + review (lift attribution intact). Edge origins are separable
+  by `sources[0].source`: 12 wikidata / 3 rule after the live run.
+- Integrity checks: films without originals, >2 originals flagged as anomalies (live: none).
+
+Live run 2026-07-02: **8/8 Wikidata remake edges rule-confirmed** (disjoint lead casts — every
+remake typing corroborated by TMDB credits), **3 dub edges derived** (Baahubali hi/ml, Devadas
+ta), 0 conflicts, 0 anomalies; graph = 15 works / 31 versions / 15 edges. Re-run → all zeros.
+Named regressions green here: `test_gs04_dub_vs_remake`, `test_gs05_sibling_vs_remake`,
+`test_gs10_false_merge`, + the rule-disagreement conflict gate.
+
 ## Planned (remaining P1 tasks)
 - Ingest from Wikidata SPARQL (relationship spine: P144/P1877/P4969, P155/P156/P179), TMDB
   (`translations`, `alternative_titles`, credits), IMDb `title.akas` (slice-filtered), Wikipedia

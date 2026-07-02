@@ -24,13 +24,20 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 
 class SourceId(StrEnum):
-    """Where a claim comes from (P1_SPEC §2.2 SourceRef contract)."""
+    """Where a claim comes from (P1_SPEC §2.2 SourceRef contract).
+
+    ``RULE`` (DEC-P1-3 amendment, task 9): evidence produced by a documented deterministic
+    rule (e.g. the dub-vs-remake lead-cast rule) — recorded honestly as its own source id,
+    never disguised as a human or external source. Rule-only claims are MEDIUM by the
+    tier table ("a derived rule with no corroboration").
+    """
 
     WIKIDATA = "wikidata"
     TMDB = "tmdb"
     IMDB = "imdb"
     WIKIPEDIA = "wikipedia"
     HUMAN = "human"
+    RULE = "rule"
 
 
 class Confidence(StrEnum):

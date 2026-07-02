@@ -463,3 +463,17 @@ IndicXlit remains the unused contingency.
 **Consequences.** `sutradhar.pipeline.normalize` implements this; `make rekey-titles`
 re-keys existing rows idempotently; `resolve_title.candidates[].score` = the rapidfuzz
 0–1 value (TOOL_SCHEMA v0 semantics).
+
+## DEC-P1-3 amendment — `SourceId` gains `rule` (2026-07-02, task 9)
+
+**Context.** The dub-vs-remake rule *derives* edges (dub tracks) and evidence. Recording rule
+output under `human` or an external source would be dishonest provenance; leaving `sources[]`
+empty is gate-forbidden.
+
+**Decision.** The pydantic `SourceId` enum (write-boundary contract) gains **`rule`** for
+evidence produced by a documented deterministic rule (`ref` names the rule, e.g.
+`dub-track-rule`, `lead-cast-overlap-rule`). Rule-only claims are **MEDIUM** by the tier table
+("a derived rule with no corroboration") — live but flagged, promotable by the human gate.
+DB-side nothing changes (`sources` is jsonb; no CHECK on content). Edge origins are now
+separable by `sources[0].source`: wikidata / rule / (later) wikipedia-extraction — which is
+what keeps the extraction-lift metric attributable.

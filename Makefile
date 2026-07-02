@@ -8,7 +8,7 @@
 COMPOSE ?= docker compose -f infra/docker-compose.yml
 
 .DEFAULT_GOAL := help
-.PHONY: help setup fmt lint typecheck test test-int check up down down-v db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles \
+.PHONY: help setup fmt lint typecheck test test-int check up down down-v db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ingest-seed \
         smoke hf-check gpu-validate gpu-nuke
 
 help: ## List available targets
@@ -61,6 +61,11 @@ fetch-plots: ## Fetch revision-pinned Wikipedia plots into plot_texts (needs ing
 
 rekey-titles: ## Re-key version_title with full transliteration + script detection (task 8)
 	uv run python data-pipeline/rekey_titles.py
+
+build-graph: ## Dub-vs-remake rule cross-check + dub-track edges + integrity report (task 9)
+	uv run python data-pipeline/build_graph.py
+
+ingest-seed: ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ## Full seed-slice ingestion chain (needs up + db-migrate + TMDB_API_KEY)
 
 smoke: ## LLM connectivity smoke test (green whether the GPU endpoint is up or off)
 	uv run python -m sutradhar.serving.smoke
