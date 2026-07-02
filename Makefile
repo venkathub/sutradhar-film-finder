@@ -97,6 +97,15 @@ gpu-validate: ## One-time ephemeral JarvisLabs create->serve->smoke->destroy val
 gpu-nuke: ## Safety: destroy any stray tagged JarvisLabs instance (no leaked GPU)
 	uv run python infra/gpu/jarvis.py nuke
 
+judge-worksheet: ## P3: build the ~24-item judge human-labelling worksheet from the committed gen run
+	uv run python evals/judge_validate.py generate
+
+judge-validate: ## P3: judge pass over the labelled worksheet -> kappa agreement report (needs JUDGE_BASE_URL)
+	uv run python evals/judge_validate.py report
+
+gpu-judge: ## P3: ephemeral judge session (serve JUDGE_MODEL + BGE-M3 -> kappa report -> destroy)
+	uv run python infra/gpu/jarvis.py judge
+
 build-corpus: ## P2: gate-visible plot chunks + metadata cards -> chunks table (all ablation configs)
 	uv run python rag-engine/build_corpus.py
 

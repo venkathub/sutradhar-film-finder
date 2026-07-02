@@ -145,6 +145,28 @@ live Postgres graph with a scripted mock model that binds REAL ids from prior to
 all five v0 tools exercised, every result v0-shape-valid, DEC-P3-5 sequence score 1.0 with
 benign extras tolerated, zero hallucinated movies.
 
+## LLM-as-judge (P3 task 7 — `sutradhar.evals.judge`, DEC-P3-1)
+
+Self-hosted OSS judge (gpt-oss-20b primary, Phi-4-14B alternate) served by vLLM in a
+**short ephemeral GPU session** (`make gpu-judge`: serve `JUDGE_MODEL` + BGE-M3 → run the
+κ report → destroy; teardown guaranteed). The client is OpenAI-compatible and env-driven
+(`JUDGE_BASE_URL`/`JUDGE_MODEL`/`JUDGE_API_KEY`), so the DEC-P3-1 self-hosted ↔ frontier
+escalation is pure config — proven by test against both endpoint styles.
+
+- **Governance pins:** rubric prompts live in-repo (`evals/prompts/judge_coherence_v1.md`,
+  `judge_faithfulness_v1.md`) and hash into `JudgeConfig` (separate from the base-model
+  `prompt_hash`); temperature 0; guided decoding + pinned low reasoning effort on the wire
+  (gpt-oss-20b is a reasoning model). Malformed judge output → `judge_error` recorded,
+  never a crash; a judge_error binarizes to the negative class so it *hurts* agreement
+  rather than hiding.
+- **Human-agreement validation** (`sutradhar.evals.judge_validation`, blocks the judge
+  freeze — task 13): `make judge-worksheet` builds the ~24-item blind worksheet from
+  committed transcripts (+ deterministic foils: a re-answer-turn-1 coherence foil and an
+  invented-movie faithfulness foil; provenance in a separate key file), the human fills
+  every `human_label`, `make judge-validate` scores it with the pinned judge and reports
+  percent agreement + **Cohen's κ (gate: ≥ 0.6)** → `evals/judge_validation/report.json`.
+  Judge–human agreement result: _pending task 13 (the labelling + ephemeral GPU session)_.
+
 ## Planned (P3+)
 - Retrieval eval harness + metrics — **landed in P2** (see above).
 - Frozen prompt artifacts — **landed in P3 task 3** (see above).
