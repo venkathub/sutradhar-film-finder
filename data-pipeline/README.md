@@ -246,6 +246,29 @@ Named regressions green here: `test_gs02_no_hallucinated_movie` (decoys resolve 
 conflated), `test_gs09_scoping` (indian/foreign/all partition exact), `test_gs09_transitive_lineage`
 (full lineage, sole ml original — the proximate-edge assertion joins with the task-14 fixtures).
 
+## LLM candidate-edge extraction (P1 task 11 — built + real GPU run done)
+
+`sutradhar.pipeline.extract` + `data-pipeline/extract_candidates.py` (`make extract-candidates`;
+GPU lifecycle: `infra/gpu/jarvis.py extract` — create → serve → extract → **destroy**, with
+script-quota cleanup):
+
+- **Honesty contract:** model output validates against a pydantic schema — malformed output is
+  dropped + counted, never repaired; the `supporting_sentence` must appear **verbatim**
+  (whitespace-normalized) in the source text or the proposal is dropped as unsupported; every
+  candidate carries page + revision pin, model id, and an `extraction_run` hash (prompt + model
+  + revisions). Title→version binding is conservative (unambiguous ≥0.9 `resolve_title` hit);
+  raw strings always kept for the reviewer. **Nothing touches `edges`** — quarantine tested.
+- **vLLM guided decoding required** (DEC-P1-4 amendment): free-form prompting of the 4B base
+  gave 92.6% parse failures; `guided_json` + temperature 0 gave **7.4%**.
+
+**Real GPU run 2026-07-02** (ephemeral A100, machine 437943, ~50 min ≈ $1, destroyed; artifact
+`data/raw/extraction/20260702T085302Z`, run hash `3e37549f492bd2fc`): 27 pages → 72 proposals
+→ 14 dropped by the verbatim guard → **58 candidates** (27 both-ends bound, 31 raw-kept),
+including the Wikidata-missing edges the pipeline was built to recover (Drishya/Drushyam/
+Dharmayuddhaya → Drishyam, **Chandramukhi → Apthamitra** proximate, Baahubali dub mentions) —
+plus honest 4B noise (self-pairs, type confusion, inverted directions) left for the human gate
+to measure as precision (task 12). CI replays a 5-page slice of the **real** artifact.
+
 ## Planned (remaining P1 tasks)
 - Ingest from Wikidata SPARQL (relationship spine: P144/P1877/P4969, P155/P156/P179), TMDB
   (`translations`, `alternative_titles`, credits), IMDb `title.akas` (slice-filtered), Wikipedia

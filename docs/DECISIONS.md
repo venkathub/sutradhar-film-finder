@@ -477,3 +477,21 @@ evidence produced by a documented deterministic rule (`ref` names the rule, e.g.
 DB-side nothing changes (`sources` is jsonb; no CHECK on content). Edge origins are now
 separable by `sources[0].source`: wikidata / rule / (later) wikipedia-extraction — which is
 what keeps the extraction-lift metric attributable.
+
+## DEC-P1-4 amendment — extraction needs vLLM guided decoding (2026-07-02, task 11 GPU run)
+
+**Measured on the live A100 session:** free-form JSON prompting of base Gemma 4 E4B produced a
+**92.6% parse-failure rate** (single-quoted pseudo-dicts, bare `<end_of_turn>`, prompt echoes).
+Re-running the same 27 pages with **vLLM `guided_json`** (schema-forced decoding from
+`ExtractionResponse.model_json_schema()`, temperature 0) dropped it to **7.4%** (2/27 pages) and
+yielded 72 proposals → 58 candidates after the verbatim-evidence guard (14 unsupported dropped).
+
+**Adjustments (within DEC-P1-4 option A — no model change, no fallback triggered):**
+1. `LLMClient.complete` accepts `temperature` + `extra_body` (guided decoding pass-through).
+2. `parse_extraction_output` takes the FIRST well-formed JSON object and ignores trailing
+   junk (guided decoding can emit continuation noise). Content is never repaired; pydantic
+   still gates every field.
+3. Observed 4B noise (self-pairs, edge-type confusion, inverted directions) is left in
+   `candidate_edges` **by design** — the human gate measures it as precision, not a crash.
+
+The frontier-API fallback stays untriggered pending the task-12 precision measurement.

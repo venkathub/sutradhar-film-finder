@@ -90,12 +90,25 @@ class LLMClient:
     def model(self) -> str:
         return self._settings.llm_model
 
-    def complete(self, prompt: str, max_tokens: int = 1) -> str:
-        """Minimal single-token round-trip used by :meth:`health` step 3."""
+    def complete(
+        self,
+        prompt: str,
+        max_tokens: int = 1,
+        temperature: float | None = None,
+        extra_body: dict[str, Any] | None = None,
+    ) -> str:
+        """Chat completion round-trip (health probe uses 1 token; P1 extraction passes
+        ``temperature=0`` + vLLM ``guided_json`` via ``extra_body`` for schema-forced output)."""
+        kwargs: dict[str, Any] = {}
+        if temperature is not None:
+            kwargs["temperature"] = temperature
+        if extra_body is not None:
+            kwargs["extra_body"] = extra_body
         resp = self._openai.chat.completions.create(
             model=self._settings.llm_model,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=max_tokens,
+            **kwargs,
         )
         return resp.choices[0].message.content or ""
 
