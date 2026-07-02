@@ -269,6 +269,30 @@ Dharmayuddhaya → Drishyam, **Chandramukhi → Apthamitra** proximate, Baahubal
 plus honest 4B noise (self-pairs, type confusion, inverted directions) left for the human gate
 to measure as precision (task 12). CI replays a 5-page slice of the **real** artifact.
 
+## Human review gate (P1 task 12 — built + real review pass done)
+
+`sutradhar.pipeline.review` + `data-pipeline/review_candidates.py` (`make review-candidates`,
+DEC-P1-6): interactive y/n/s CLI **and** batch mode over a committed decisions YAML (the audit
+artifact of a session). Gate semantics, enforced and tested:
+
+- **Promotion is the only candidate→edge path**: confirmed → `human_verified=true` HIGH edge
+  (or corroboration — sources merged onto the existing edge, verified flag set, never a dup),
+  `promoted_edge_id` linking the audit trail. Work-level types (`based_on`/`is_sequel_of`)
+  promote at work level; endpoints may be reviewer-bound (resolution ≠ repair — the model's
+  own bindings can be wrong, observed live). Unbindable confirms are refused, never partial.
+- **Rejection** records reviewer + timestamp and never writes edges. **Skip** = out-of-slice
+  truth (excluded from the precision denominator, logged for the breadth backlog).
+- Rule-derived MEDIUM dub edges have an explicit verification queue (same gate semantics).
+
+**Real review pass 2026-07-02** (reviewer: venkatesh; decisions file
+`data-pipeline/review_decisions_20260702.yaml`, run `3e37549f492bd2fc`): 58 candidates →
+**19 confirmed / 35 rejected / 4 skipped** → **candidate precision 0.352** (the honest 4B
+number: inverted directions, self-pairs, type confusion all rejected). **6 edges created =
+exactly the Wikidata gap** — Drishya, Drushyam, Dharmayuddhaya, Drishya 2, Drushyam 2, and the
+Chandramukhi→Apthamitra **proximate** edge (GS-09B) — plus 13 corroborations and 3 dub-track
+verifications. Graph: 15 → **21 gate-visible edges**; every curated Indian remake edge now
+exists and GS-01 is unblocked.
+
 ## Planned (remaining P1 tasks)
 - Ingest from Wikidata SPARQL (relationship spine: P144/P1877/P4969, P155/P156/P179), TMDB
   (`translations`, `alternative_titles`, credits), IMDb `title.akas` (slice-filtered), Wikipedia
