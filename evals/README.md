@@ -189,6 +189,25 @@ reported, the detector gates.
   (removed `vertexai` module); a `[tool.uv] constraint-dependencies` pin holds the stack
   at `<0.4` until a ragas release absorbs it (see DEC-P3-3 amendment).
 
+## Generation-run artifact + runner (P3 task 9 — `sutradhar.evals.generation_run`)
+
+The committed Table 2 evidence unit, mirroring the P2 retrieval-run pattern (DEC-P2-6):
+`evals/generation_runs/<run_id>.json` embeds every fixture's **full transcript**, its
+deterministic scores (tool-call two-level + validity, intent, slots, hallucination per
+turn), the Table 2 aggregates (`MetricsBlock` incl. per-slice breakdown and the
+`gs02_inventions` hard gate), and a reproducibility stamp (code SHA, golden-set hash,
+`prompt_hash`, tool-schema version+sha256, pinned `retrieval_run`, ragas version).
+
+- **Honesty invariants, validator-enforced:** `mode="dry_run"` ⇒ `serving=null` and null
+  latency/throughput — mock timings can never masquerade as GPU numbers; Table 2 publishes
+  only `mode="live"` runs captured by this same harness at the top of the P4 GPU window.
+- **Enrichment passes** (`apply_judge_scores`, `apply_ragas_scores`) fill the supplementary
+  judge-coherence and RAGAS fields in place during the ephemeral GPU session; deterministic
+  metrics never depend on them (Tier-1 checks presence/shape only).
+- Runner: `evals/run_generation_eval.py` — `make generation-dryrun` (mock endpoint,
+  task 11) / `make benchmark-generation` (live `LLM_BASE_URL` + `--with-judge
+  --with-ragas`). Exit code 3 = the GS-02 zero-inventions gate failed.
+
 ## Planned (P3+)
 - Retrieval eval harness + metrics — **landed in P2** (see above).
 - Frozen prompt artifacts — **landed in P3 task 3** (see above).

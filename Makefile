@@ -106,6 +106,12 @@ judge-validate: ## P3: judge pass over the labelled worksheet -> kappa agreement
 gpu-judge: ## P3: ephemeral judge session (serve JUDGE_MODEL + BGE-M3 -> kappa report -> destroy)
 	uv run python infra/gpu/jarvis.py judge
 
+generation-dryrun: ## P3: 30-second demo — scripted mock endpoint -> scored transcripts -> committed artifact
+	uv run python evals/run_generation_eval.py --mode dry_run
+
+benchmark-generation: ## P4 window: authoritative generation benchmark against LLM_BASE_URL (Table 2)
+	uv run python evals/run_generation_eval.py --mode live --with-judge --with-ragas
+
 build-corpus: ## P2: gate-visible plot chunks + metadata cards -> chunks table (all ablation configs)
 	uv run python rag-engine/build_corpus.py
 
