@@ -1,0 +1,34 @@
+# GS-05 — Devdas: shared literary source = sibling adaptations, never a remake chain.
+fixtures:
+  - id: GS-05a
+    name: All the Devdas movies are siblings
+    category: literary-source
+    subsystem: graph
+    query: all the Devdas movies
+    query_lang: en
+    expected:
+      source_work: Devdas
+      works: [Devadasu, Devdas]
+      versions:
+        - {title: Devadasu, language: te, year: 1953, is_original: true}
+        - {title: Devdas, language: hi, year: 1955, is_original: true}
+        - {title: Devdas, language: hi, year: 2002, is_original: true}
+    gating_metric: sibling-vs-remake label accuracy
+    must_not:
+      - collapse the adaptations into one is_remake_of lineage off a single film
+    verify_source: [Q11169650, Q3025390, Q771754, Q247854]
+  - id: GS-05b
+    name: Devadasu's Tamil track is a dub inside a sibling
+    category: literary-source
+    subsystem: graph
+    query: was Devadasu released in Tamil?
+    query_lang: en
+    expected:
+      canonical_work: Devadasu
+      canonical_year: 1953
+      versions:
+        - {title: Devadas, language: ta, year: 1953, relationship: is_official_dub_of}
+    gating_metric: sibling-vs-remake label accuracy (edge types compose)
+    must_not:
+      - call the Tamil Devadas a remake of the Telugu film
+    verify_source: [Q3025390]

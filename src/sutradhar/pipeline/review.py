@@ -265,8 +265,13 @@ def verify_medium_edges(
     edge_ids: list[uuid.UUID],
     reviewed_at: datetime | None = None,
 ) -> int:
-    """Human-verify explicitly listed rule-derived edges (same gate semantics)."""
+    """Human-verify explicitly listed rule-derived edges (same gate semantics).
+
+    Verifying an edge also verifies its MEDIUM endpoint versions: confirming "this dub
+    track's edge is real" is confirming the track itself (one human act, both records).
+    """
     reviewed_at = reviewed_at or datetime.now(tz=UTC)
+    human_ref = SourceRef(source=SourceId.HUMAN, ref=reviewer, retrieved_at=reviewed_at)
     verified = 0
     by_id = {e.edge_id: e for e in list_medium_rule_edges(session)}
     for edge_id in edge_ids:
@@ -274,9 +279,50 @@ def verify_medium_edges(
         if edge is None:
             continue
         edge.human_verified = True
-        edge.sources = edge.sources + sources_to_jsonb(
-            [SourceRef(source=SourceId.HUMAN, ref=reviewer, retrieved_at=reviewed_at)]
+        edge.sources = edge.sources + sources_to_jsonb([human_ref])
+        for endpoint_id in (edge.src_id, edge.dst_id):
+            version = session.get(Version, endpoint_id)
+            if (
+                version is not None
+                and version.confidence == "MEDIUM"
+                and not version.human_verified
+            ):
+                version.human_verified = True
+                version.sources = version.sources + sources_to_jsonb([human_ref])
+        verified += 1
+    session.flush()
+    return verified
+
+
+def list_medium_versions(session: Session) -> list[Version]:
+    """MEDIUM, unverified version rows (e.g. a QID-less bilingual co-original)."""
+    return list(
+        session.scalars(
+            select(Version).where(
+                Version.confidence == Confidence.MEDIUM.value,
+                Version.human_verified.is_(False),
+            )
         )
+    )
+
+
+def verify_medium_versions(
+    session: Session,
+    reviewer: str,
+    version_ids: list[uuid.UUID],
+    reviewed_at: datetime | None = None,
+) -> int:
+    """Human-verify explicitly listed MEDIUM version rows (seed-curated tracks)."""
+    reviewed_at = reviewed_at or datetime.now(tz=UTC)
+    human_ref = SourceRef(source=SourceId.HUMAN, ref=reviewer, retrieved_at=reviewed_at)
+    verified = 0
+    by_id = {v.version_id: v for v in list_medium_versions(session)}
+    for version_id in version_ids:
+        version = by_id.get(version_id)
+        if version is None:
+            continue
+        version.human_verified = True
+        version.sources = version.sources + sources_to_jsonb([human_ref])
         verified += 1
     session.flush()
     return verified

@@ -1,0 +1,53 @@
+# GS-09 — Cross-border scoping + transitive lineage.
+fixtures:
+  - id: GS-09a
+    name: Non-Indian Drishyam versions
+    category: cross-border
+    subsystem: graph
+    query: are there non-Indian versions of Drishyam?
+    query_lang: en
+    scope: foreign
+    expected:
+      canonical_work: Drishyam
+      canonical_year: 2013
+      versions:
+        - {title: Dharmayuddhaya, language: si, year: 2017, relationship: is_remake_of}
+        - {title: Sheep Without a Shepherd, language: zh, year: 2019, relationship: is_remake_of}
+    gating_metric: scoping correctness
+    must_not:
+      - mix foreign versions into the Indian set unprompted
+      - drop foreign edges entirely
+    verify_source: [Q30647147, Q79325356]
+  - id: GS-09b
+    name: Original of Bhool Bhulaiyaa
+    category: cross-border
+    subsystem: graph
+    query: what's the original of Bhool Bhulaiyaa?
+    query_lang: en
+    expected:
+      canonical_work: Manichitrathazhu
+      canonical_year: 1993
+      versions:
+        - {title: Manichitrathazhu, language: ml, year: 1993, is_original: true, relationship: is_original_of}
+        - {title: Bhool Bhulaiyaa, language: hi, year: 2007, relationship: is_remake_of}
+    gating_metric: relationship-label accuracy
+    must_not:
+      - name any film other than Manichitrathazhu as the original
+    verify_source: [Q3530081, Q3764588]
+  - id: GS-09c
+    name: Chandramukhi's proximate source (remake-of-a-remake)
+    category: cross-border
+    subsystem: graph
+    query: what is Chandramukhi a remake of?
+    query_lang: en
+    expected:
+      canonical_work: Manichitrathazhu
+      canonical_year: 1993
+      versions:
+        - {title: Chandramukhi, language: ta, year: 2005, relationship: is_remake_of}
+        - {title: Apthamitra, language: kn, year: 2004, relationship: is_remake_of}
+        - {title: Manichitrathazhu, language: ml, year: 1993, is_original: true, relationship: is_original_of}
+    gating_metric: transitive-lineage correctness (proximate edge preserved)
+    must_not:
+      - flag Apthamitra or Chandramukhi as the lineage's original
+    verify_source: [Q1193810, Q4782241, Q3530081, "Chandramukhi@wikipedia-revision-pinned"]

@@ -1,0 +1,54 @@
+# GS-07 — Code-mixed (Tanglish/Hinglish) intent + slots. Carries expected_tool_calls
+# validated against TOOL_SCHEMA v0 (frozen task 15). Placeholders ($work_id) are bound
+# at runtime; P4 synthetic data and the tool-call-accuracy metric use these sequences.
+fixtures:
+  - id: GS-07a
+    name: Tanglish plot query
+    category: code-mixed
+    subsystem: intent/translit
+    query: oru police officer-a paathi kudumbathukaaga case-a maathura padam
+    query_lang: ta-latin
+    expected:
+      canonical_work: Drishyam
+      canonical_year: 2013
+      versions:
+        - {title: Papanasam, language: ta, year: 2015, relationship: is_remake_of}
+        - {title: Drishyam, language: ml, year: 2013, is_original: true, relationship: is_original_of}
+    gating_metric: intent/slot accuracy (QLoRA must beat base)
+    must_not:
+      - fail to parse because the query is romanized
+    verify_source: [Q18129183, Q15401703]
+    expected_tool_calls:
+      - tool: search_by_plot
+        arguments:
+          description: family covers up a case to protect themselves from a police officer
+          top_k: 10
+      - tool: get_versions
+        arguments:
+          work_id: $work_id
+          scope: indian
+  - id: GS-07b
+    name: Hinglish plot query
+    category: code-mixed
+    subsystem: intent/translit
+    query: wo film jisme baap evidence chhupa ke family ko bachata hai
+    query_lang: hi-latin
+    expected:
+      canonical_work: Drishyam
+      canonical_year: 2013
+      versions:
+        - {title: Drishyam, language: hi, year: 2015, relationship: is_remake_of}
+        - {title: Drishyam, language: ml, year: 2013, is_original: true, relationship: is_original_of}
+    gating_metric: intent/slot accuracy (QLoRA must beat base)
+    must_not:
+      - answer in the wrong register/language
+    verify_source: [Q19824636, Q15401703]
+    expected_tool_calls:
+      - tool: search_by_plot
+        arguments:
+          description: father hides evidence to save his family
+          top_k: 10
+      - tool: get_versions
+        arguments:
+          work_id: $work_id
+          scope: indian

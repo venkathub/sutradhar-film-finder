@@ -1,0 +1,37 @@
+# GS-04 — Baahubali: dub vs remake (edge typing) + bilingual double-original.
+# Dub edges are rule-derived and HUMAN-VERIFIED (review pass 2026-07-02).
+fixtures:
+  - id: GS-04a
+    name: Baahubali language versions are dubs
+    category: dub-vs-remake
+    subsystem: graph
+    query: "show me all language versions of Baahubali: The Beginning"
+    query_lang: en
+    expected:
+      canonical_work: "Baahubali: The Beginning"
+      canonical_year: 2015
+      versions:
+        - {title: "Baahubali: The Beginning", language: te, year: 2015, is_original: true, relationship: is_original_of}
+        - {title: Baahubali, language: ta, year: 2015, is_original: true}
+        - {title: Baahubali - The Beginning, language: hi, year: 2015, relationship: is_official_dub_of}
+        - {title: Baahubali, language: ml, year: 2015, relationship: is_official_dub_of}
+    gating_metric: relationship-label accuracy (dub vs remake)
+    must_not:
+      - present dubs as separate remakes with separate casts
+      - flag only one language of the bilingual shoot as original
+    verify_source: [Q13897247]
+  - id: GS-04b
+    name: Hindi Baahubali is the same film
+    category: dub-vs-remake
+    subsystem: graph
+    query: is the Hindi Baahubali a different movie from the Telugu one?
+    query_lang: en
+    expected:
+      canonical_work: "Baahubali: The Beginning"
+      canonical_year: 2015
+      versions:
+        - {title: Baahubali - The Beginning, language: hi, year: 2015, relationship: is_official_dub_of}
+    gating_metric: relationship-label accuracy (dub vs remake)
+    must_not:
+      - answer that it is a remake
+    verify_source: [Q13897247]

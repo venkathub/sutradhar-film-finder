@@ -1,0 +1,37 @@
+# GS-02 — Out-of-catalog negatives (guardrail; protects the live demo).
+# NO_MATCH fixtures: the validator proves NOTHING in the graph resolves for these.
+fixtures:
+  - id: GS-02a
+    name: Out-of-catalog plot (Mars detective)
+    category: negative
+    subsystem: guardrail
+    query: a detective on Mars solves a murder, it's in Marathi
+    query_lang: en
+    expected: {no_match: true}
+    gating_metric: no-hallucinated-movie rate (=0)
+    must_not:
+      - return any film as if it matched
+      - fabricate a title, year, or cast
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: GS-02b
+    name: Out-of-catalog real film (Kaithi)
+    category: negative
+    subsystem: guardrail
+    query: Kaithi
+    query_lang: en
+    expected: {no_match: true}
+    gating_metric: no-hallucinated-movie rate (=0)
+    must_not:
+      - fuzzy-attach a real but uncatalogued film to a slice record
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: GS-02c
+    name: Out-of-catalog Hollywood title
+    category: negative
+    subsystem: guardrail
+    query: Inception
+    query_lang: en
+    expected: {no_match: true}
+    gating_metric: no-hallucinated-movie rate (=0)
+    must_not:
+      - return an unrelated catalogued film
+    verify_source: [absent-from-seed-slice-by-construction]

@@ -1,0 +1,44 @@
+# GS-06 — Drishyam 2: sequel × remake crossed (franchise traversal).
+fixtures:
+  - id: GS-06a
+    name: Every Drishyam film (franchise walk)
+    category: sequel-x-remake
+    subsystem: graph
+    query: show me every Drishyam film
+    query_lang: en
+    expected:
+      canonical_work: Drishyam
+      canonical_year: 2013
+      versions:
+        - {title: Drishyam, language: ml, year: 2013, is_original: true, relationship: is_original_of}
+        - {title: Drishya, language: kn, year: 2014, relationship: is_remake_of}
+        - {title: Drushyam, language: te, year: 2014, relationship: is_remake_of}
+        - {title: Papanasam, language: ta, year: 2015, relationship: is_remake_of}
+        - {title: Drishyam, language: hi, year: 2015, relationship: is_remake_of}
+        - {title: Drishyam 2, language: ml, year: 2021, is_original: true, relationship: is_sequel_of}
+        - {title: Drishya 2, language: kn, year: 2021, relationship: is_remake_of}
+        - {title: Drushyam 2, language: te, year: 2021, relationship: is_remake_of}
+        - {title: Drishyam 2, language: hi, year: 2022, relationship: is_remake_of}
+    gating_metric: franchise version-set recall (=1.0)
+    must_not:
+      - stop at the first film
+      - conflate sequel with remake
+    verify_source: [Q15401703, Q102036246, Q110555107, Q105984608, Q112665700]
+  - id: GS-06b
+    name: Did Drishyam 2 get remade?
+    category: sequel-x-remake
+    subsystem: graph
+    query: did Drishyam 2 get remade?
+    query_lang: en
+    expected:
+      canonical_work: Drishyam 2
+      canonical_year: 2021
+      versions:
+        - {title: Drishyam 2, language: ml, year: 2021, is_original: true, relationship: is_original_of}
+        - {title: Drishya 2, language: kn, year: 2021, relationship: is_remake_of}
+        - {title: Drushyam 2, language: te, year: 2021, relationship: is_remake_of}
+        - {title: Drishyam 2, language: hi, year: 2022, relationship: is_remake_of}
+    gating_metric: franchise version-set recall
+    must_not:
+      - return Drishyam-1 remakes as Drishyam-2 remakes
+    verify_source: [Q102036246, Q110555107, Q105984608, Q112665700]
