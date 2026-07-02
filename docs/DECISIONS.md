@@ -889,3 +889,34 @@ on OOM/disk pressure; the same VPS is the intended P6 consolidation host (static
 optional read-only MLflow mirror — decided in P6). Rejected: Langfuse Cloud free tier as default
 ($0 but vendor-hosted, weaker self-hosted story — kept as fallback); on-demand VM (dead trace
 links gut the standing evidence).
+
+## DEC-P3-8 — `search_by_plot` in the generation harness: per-fixture replay of the committed retrieval run (2026-07-03)
+
+**Status:** Accepted (P3 task 6, implementation decision under the P3_SPEC §2.1 "artifact-backed
+retriever" requirement).
+
+**Context.** The P2 artifact providers are keyed by `sha256(query_text)` and raise
+`MissingArtifactError` for unseen text — but the model under test *paraphrases* plot
+descriptions, so its emitted `search_by_plot(description=…)` will never hash-match a recorded
+query. Running the fusion pipeline on model text would require live embeddings (a neural op the
+laptop/CI path forbids, ROADMAP §2).
+
+**Decision.** The driver's tool executor replays the **recorded per-fixture result** from the
+committed P2 retrieval-run artifact (`RecordedPlotSearch`: pinned run, winner config, keyed by
+the driven fixture id). Fixtures absent from the recorded run (the P3 conversational negatives —
+out-of-catalog by construction, golden-validated) replay as honest abstention
+(`results: [], abstain: true`).
+
+**Consequences.** (1) No neural op on the laptop; Tier-1 CI and the dry-run are fully
+deterministic. (2) Base (top of the P4 window) and QLoRA columns see **byte-identical tool
+behaviour** — retrieval quality cannot leak into the generation before/after (the two-table
+honesty rule). (3) The model's description *quality* is still measured — by the DEC-P3-5
+call-level argument match against `expected_tool_calls`, not by retrieval. (4) Limitation,
+stated: replay answers "what would the pinned retriever have returned for this fixture's query",
+not "for the model's paraphrase" — acceptable because the golden queries ARE the benchmark's
+ground truth; the live P5 query path uses the real retriever with live embeddings.
+
+**Rejected.** (a) Live embeddings in the harness (breaks laptop/CI compute placement and makes
+Table 2 depend on GPU retrieval state); (b) abstain-on-unseen for ALL queries (would falsely
+abstain GS-07a/b whose recorded queries exist); (c) nearest-recorded-query fuzzy fallback
+(non-deterministic tool surface under paraphrase drift — noisier than pinning by fixture).

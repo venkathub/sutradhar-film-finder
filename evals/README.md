@@ -117,6 +117,34 @@ transcripts, these score them, Tier-1 re-runs the same bytes over the committed 
   must fuzzy-resolve (≥ 0.80, DEC-P1-5) to a tool-result title of the same conversation;
   "Papanaasam"-style variants pass, inventions are counted; abstentions assert nothing.
 
+## Conversation driver (P3 task 6 — `sutradhar.evals.driver`)
+
+The multi-turn validate→execute→feedback loop that runs one golden fixture conversation
+against any OpenAI-compatible endpoint (`LLMClient.chat()`; mock in dry-run, vLLM in the
+P4 GPU window):
+
+- **Outbound tools are generated from `tool_schema.v0.json`** — never hand-written, so
+  drift from the frozen schema is impossible (P3_SPEC §2.8).
+- **Every emitted call is validated BEFORE execution** (the DEC-P1-8 jsonschema validator
+  applied to model output): hallucinated tools, hallucinated parameters and wrong-typed
+  arguments are recorded as scored verdicts, the error is fed back as the tool result, and
+  the loop continues — bounded by `MAX_TOOL_ROUNDS = 6` per turn, never a crash.
+- **Valid calls execute against `sutradhar.graph.repository`** (the five frozen v0 tools).
+  `search_by_plot` **replays the committed P2 retrieval run** (pinned `RETRIEVAL_RUN`,
+  per-fixture records): no neural op on the laptop, and both Table 2 columns see
+  byte-identical tool behaviour; fixtures absent from the recorded run (the P3
+  conversational negatives, out-of-catalog by construction) replay as honest abstention.
+  Description *quality* is still scored by tool-call accuracy.
+- **Full transcript capture** (`FixtureTranscript`): every message, call (raw + verdict +
+  bound arguments + result/error), per-round usage and latency, per-turn final answers —
+  what the task-9 artifact commits and Langfuse traces mirror. Endpoint off/error →
+  `chat_status` recorded, fixture aborts gracefully (DEC-P0-4).
+
+Integration proof (`tests/integration/test_driver_e2e.py`): GS-08a end-to-end against the
+live Postgres graph with a scripted mock model that binds REAL ids from prior tool results —
+all five v0 tools exercised, every result v0-shape-valid, DEC-P3-5 sequence score 1.0 with
+benign extras tolerated, zero hallucinated movies.
+
 ## Planned (P3+)
 - Retrieval eval harness + metrics — **landed in P2** (see above).
 - Frozen prompt artifacts — **landed in P3 task 3** (see above).

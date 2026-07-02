@@ -32,6 +32,8 @@ dependencies = [
     "ragas>=0.4.3",
     "langfuse>=4.13",
     "mlflow>=3.14",
+    # DEC-P1-8 validator, now applied to model-emitted calls at runtime (P3 driver).
+    "jsonschema>=4.26.0",
 ]
 
 [dependency-groups]
@@ -46,7 +48,8 @@ dev = [
     "jarvislabs>=0.2",
     # Type stubs for mypy-strict (yaml used by sutradhar.pipeline.seed + CI meta-tests).
     "types-pyyaml>=6.0",
-    "jsonschema>=4.26.0",
+    # Type stubs for the DEC-P1-8 validator now that jsonschema is used in src (P3 driver).
+    "types-jsonschema>=4.26",
 ]
 # NOTE (P2 execution): P2_SPEC §2.7 planned a `gpu` dependency group here
 # (FlagEmbedding+torch for `uv sync --group gpu` on the instance). Dropped during task 6:
