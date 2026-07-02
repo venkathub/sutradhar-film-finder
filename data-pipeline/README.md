@@ -182,6 +182,26 @@ Live run 2026-07-02 (snapshot `20260702T064101Z`): **52 pages → 52 rows** (27 
 native-wiki; avg ~5.1 KB), all revision-pinned, re-run → 52 unchanged. QID-less dub tracks are
 skipped and reported (their story lives in the parent film's article — extraction's input).
 
+## Normalization / transliteration (P1 task 8 — built, DEC-P1-5 + measured amendment)
+
+`sutradhar.pipeline.normalize` (+ `make rekey-titles`):
+
+- **`match_key` pipeline:** NFC → script detection (Unicode-block majority) → deterministic
+  **ITRANS** romanization (`indic-transliteration`; measured winner over IAST/ISO — avg 87.4 vs
+  80.9 on real slice pairs, see DEC-P1-5 amendment) with Tamil digraph normalization and
+  Devanagari/Bengali final-schwa deletion → casefold → strip diacritics → alnum-only →
+  collapse character runs (`Paapanaasam → papanasam`, `दृश्यम → drishyam` **exact**).
+- **Resolution** = exact key hit, then `best_matches` (rapidfuzz ratio, 0–1, threshold 0.80
+  tuned on GS-11): perturbations ("Papanaasam", "Chandramuki", 1–2-char typos) resolve; decoys
+  ("Inception", "Kaithi") stay below threshold; the Drishyam-family mutual near-matches all
+  surface — the ambiguity signal `resolve_title` needs (GS-10).
+- **No neural op** — pure Python, laptop/CI-safe; IndicXlit stays the unused contingency.
+  Known limitation: non-Sanskrit Tamil letters (ன/ழ/ற), Sinhala, Han have no deterministic
+  mapping — their Latin AKA/canonical rows in the same index carry the match instead.
+- `make rekey-titles` (idempotent): seeds every version's canonical title into the index,
+  recomputes all interim keys, populates `version_title.script`. Live 2026-07-02: +8 canonical
+  rows, 88 keys recomputed, 278 scripts populated (index: 209 latn / 69 native-script rows).
+
 ## Planned (remaining P1 tasks)
 - Ingest from Wikidata SPARQL (relationship spine: P144/P1877/P4969, P155/P156/P179), TMDB
   (`translations`, `alternative_titles`, credits), IMDb `title.akas` (slice-filtered), Wikipedia

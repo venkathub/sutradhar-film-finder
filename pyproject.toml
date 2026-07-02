@@ -22,6 +22,8 @@ dependencies = [
     # Ingestion connectors + CLIs (P1 task 4+): httpx per P1_SPEC §2.8, typer per DEC-P1-6.
     "httpx>=0.27",
     "typer>=0.12",
+    "indic-transliteration>=2.3.82",
+    "rapidfuzz>=3.14.5",
 ]
 
 [dependency-groups]
@@ -64,6 +66,11 @@ disallow_untyped_defs = true
 [[tool.mypy.overrides]]
 # Third-party SDK without type stubs (used only by infra/gpu/jarvis.py).
 module = ["jarvislabs.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Pure-Python transliteration lib without py.typed (DEC-P1-5; sutradhar.pipeline.normalize).
+module = ["indic_transliteration.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

@@ -436,3 +436,30 @@ column and can filter. CANDIDATE remains excluded **by construction** (separate
 `test_medium_edge_passes_gate_views` pins it. The golden-fixture validator (task 14) owns the
 stricter HIGH/human-verified rule. Layered gates: structural exclusion (CANDIDATE) → conflict/
 provenance gate (views) → fixture gate (HIGH only).
+
+## DEC-P1-5 amendment — `match_key` romanization scheme: ITRANS, measured (2026-07-02)
+
+**Status:** Accepted (P1 task 8; refines DEC-P1-5 option A within its "IAST/ISO-15919-style"
+wording — the *goal* of the key is popular-spelling proximity, so the scheme is a measured
+parameter, not a reopened decision).
+
+**Measurement** (11 real slice title pairs, native script vs popular English spelling,
+rapidfuzz ratio after fold): **ITRANS avg 87.4** with 2 exact hits vs **IAST 80.9 / ISO-15919
+80.9** with 0 exact — IAST's bare consonants (`dṛśyam → drsyam`) lose the vowels popular
+romanization keeps (`drishyam`). Two deterministic post-fixes raise ITRANS to **10/11 pairs
+≥ 0.80 (avg 89.7)**:
+1. **Tamil digraph normalization** — sanscript's Tamil scheme emits Sanskrit-positional
+   aspirates (`ப→bha`, `ச→jha`); folded to the popular plain series (`p/ch/k/d`).
+2. **Word-final schwa deletion** for Devanagari/Bengali (`दृश्यम → drishyam`, `एक → ek`),
+   applied before casefold so long ā survives; Dravidian scripts keep final vowels.
+
+**Pipeline:** NFC → script detect (Unicode-block majority) → ITRANS (+fixes) → casefold →
+strip diacritics → alnum-only → collapse character runs (vowel length + gemination) →
+collapse whitespace. Fuzzy resolution threshold **0.80**, tuned on the GS-11 perturbation
+suite. Known limitation: non-Sanskrit Tamil letters (ன/ழ/ற) and Sinhala/Han have no
+deterministic mapping — their Latin AKA/canonical rows in the same index carry the match;
+IndicXlit remains the unused contingency.
+
+**Consequences.** `sutradhar.pipeline.normalize` implements this; `make rekey-titles`
+re-keys existing rows idempotently; `resolve_title.candidates[].score` = the rapidfuzz
+0–1 value (TOOL_SCHEMA v0 semantics).
