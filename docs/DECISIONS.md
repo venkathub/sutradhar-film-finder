@@ -296,3 +296,118 @@ time) is captured into `/infra/README.md` as the seed for the P6 RUNBOOK.
 `/cli` — programmatic create/pause/resume/destroy, `jl run` auto-destroy; replaces deprecated
 `jlclient`); JarvisLabs "Serving LLMs" tutorial (`vllm serve --port 8000` reached from the laptop
 via tunnel).
+
+---
+
+## DEC-P1-1 — Edge storage: single polymorphic `edges` table (2026-07-02)
+
+**Status:** Accepted (P1 grooming; spec `docs/phases/P1_SPEC.md` §2.2/§3).
+
+**Context.** The remake graph needs five typed edges over two node kinds (`version→version` for
+remake/dub, `work→work` for sequel/based_on), and every edge must flow through one provenance +
+confidence + conflict + human-review pipeline (the verification gate is the product).
+
+**Options.** (A) **Single polymorphic `edges` table** — enum `edge_type`, `src/dst_kind`
+discriminators, CHECK constraints per type shape, traversal via recursive CTEs. (B) Two typed
+tables (`version_edges`, `work_edges`) with hard FKs. (C) Graph extension (Apache AGE) / dedicated
+graph DB.
+
+**Decision.** **A.** One uniform gate/review/promotion path and one `ground_truth_edges` view for
+every edge type; adding an edge type is a value, not a table. Soft polymorphic FKs are hardened by
+a validation trigger + constraint integration tests. B forks the gate logic; C reopens the settled
+Postgres call for a 2-hop graph.
+
+**Consequences.** Type-shape rules (remake/dub = version→version; sequel/based_on = work→work) are
+CHECK-enforced; `candidate_edges` promotion targets a single table; P2 indexing and P5 tools read
+one view.
+
+## DEC-P1-2 — DB access + migrations: SQLAlchemy 2.0 (typed ORM) + Alembic (2026-07-02)
+
+**Status:** Accepted (P1 grooming).
+
+**Options.** (A) **SQLAlchemy 2.0 typed ORM + Alembic.** (B) psycopg 3 + numbered raw-SQL
+migrations + hand-rolled runner. (C) SQLAlchemy Core + Alembic.
+
+**Decision.** **A.** The graph outlives P1 (P2 indexing, P5 tools read it); typed models that
+mypy-strict can see, a standard migration story, and Alembic autogenerate keep schema diffs
+reviewable. Bulk upserts use Core-level `insert…on_conflict` inside the ORM session where the ORM
+would be ceremony.
+
+**Consequences.** `sutradhar.graph.schema` (declarative models) + `alembic/` migrations are the
+schema source of truth; `make db-migrate` is the documented entrypoint.
+
+## DEC-P1-3 — Provenance: inline `jsonb sources[]`, pydantic-validated (2026-07-02)
+
+**Status:** Accepted (P1 grooming).
+
+**Options.** (A) **`jsonb` `sources[]` column per record/edge, validated by a pydantic
+`SourceRef` model at the write boundary.** (B) Normalized `provenance` table. (C) Hybrid (jsonb
+now, mirror table later).
+
+**Decision.** **A**, with C's escape hatch noted. Every consumer of provenance — the gate views,
+golden-fixture builder, tool results (`TOOL_SCHEMA.md` puts `sources[]` inline on every result),
+and the P6 citation UI — wants it *with the row*, join-free. A normalized table is machinery a
+~30-record slice (and even the breadth catalog) doesn't need; if source-centric queries ever
+matter, a mirror table can be derived from the jsonb without a schema break.
+
+**Consequences.** `SourceRef` rejects empty `sources[]`/unknown source ids before any insert;
+"all claims from source X" queries use jsonb operators.
+
+## DEC-P1-4 — Candidate-edge extraction model: Gemma 4 E4B on the ephemeral A100 (2026-07-02)
+
+**Status:** Accepted (P1 grooming). Frontier API is the documented fallback.
+
+**Context.** The P1 GPU job (DEC-0003: ~1–2 h) proposes remake/dub edges from Wikipedia prose into
+`candidate_edges`. Every candidate passes a human gate, so extractor precision is a review-time
+cost knob, not a correctness risk.
+
+**Options.** (A) **Gemma 4 E4B served by vLLM on the ephemeral JarvisLabs A100** (the exact stack
+validated in P0 / DEC-P0-5). (B) Frontier API. (C) Sarvam-M 24B FP8.
+
+**Decision.** **A.** ~$1–2 for the whole pass, zero new dependency or key, and it dogfoods the
+same serving path P4 uses. **Fallback trigger:** if a spot-check puts candidate precision below
+~0.5 (human review time becomes the real cost), switch to a frontier API and record the switch
+here. C is rejected: a 24B rental for a job a 4B + human gate covers; Sarvam-M's slot is the P4
+data-teacher (DEC-0001).
+
+**Consequences.** The extraction script talks only to `LLMClient`/`LLM_BASE_URL` (endpoint-
+agnostic); prompts + raw outputs are persisted as a versioned artifact with a run hash
+(reproducibility stamp, ROADMAP §6.1); parse-failure and precision metrics reported in the P1
+graph report.
+
+## DEC-P1-5 — Cross-script `match_key`: deterministic rule-based romanization + rapidfuzz (2026-07-02)
+
+**Status:** Accepted (P1 grooming). IndicXlit remains a measured contingency.
+
+**Options.** (A) **Rule-based:** native script → IAST/ISO-15919-style romanization via
+`indic_transliteration.sanscript` (Devanagari/Tamil/Malayalam/Telugu/Kannada/Bengali verified
+supported) → ASCII fold → lowercase → vowel-length collapse; resolution = exact `match_key` hit
+then rapidfuzz over the key index. (B) Neural IndicXlit romanization for every native title.
+(C) Multi-key storage (multiple romanization schemes per title).
+
+**Decision.** **A.** Laptop-safe (pure Python — not a neural op, per ROADMAP §2 compute
+placement), reproducible, one indexed key. The "popular spelling" variants B/C chase are already
+supplied as real data by IMDb `title.akas` + TMDB `alternative_titles` into `version_title`.
+**Contingency:** if rule-based + fuzzy fails GS-11 spot-checks, run IndicXlit in a rented-GPU
+session with outputs cached as `version_title(kind='transliteration')` — noting IndicXlit models
+are **CC BY-SA 4.0** (attribution/share-alike added to `LICENSING.md` if invoked).
+
+**Consequences.** GS-11 (title-match under perturbation) gates this in P1 unit tests and again in
+P2 retrieval; the rapidfuzz threshold is recorded when tuned.
+
+## DEC-P1-6 — Human-verification gate tooling: typer CLI (2026-07-02)
+
+**Status:** Accepted (P1 grooming).
+
+**Options.** (A) **Typer CLI (`make review-candidates`)** — supporting sentence + resolved
+entities shown; confirm/reject/skip; writes `reviewed_by/reviewed_at`; promotion sets
+`human_verified=true` and links `promoted_edge_id`. (B) Minimal web review page. (C) CSV
+export/import round-trip.
+
+**Decision.** **A.** The portfolio point is the *gate semantics* (nothing bypasses the gate;
+rejection is recorded; promotion is auditable), not the review surface. A CLI is zero extra
+surface area, scriptable, and testable; a session screenshot serves the evidence need. B pre-empts
+P5's API and P6's UI; C has no audit-trail integrity.
+
+**Consequences.** Gate-enforcement integration tests drive the CLI's promotion/rejection paths;
+the review session is part of the P1 exit evidence (candidate precision = confirmed/proposed).
