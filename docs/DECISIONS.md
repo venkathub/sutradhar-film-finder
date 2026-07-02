@@ -658,3 +658,28 @@ remains the escalation path inside the P2 iteration loop (chunking → fusion �
 order). Context worth recording: MIRACL — the public benchmark behind both embedders'
 cross-lingual claims — covers hi/bn/te but **not ta/ml/kn**, so the golden-set gate (not
 leaderboards) is the only measurement that answers Sutradhar's question.
+
+## DEC-P2-7 — GPU-job transport: HF Hub relay (2026-07-02, execution — user-confirmed)
+
+**Context.** P2 task 5's `make gpu-embed` must ship `gpu_inputs.json` + the job code to the
+ephemeral JarvisLabs instance and pull the sealed artifact run back (P2_SPEC §2.6 names the
+lifecycle but not the channel). The P0/P1 sessions never moved files — they drove a remote vLLM
+API — so there was no precedent to reuse.
+
+**Options.** (A) **HF Hub relay:** laptop uploads inputs + the *self-contained*
+`rag-engine/embed_and_score.py` to a private HF **dataset** repo (`HF_ARTIFACT_REPO`); the
+instance startup script downloads both, runs the job, uploads the sealed run + an `EXIT` marker;
+the laptop polls, downloads into `data/artifacts/retrieval/<run_id>/`, MANIFEST-verifies, then
+destroys the instance. (B) SSH/scp direct — no relay repo, but untested SDK SSH surface + key
+management. (C) Manual runbook — least code, but no automated ephemeral driver (weak DEC-P0-5
+story).
+
+**Decision.** **A** (user-approved at task 5). It matches CLAUDE.md's "HF Hub = artifact
+registry / reproducibility bridge" and the delete-the-volume lifecycle, and is fully
+mock-testable like `extract_session`. Two deliberate consequences: (1) `embed_and_score.py` is
+**self-contained** (stdlib+numpy+pyarrow+FlagEmbedding, no `sutradhar` import — no repo clone on
+the box); its output format is locked to `sutradhar.rag.artifacts` by the laptop-side stub
+dry-run test. (2) Unlike the token-free vLLM validate script (P0 invariant, still enforced by
+test), the embed startup script **must embed an HF token** to upload results; mitigation: use a
+fine-grained token scoped to `HF_ARTIFACT_REPO` only, no `set -x` (never echoed), and the script
+slot is removed in the same `finally` as instance teardown.

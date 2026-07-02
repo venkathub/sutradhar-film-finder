@@ -91,6 +91,9 @@ gpu-nuke: ## Safety: destroy any stray tagged JarvisLabs instance (no leaked GPU
 build-corpus: ## P2: gate-visible plot chunks + metadata cards -> chunks table (all ablation configs)
 	uv run python rag-engine/build_corpus.py
 
+gpu-embed: ## P2: ephemeral GPU embed+score session (export -> HF relay -> pull artifacts -> destroy)
+	uv run python infra/gpu/jarvis.py embed
+
 golden-validate: ## Validate golden fixtures against the live graph (task 14)
 	uv run python evals/build_golden.py
 

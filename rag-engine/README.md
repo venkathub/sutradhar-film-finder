@@ -54,6 +54,25 @@ a missing/mismatched/stray file — a corrupt run is never silently served.
 never degrades to a fake vector. The run CI/demo read is pinned by `RETRIEVAL_RUN` (env;
 see `.env.example`); the live embedding path (`EMBED_BASE_URL`) stays unset until P5.
 
+### GPU embed+score job (P2 task 5, DEC-P2-7)
+
+```
+make gpu-embed     # ephemeral: export → HF relay → A100 embeds+scores → pull → verify → destroy
+# pieces, runnable standalone:
+uv run python rag-engine/export_gpu_inputs.py                     # DB → gpu_inputs.json
+python rag-engine/embed_and_score.py --inputs … --out … --run-id … [--stub]
+```
+
+One batched session produces every neural output as a sealed artifact run: BGE-M3
+dense+sparse embeddings for **all** chunk configs + all golden/negative queries, and the
+**full** query×chunk `bge-reranker-v2-m3` matrix per config (sigmoid-normalized, parquet)
+— making fusion/depth/top-k free laptop-side parameters. `embed_and_score.py` is
+**self-contained** (no `sutradhar` import — the HF relay ships this one file to the box);
+its output format is locked to `sutradhar.rag.artifacts` by the `--stub` dry-run test.
+`FlagEmbedding`/torch live only in the `gpu` dependency group (`uv sync --group gpu` on
+the instance); the laptop/CI env stays neural-free. Transport per DEC-P2-7: private HF
+dataset repo (`HF_ARTIFACT_REPO`, fine-grained token), instance destroyed in `finally`.
+
 ## Tests
 
 ```

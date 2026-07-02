@@ -205,6 +205,25 @@ def test_conflict_hidden_version_yields_zero_chunks(corpus_ready: Session) -> No
     assert count == 0  # excluded by construction — the view never surfaced it
 
 
+def test_gpu_inputs_export_matches_db(corpus_ready: Session) -> None:
+    """P2 task 5: the exported inputs mirror the chunks table, hash-verified."""
+    from sutradhar.rag.gpu_jobs import export_gpu_inputs
+
+    build_corpus(corpus_ready)
+    inputs = export_gpu_inputs(corpus_ready)
+    assert set(inputs["configs"]) == {c.name for c in CHUNK_CONFIGS}
+    db_hashes = {
+        row[0]
+        for row in corpus_ready.execute(
+            text("SELECT content_hash FROM chunks WHERE chunk_config = '512tok_15pct'")
+        )
+    }
+    exported = {r["hash"] for r in inputs["configs"]["512tok_15pct"]}
+    assert exported == db_hashes
+    assert inputs["embed_model"] and inputs["rerank_model"]
+    assert any(r["id"].startswith("NEG-") for r in inputs["queries"])
+
+
 def test_rebuild_is_idempotent(corpus_ready: Session) -> None:
     build_corpus(corpus_ready)
 

@@ -25,6 +25,7 @@ dependencies = [
     "indic-transliteration>=2.3.82",
     "rapidfuzz>=3.14.5",
     "pgvector>=0.4.2",
+    "pyarrow>=24.0.0",
 ]
 
 [dependency-groups]
@@ -40,6 +41,12 @@ dev = [
     # Type stubs for mypy-strict (yaml used by sutradhar.pipeline.seed + CI meta-tests).
     "types-pyyaml>=6.0",
     "jsonschema>=4.26.0",
+]
+# GPU-session-only deps (P2_SPEC §2.7): synced ON THE INSTANCE via `uv sync --group gpu`.
+# Never installed on the laptop/CI — `uv sync` (default: dev) keeps the local env
+# neural-free (ROADMAP §2); FlagEmbedding pulls torch/transformers.
+gpu = [
+    "flagembedding>=1.3",
 ]
 
 [build-system]

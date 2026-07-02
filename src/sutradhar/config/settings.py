@@ -99,6 +99,8 @@ class Settings(BaseSettings):
 
     # --- Secrets: contextually required (validate via .require at point of use) ---
     hf_token: str | None = Field(default=None, validation_alias="HF_TOKEN")
+    # DEC-P2-7 HF-relay: private dataset repo that ferries GPU-job inputs/artifacts.
+    hf_artifact_repo: str | None = Field(default=None, validation_alias="HF_ARTIFACT_REPO")
     jarvislabs_api_key: str | None = Field(default=None, validation_alias="JARVISLABS_API_KEY")
     tmdb_api_key: str | None = Field(default=None, validation_alias="TMDB_API_KEY")
     langfuse_public_key: str | None = Field(default=None, validation_alias="LANGFUSE_PUBLIC_KEY")
