@@ -39,8 +39,12 @@ RETRIEVAL_SLICES = {
     "GS-07": "code_mixed",
     "GS-11": "fuzzy_title",
 }
-REGRESSION_SLICES = {"GS-02": "negative", "GS-04": "dub_regression",
-                     "GS-05": "source_regression", "GS-10": "collision_regression"}
+REGRESSION_SLICES = {
+    "GS-02": "negative",
+    "GS-04": "dub_regression",
+    "GS-05": "source_regression",
+    "GS-10": "collision_regression",
+}
 SKIPPED = ("GS-08", "GS-09")  # multi-turn backtracking (P5) / graph-scoping (no retrieval fixture)
 
 RERANK_DEPTHS = (20, 50)  # DEC-P2-4 ablation
@@ -131,9 +135,7 @@ def _version_matches(expected: ExpectedVersion, got: RecordedVersion) -> bool:
     return not (expected.is_original and not got.is_original)
 
 
-def version_set_recall(
-    expected: list[ExpectedVersion], got: list[RecordedVersion] | None
-) -> float:
+def version_set_recall(expected: list[ExpectedVersion], got: list[RecordedVersion] | None) -> float:
     """Fraction of expected versions present with correct labels (the Papanasam metric)."""
     if not expected:
         return 1.0
@@ -146,9 +148,7 @@ def needs_sequel_walk(fixture: GoldenFixture) -> bool:
     return any(v.relationship == "is_sequel_of" for v in fixture.expected.versions)
 
 
-def compute_metrics(
-    fixtures: list[GoldenFixture], record: ConfigRecord
-) -> dict[str, Any]:
+def compute_metrics(fixtures: list[GoldenFixture], record: ConfigRecord) -> dict[str, Any]:
     """Per-slice + overall metrics for one config cell, from recorded observations only."""
     by_slice: dict[str, list[GoldenFixture]] = {}
     for fixture in fixtures:
@@ -312,7 +312,11 @@ def run_retrieval_eval(
                 slice_name = fixture_slice(fixture.id)
                 assert slice_name is not None
                 record.queries[fixture.id] = _record_query(
-                    session, retriever, fixture.id, slice_name, query,
+                    session,
+                    retriever,
+                    fixture.id,
+                    slice_name,
+                    query,
                     version_set_for=fixture,
                 )
             for negative in negatives:

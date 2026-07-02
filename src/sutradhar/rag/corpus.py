@@ -181,9 +181,7 @@ def load_version_metas(session: Session) -> list[VersionMeta]:
 
 def _plot_docs(session: Session, version_ids: set[uuid.UUID]) -> dict[uuid.UUID, list[PlotText]]:
     """Plot rows per gate-visible version: Wikipedia primary, TMDB overview fill."""
-    rows = session.scalars(
-        select(PlotText).where(PlotText.version_id.in_(version_ids))
-    ).all()
+    rows = session.scalars(select(PlotText).where(PlotText.version_id.in_(version_ids))).all()
     by_version: dict[uuid.UUID, list[PlotText]] = {}
     for row in rows:
         by_version.setdefault(row.version_id, []).append(row)

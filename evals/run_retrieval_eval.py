@@ -1,6 +1,6 @@
 """Run the retrieval eval + ablation grid (P2 task 10) and write the committed artifact.
 
-    make retrieval-eval        # uses RETRIEVAL_RUN; writes evals/retrieval_runs/<run_id>.json
+make retrieval-eval        # uses RETRIEVAL_RUN; writes evals/retrieval_runs/<run_id>.json
 """
 
 from __future__ import annotations
@@ -42,8 +42,10 @@ def main(
     out.write_text(artifact.model_dump_json(indent=1) + "\n", encoding="utf-8")
 
     typer.echo(f"committed run artifact: {out} ({out.stat().st_size / 1e6:.2f} MB)")
-    typer.echo(f"{'config':<22} {'R@1':>6} {'R@5':>6} {'R@10':>6} {'MRR@10':>7} "
-               f"{'VSR-01':>7} {'VSR-06':>7}")
+    typer.echo(
+        f"{'config':<22} {'R@1':>6} {'R@5':>6} {'R@10':>6} {'MRR@10':>7} "
+        f"{'VSR-01':>7} {'VSR-06':>7}"
+    )
     for key, m in sorted(artifact.metrics.items()):
         slices = m["slices"]
         r1 = sum(s["recall@1"] * s["n"] for s in slices.values())

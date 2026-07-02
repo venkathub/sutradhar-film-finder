@@ -49,7 +49,10 @@ def _version(
     is_original: bool = False,
 ) -> RecordedVersion:
     return RecordedVersion(
-        title=title, language=language, year=year, relationship=relationship,
+        title=title,
+        language=language,
+        year=year,
+        relationship=relationship,
         is_original=is_original,
     )
 
@@ -84,8 +87,13 @@ def test_mrr_cutoff_at_10() -> None:
 # --- version-set recall (the Papanasam metric) ---
 
 EXPECTED_FAMILY = [
-    {"title": "Drishyam", "language": "ml", "year": 2013, "is_original": True,
-     "relationship": "is_original_of"},
+    {
+        "title": "Drishyam",
+        "language": "ml",
+        "year": 2013,
+        "is_original": True,
+        "relationship": "is_original_of",
+    },
     {"title": "Papanasam", "language": "ta", "year": 2015, "relationship": "is_remake_of"},
 ]
 
@@ -142,9 +150,10 @@ def test_slice_map_covers_spec_slices() -> None:
 
 def test_needs_sequel_walk_detects_gs06_shape() -> None:
     with_sequel = _fixture(
-        versions=[*EXPECTED_FAMILY,
-                  {"title": "Drishyam 2", "language": "ml", "year": 2021,
-                   "relationship": "is_sequel_of"}]
+        versions=[
+            *EXPECTED_FAMILY,
+            {"title": "Drishyam 2", "language": "ml", "year": 2021, "relationship": "is_sequel_of"},
+        ]
     )
     assert needs_sequel_walk(with_sequel) is True
     assert needs_sequel_walk(_fixture(versions=EXPECTED_FAMILY)) is False

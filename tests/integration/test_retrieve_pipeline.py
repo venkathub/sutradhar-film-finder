@@ -149,9 +149,7 @@ def retriever(session: Session, tmp_path: Path) -> Retriever:
     meta = json.loads(run.path("meta.json").read_text("utf-8"))
     return Retriever(
         session,
-        RetrievalConfig(
-            chunk_config=CONFIG, embed_model=meta["embed_model"], index_version=RUN_ID
-        ),
+        RetrievalConfig(chunk_config=CONFIG, embed_model=meta["embed_model"], index_version=RUN_ID),
         ArtifactEmbeddings(run, banks=("queries", f"corpus_{CONFIG}")),
         ArtifactReranker(run, CONFIG),
     )

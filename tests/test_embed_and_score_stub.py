@@ -33,16 +33,20 @@ INPUTS = {
             {"hash": content_hash(CARD), "text": CARD},  # card repeats across configs
         ],
         "512tok_15pct": [
-            {"hash": content_hash("chunk one text. chunk two text."),
-             "text": "chunk one text. chunk two text."},
+            {
+                "hash": content_hash("chunk one text. chunk two text."),
+                "text": "chunk one text. chunk two text.",
+            },
             {"hash": content_hash(CARD), "text": CARD},
         ],
     },
     "queries": [
-        {"id": "GS-03a", "hash": content_hash("a man buries a body"),
-         "text": "a man buries a body"},
-        {"id": "NEG-01", "hash": content_hash("a mermaid in Kochi"),
-         "text": "a mermaid in Kochi"},
+        {
+            "id": "GS-03a",
+            "hash": content_hash("a man buries a body"),
+            "text": "a man buries a body",
+        },
+        {"id": "NEG-01", "hash": content_hash("a mermaid in Kochi"), "text": "a mermaid in Kochi"},
     ],
 }
 
@@ -53,8 +57,17 @@ def _run(tmp_path: Path, run_id: str = "stub-run") -> Path:
     inputs.write_text(json.dumps(INPUTS), encoding="utf-8")
     out = tmp_path / "artifacts"
     proc = subprocess.run(
-        [sys.executable, str(SCRIPT), "--inputs", str(inputs), "--out", str(out),
-         "--run-id", run_id, "--stub"],
+        [
+            sys.executable,
+            str(SCRIPT),
+            "--inputs",
+            str(inputs),
+            "--out",
+            str(out),
+            "--run-id",
+            run_id,
+            "--stub",
+        ],
         capture_output=True,
         text=True,
         timeout=120,
@@ -123,8 +136,17 @@ def test_refuses_to_overwrite_existing_run(tmp_path: Path) -> None:
     _run(tmp_path)
     inputs = tmp_path / "gpu_inputs.json"
     proc = subprocess.run(
-        [sys.executable, str(SCRIPT), "--inputs", str(inputs), "--out",
-         str(tmp_path / "artifacts"), "--run-id", "stub-run", "--stub"],
+        [
+            sys.executable,
+            str(SCRIPT),
+            "--inputs",
+            str(inputs),
+            "--out",
+            str(tmp_path / "artifacts"),
+            "--run-id",
+            "stub-run",
+            "--stub",
+        ],
         capture_output=True,
         text=True,
         timeout=120,

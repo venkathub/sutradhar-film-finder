@@ -209,8 +209,7 @@ def run_job(
             batch = pairs[start : start + batch_size]
             scores = scorer.score([(q["text"], c["text"]) for q, c in batch])
             rows.extend(
-                (q["hash"], c["hash"], float(s))
-                for (q, c), s in zip(batch, scores, strict=True)
+                (q["hash"], c["hash"], float(s)) for (q, c), s in zip(batch, scores, strict=True)
             )
         _write_scores(root, config, rows)
         counts[config] = len(chunks)

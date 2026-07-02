@@ -1,6 +1,6 @@
 """Export GPU-job inputs (P2 task 5): corpus texts per config + all eval queries.
 
-    uv run python rag-engine/export_gpu_inputs.py [--out data/interim/gpu_inputs.json]
+uv run python rag-engine/export_gpu_inputs.py [--out data/interim/gpu_inputs.json]
 """
 
 from __future__ import annotations

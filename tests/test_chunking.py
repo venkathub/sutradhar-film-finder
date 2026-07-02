@@ -105,8 +105,10 @@ def test_paragraph_boundaries_respected() -> None:
 def test_size_bounds_hold() -> None:
     text = "\n\n".join(_para(5, f"plot{i}") for i in range(10))
     for chunk in chunk_text(text, CFG):
-        assert 0 < estimate_tokens(chunk) <= CFG.target_tokens + int(
-            CFG.target_tokens * CFG.overlap_fraction
+        assert (
+            0
+            < estimate_tokens(chunk)
+            <= CFG.target_tokens + int(CFG.target_tokens * CFG.overlap_fraction)
         )
 
 

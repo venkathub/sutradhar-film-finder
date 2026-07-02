@@ -107,8 +107,11 @@ def main(
             outcome = retriever.retrieve(query)
             result = search_by_plot(session, query, top_k=3, retriever=retriever)
             top = result.results[0]
-            confidence = "LOW CONFIDENCE (below calibrated θ — shown, never invented)" \
-                if result.abstain else "confident"
+            confidence = (
+                "LOW CONFIDENCE (below calibrated θ — shown, never invented)"
+                if result.abstain
+                else "confident"
+            )
             typer.echo(f"  → {top.canonical_title} ({top.year}) — {confidence}")
 
             versions = get_versions(session, top.work_id)

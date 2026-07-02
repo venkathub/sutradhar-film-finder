@@ -82,9 +82,7 @@ def _session_kwargs(tmp_path: Path) -> dict[str, Any]:
 def test_happy_path_pulls_verified_run_and_destroys(tmp_path: Path) -> None:
     client = _FakeClient()
     hub = _FakeHub(tmp_path)
-    ev = jarvis.embed_session(
-        _settings(), _base_deps(client), hub, **_session_kwargs(tmp_path)
-    )
+    ev = jarvis.embed_session(_settings(), _base_deps(client), hub, **_session_kwargs(tmp_path))
     assert ev.status == "up" and ev.booted and ev.destroyed
     assert client.destroyed == [4242]
     assert "RETRIEVAL_RUN=" in ev.detail
@@ -98,9 +96,7 @@ def test_happy_path_pulls_verified_run_and_destroys(tmp_path: Path) -> None:
 def test_failed_job_still_destroys_instance(tmp_path: Path) -> None:
     client = _FakeClient()
     hub = _FakeHub(tmp_path, job_succeeds=False)  # EXIT appears but no sealed run
-    ev = jarvis.embed_session(
-        _settings(), _base_deps(client), hub, **_session_kwargs(tmp_path)
-    )
+    ev = jarvis.embed_session(_settings(), _base_deps(client), hub, **_session_kwargs(tmp_path))
     assert ev.status == "error" and not ev.booted
     assert client.destroyed == [4242]  # teardown guaranteed
 
@@ -109,9 +105,7 @@ def test_timeout_still_destroys_instance(tmp_path: Path) -> None:
     client = _FakeClient()
     hub = _FakeHub(tmp_path)
     hub.exists = lambda path: False  # type: ignore[method-assign] — EXIT never appears
-    ev = jarvis.embed_session(
-        _settings(), _base_deps(client), hub, **_session_kwargs(tmp_path)
-    )
+    ev = jarvis.embed_session(_settings(), _base_deps(client), hub, **_session_kwargs(tmp_path))
     assert ev.status == "off"
     assert client.destroyed == [4242]
 

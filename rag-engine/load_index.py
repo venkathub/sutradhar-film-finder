@@ -1,7 +1,7 @@
 """Load the pinned artifact run into pgvector (P2 task 7).
 
-    uv run python rag-engine/load_index.py                 # uses RETRIEVAL_RUN from .env
-    uv run python rag-engine/load_index.py --run-id <id>
+uv run python rag-engine/load_index.py                 # uses RETRIEVAL_RUN from .env
+uv run python rag-engine/load_index.py --run-id <id>
 """
 
 from __future__ import annotations

@@ -1,7 +1,7 @@
 """Build the retrieval corpus (P2 task 3): gate-visible plot chunks + metadata cards.
 
-    uv run python rag-engine/build_corpus.py            # all three ablation configs
-    uv run python rag-engine/build_corpus.py --config 512tok_15pct
+uv run python rag-engine/build_corpus.py            # all three ablation configs
+uv run python rag-engine/build_corpus.py --config 512tok_15pct
 """
 
 from __future__ import annotations

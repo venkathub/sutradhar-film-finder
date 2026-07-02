@@ -83,9 +83,7 @@ def test_no_hallucinated_movie_gs02(artifact: EvalRunArtifact, winner: ConfigRec
     """GS-02a/b/c + the untouched test-half negatives: abstain on ALL — false-accept = 0."""
     gs02 = {qid: q for qid, q in winner.queries.items() if qid.startswith("GS-02")}
     assert len(gs02) == 3
-    assert all(q.abstain for q in gs02.values()), {
-        qid: q.abstain for qid, q in gs02.items()
-    }
+    assert all(q.abstain for q in gs02.values()), {qid: q.abstain for qid, q in gs02.items()}
     test_half = {qid: q for qid, q in winner.negatives.items() if q.slice == "heldout_test"}
     assert len(test_half) == 12
     assert all(q.abstain for q in test_half.values())
@@ -137,9 +135,7 @@ def test_false_merge_gs10(winner: ConfigRecord) -> None:
     assert len({wid for _, wid in vikrams}) >= 2  # distinct work_ids, never merged
 
 
-def test_tool_calls_validate_v0(
-    fixtures: dict[str, GoldenFixture], winner: ConfigRecord
-) -> None:
+def test_tool_calls_validate_v0(fixtures: dict[str, GoldenFixture], winner: ConfigRecord) -> None:
     """GS-07 expected_tool_calls + every recorded search_by_plot-shaped result: 100% valid v0."""
     params_schema = dict(SCHEMA["tools"]["search_by_plot"]["params"])
     params_schema["$defs"] = SCHEMA["$defs"]

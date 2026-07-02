@@ -122,9 +122,7 @@ def calibrate(
     precision = round(test_abstained / abstained_total, 4) if abstained_total else 1.0
 
     curve: list[CurvePoint] = []
-    candidates = sorted(
-        {*inputs.positives.values(), *inputs.calibration_negatives.values(), theta}
-    )
+    candidates = sorted({*inputs.positives.values(), *inputs.calibration_negatives.values(), theta})
     for point in candidates:
         true_abstains = sum(1 for s in inputs.calibration_negatives.values() if s < point)
         false_accepts = len(inputs.calibration_negatives) - true_abstains

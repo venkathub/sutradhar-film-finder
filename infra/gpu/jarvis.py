@@ -537,9 +537,8 @@ def embed_session(
         if not hub.exists(f"runs/{run_id}/out/MANIFEST.sha256"):
             ev.status = "error"
             log_tail = hub.fetch_log(run_id)
-            ev.detail = (
-                "job exited without a sealed artifact run"
-                + (f" — job.log tail:\n{log_tail}" if log_tail else " (no job.log uploaded)")
+            ev.detail = "job exited without a sealed artifact run" + (
+                f" — job.log tail:\n{log_tail}" if log_tail else " (no job.log uploaded)"
             )
             return ev
 
@@ -553,8 +552,7 @@ def embed_session(
         ev.booted = True
         ev.status = "up"
         ev.detail = (
-            f"sealed artifact run pulled + verified: {dest} — "
-            f"set RETRIEVAL_RUN={run_id} in .env"
+            f"sealed artifact run pulled + verified: {dest} — set RETRIEVAL_RUN={run_id} in .env"
         )
         return ev
     except Exception as exc:  # noqa: BLE001 — record, then guarantee teardown in finally

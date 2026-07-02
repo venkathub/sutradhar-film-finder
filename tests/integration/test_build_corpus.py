@@ -126,10 +126,7 @@ def test_corpus_covers_every_config_and_version(corpus_ready: Session) -> None:
     assert report.versions_seen > 20  # the seed slice is gate-visible
     for config in CHUNK_CONFIGS:
         cards = corpus_ready.execute(
-            text(
-                "SELECT count(*) FROM chunks "
-                "WHERE kind = 'metadata_card' AND chunk_config = :c"
-            ),
+            text("SELECT count(*) FROM chunks WHERE kind = 'metadata_card' AND chunk_config = :c"),
             {"c": config.name},
         ).scalar_one()
         assert cards == report.versions_seen  # one card per gate-visible version per config

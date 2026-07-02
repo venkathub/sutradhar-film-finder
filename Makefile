@@ -21,8 +21,9 @@ setup: ## Install the locked Python environment (uv sync)
 fmt: ## Auto-format the codebase (ruff format)
 	uv run ruff format .
 
-lint: ## Lint the codebase (ruff check)
+lint: ## Lint + format check (ruff) — matches the Tier-1 CI job exactly
 	uv run ruff check .
+	uv run ruff format --check .
 
 typecheck: ## Static type check (mypy, strict)
 	uv run mypy src
