@@ -69,6 +69,13 @@ class GoldenFixture(BaseModel):
     verify_source: list[str] = Field(min_length=1)  # QIDs / tmdb ids / page@revision
     expected_tool_calls: list[ExpectedToolCall] | None = None
     scope: str | None = None  # for scoping fixtures (GS-09)
+    # --- Generation-slice labels (P3 task 4, P3_SPEC §2.2; additive, optional) ---
+    # One label/dict for single-turn fixtures, one per turn (ordered) for multi-turn.
+    # Labels must come from the frozen intent taxonomy / slot vocabulary
+    # (evals/prompts/intent_taxonomy_v1.json) — enforced by
+    # tests/test_golden_generation_labels.py, not here (golden.py stays taxonomy-agnostic).
+    expected_intent: str | list[str] | None = None
+    expected_slots: dict[str, Any] | list[dict[str, Any]] | None = None
 
 
 class ValidationIssue(BaseModel):

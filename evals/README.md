@@ -4,7 +4,7 @@ Evaluation harnesses for Sutradhar. **Import package:** `sutradhar.evals`
 
 ## Golden set (P1 — frozen)
 
-`evals/golden/*.yaml` holds **25 fixtures across all 11 scenario categories**
+`evals/golden/*.yaml` holds **34 fixtures across all 11 scenario categories**
 (GS-01..GS-11 per `docs/GOLDEN_SET_SCENARIOS.md`), authored only from verified graph facts
 (each `verify_source` names the QIDs / pinned pages). `make golden-validate` runs the
 validator against the live graph:
@@ -23,6 +23,24 @@ regressions (`test_gs01_version_set_recall`, `test_gs04_dub_vs_remake`, …).
 
 Frozen 2026-07-02 against graph state: 15 works / 31 versions / 21 gate-visible edges
 (reproducibility stamp in `docs/BENCHMARKS.md`).
+
+### Generation slice (P3 task 4 — the Table 2 fixtures)
+
+12 fixtures carry the additional generation labels (`expected_intent`, `expected_slots` —
+one entry per turn for multi-turn; labels drawn from the frozen taxonomy, test-enforced by
+`tests/test_golden_generation_labels.py`) plus `expected_tool_calls` validated against
+TOOL_SCHEMA v0:
+
+| Slice | Fixtures | Notes |
+|---|---|---|
+| GS-07 (code-mixed) | a Tanglish, b Hinglish (plot); **c Kanglish, d Tenglish (+actor slot), e native-script Kannada** (title path) | intent/slot accuracy |
+| GS-08 (backtracking) | a Drishyam; **b Manichitrathazhu franchise; c Drishyam 2 with a mid-turn NO_MATCH** (no Tamil version exists — abstain without losing the set) | backtracking coherence |
+| GS-02-conversational | **d Hinglish title (Salaar), e Hinglish plot, f Tanglish plot+language, g native-Telugu title (Pushpa)** | 0-inventions gate, end-to-end |
+
+GS-02a/b/c stay retrieval-shaped and untouched (the P2 committed artifact keeps validating);
+all new queries were verified against the live title index before freezing (negatives resolve
+to nothing — including their extracted title forms; positives resolve at score 1.0). All 34
+fixtures pass `make golden-validate` (expanded 2026-07-03, same graph state).
 
 ## Held-out negatives (P2 — abstention calibration)
 

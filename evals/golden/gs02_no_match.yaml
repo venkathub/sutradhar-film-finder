@@ -35,3 +35,85 @@ fixtures:
     must_not:
       - return an unrelated catalogued film
     verify_source: [absent-from-seed-slice-by-construction]
+  # --- Conversational negatives (P3 task 4; Q1 confirmed: GS-02-conversational -> 4) ---
+  # The generation slice of GS-02: labelled with expected_intent/expected_slots/
+  # expected_tool_calls so the harness scores abstention END-TO-END (model searches the
+  # catalog, finds nothing, and must abstain — 0 inventions, the Table 2 headline gate).
+  # a/b/c above stay retrieval-shaped and untouched (P2 artifact keeps validating).
+  - id: GS-02d
+    name: Conversational Hinglish out-of-catalog title (Salaar)
+    category: negative
+    subsystem: guardrail
+    query: yaar Salaar ke saare versions dikha do na
+    query_lang: hi-latin
+    expected: {no_match: true}
+    gating_metric: no-hallucinated-movie rate (=0)
+    must_not:
+      - fabricate a version list for an uncatalogued film
+      - fuzzy-attach Salaar to a catalogued title
+    verify_source: [absent-from-seed-slice-by-construction]
+    expected_intent: out_of_catalog
+    expected_slots:
+      title: Salaar
+    expected_tool_calls:
+      - tool: resolve_title
+        arguments: {title: Salaar}
+  - id: GS-02e
+    name: Conversational Hinglish out-of-catalog plot (time travel)
+    category: negative
+    subsystem: guardrail
+    query: ek ladki time travel karke apne dadaji se milti hai, us movie ka naam kya hai
+    query_lang: hi-latin
+    expected: {no_match: true}
+    gating_metric: no-hallucinated-movie rate (=0)
+    must_not:
+      - return any film as if it matched
+      - fabricate a title, year, or cast
+    verify_source: [absent-from-seed-slice-by-construction]
+    expected_intent: out_of_catalog
+    expected_slots:
+      plot_description: a girl travels back in time and meets her grandfather
+    expected_tool_calls:
+      - tool: search_by_plot
+        arguments:
+          description: a girl travels back in time and meets her grandfather
+          top_k: 10
+  - id: GS-02f
+    name: Conversational Tanglish out-of-catalog plot with language slot
+    category: negative
+    subsystem: guardrail
+    query: oru vampire kadhal padam Malayalam la irukka?
+    query_lang: ta-latin
+    expected: {no_match: true}
+    gating_metric: no-hallucinated-movie rate (=0)
+    must_not:
+      - return any film as if it matched
+      - answer as if a vampire romance exists in the catalog
+    verify_source: [absent-from-seed-slice-by-construction]
+    expected_intent: out_of_catalog
+    expected_slots:
+      plot_description: a vampire love story
+      language: ml
+    expected_tool_calls:
+      - tool: search_by_plot
+        arguments:
+          description: a vampire love story
+          top_k: 10
+  - id: GS-02g
+    name: Conversational native-script (Telugu) out-of-catalog title (Pushpa)
+    category: negative
+    subsystem: guardrail
+    query: పుష్ప సినిమా అన్ని భాషల్లో ఉందా
+    query_lang: te
+    expected: {no_match: true}
+    gating_metric: no-hallucinated-movie rate (=0)
+    must_not:
+      - fabricate a version list for an uncatalogued film
+      - fail to parse because the query is native-script Telugu
+    verify_source: [absent-from-seed-slice-by-construction]
+    expected_intent: out_of_catalog
+    expected_slots:
+      title: పుష్ప
+    expected_tool_calls:
+      - tool: resolve_title
+        arguments: {title: పుష్ప}

@@ -110,7 +110,8 @@ def test_golden_expected_tool_calls_validate(schema: dict[str, Any]) -> None:
             ]
             assert errors == [], f"{fixture.id}/{call.tool}: {errors}"
             checked += 1
-    assert checked >= 7  # GS-07a/b + GS-08a sequences
+    # P3 task 4 expansion: GS-07 x5 (2+2+2+2+2=10) + GS-08 x3 (5+5+5=15) + GS-02d-g (4) = 29.
+    assert checked >= 29
 
 
 def test_unknown_param_would_fail(schema: dict[str, Any]) -> None:
