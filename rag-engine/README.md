@@ -149,6 +149,21 @@ skipped. Known non-gating miss: GS-07b (Hinglish) ranks Drishyam #2 (R@5=1.0, VS
 top-1 misses) — the raw-code-mixed-query limitation P2 accepts by design; LLM intent
 parsing is the P4 headroom story.
 
+### Abstention calibration (P2 task 11, DEC-P2-5)
+
+```
+make calibrate-no-match    # pure laptop math over the committed artifact
+```
+
+**θ = 0.151747** (1.35 × top calibration canary), calibrated on the 12-negative
+calibration half only. **Zero false accepts on GS-02 + all 12 untouched test negatives
+(NO_MATCH recall 1.0, precision 0.75).** Measured and documented: the zero-false-reject
+constraint is infeasible on raw cross-encoder scores (code-mixed positives score below
+fluent-English out-of-catalog negatives) — four positives (GS-03a/c, GS-07a/b) are
+flagged `abstain=true` **with their correct results** (all still Recall@5 = 1.0): they
+degrade to "low confidence", never to a hallucinated match. This interleave is a named
+P4 headroom target. Full curve: `evals/retrieval_runs/<run>.calibration.json`.
+
 ## Tests
 
 ```

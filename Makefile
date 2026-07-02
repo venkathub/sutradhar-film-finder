@@ -100,6 +100,9 @@ load-index: ## P2: load the pinned artifact run (RETRIEVAL_RUN) into chunk_embed
 retrieval-eval: ## P2: run the retrieval eval + ablation grid; write the committed run artifact
 	uv run python evals/run_retrieval_eval.py
 
+calibrate-no-match: ## P2: tune the NO_MATCH abstention threshold from the committed artifact
+	uv run python evals/calibrate_no_match.py
+
 golden-validate: ## Validate golden fixtures against the live graph (task 14)
 	uv run python evals/build_golden.py
 

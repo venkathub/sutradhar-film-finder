@@ -632,8 +632,25 @@ Calibration: canary + ε-margin methodology on the calibration half of the ~24-q
 negative set (`evals/negatives/heldout.yaml`, absent-from-slice-by-construction), maximizing
 NO_MATCH F1 subject to **zero false rejects** on positive golden fixtures; P/R reported on the
 test half; gate = 0 false accepts on GS-02. The title channel's 0.80 fuzzy floor (DEC-P1-5)
-composes with θ for pure-title negatives (GS-02b "Kaithi"). _Measured θ + curve: — (pending P2
-execution)._
+composes with θ for pure-title negatives (GS-02b "Kaithi").
+
+_Measured outcome (2026-07-02, run `20260702T135315Z-f6583183`, winner cell 1024tok/d20):_
+**θ = 0.151747** = 1.35 × the top calibration canary (NEG-17 "toddy-shop accountant wins the
+Fields Medal" = 0.11241 — thematically Indian negatives score highest, as expected). **Hard gate
+met: 0 false accepts on GS-02 and on all 12 untouched test negatives (NO_MATCH recall = 1.0;
+precision 0.75 over the validation population).** The zero-false-reject side constraint was
+**measured infeasible** — witness: GS-07a (Tanglish positive) = 0.00084 ≤ NEG-17 = 0.11241; the
+cross-encoder scores code-mixed/vague-plot positives below fluent-English out-of-catalog plots.
+Consequence, chosen deliberately: the no-hallucination gate outranks the no-false-reject
+preference, so four weak-scoring positives (GS-03a/c, GS-07a/b) return `abstain=true` **with
+their correct results** (v0 allows both) — they degrade to "low confidence", never to a
+fabricated match, and all four still rank the right Work top-5 (Recall@5 = 1.0). This measured
+positive/negative interleave on raw cross-encoder scores is a primary P4 headroom target
+(code-mixed intent parsing before retrieval). Identical false-reject set across all six ablation
+cells (structural, not config noise). θ wired as
+`sutradhar.rag.retrieve.CALIBRATED_NO_MATCH_THRESHOLD` (drift-checked against the artifact by
+`test_recorded_calibration_outcome_holds`); full curve committed at
+`evals/retrieval_runs/<run>.calibration.json`.
 
 **Sources (accessed 2026-07-02).** BAAI `bge-reranker-v2-m3` card (sigmoid mapping); retrieval-
 abstention practice (cross-encoder score stability; canary-threshold methodology); UAEval4RAG

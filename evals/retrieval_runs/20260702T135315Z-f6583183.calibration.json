@@ -1,0 +1,205 @@
+{
+ "config_key": "1024tok_15pct/d20",
+ "theta": 0.151747,
+ "max_calibration_negative": [
+  "NEG-17",
+  0.11240509152412415
+ ],
+ "relative_margin": 0.35,
+ "zero_false_reject_feasible": false,
+ "infeasibility_witness": "GS-07a=0.00084 <= NEG-17=0.11241",
+ "positive_false_rejects": [
+  "GS-03a",
+  "GS-03c",
+  "GS-07a",
+  "GS-07b"
+ ],
+ "gs02_false_accepts": [],
+ "test_false_accepts": [],
+ "test_no_match_recall": 1.0,
+ "test_no_match_precision": 0.75,
+ "curve": [
+  {
+   "theta": 0.000238,
+   "calib_true_abstains": 0,
+   "calib_false_accepts": 12,
+   "positive_false_rejects": 0,
+   "f1": 0.0
+  },
+  {
+   "theta": 0.000836,
+   "calib_true_abstains": 1,
+   "calib_false_accepts": 11,
+   "positive_false_rejects": 0,
+   "f1": 0.1538
+  },
+  {
+   "theta": 0.002075,
+   "calib_true_abstains": 1,
+   "calib_false_accepts": 11,
+   "positive_false_rejects": 1,
+   "f1": 0.1429
+  },
+  {
+   "theta": 0.002673,
+   "calib_true_abstains": 2,
+   "calib_false_accepts": 10,
+   "positive_false_rejects": 1,
+   "f1": 0.2667
+  },
+  {
+   "theta": 0.002801,
+   "calib_true_abstains": 3,
+   "calib_false_accepts": 9,
+   "positive_false_rejects": 1,
+   "f1": 0.375
+  },
+  {
+   "theta": 0.003839,
+   "calib_true_abstains": 4,
+   "calib_false_accepts": 8,
+   "positive_false_rejects": 1,
+   "f1": 0.4706
+  },
+  {
+   "theta": 0.005843,
+   "calib_true_abstains": 5,
+   "calib_false_accepts": 7,
+   "positive_false_rejects": 1,
+   "f1": 0.5556
+  },
+  {
+   "theta": 0.006719,
+   "calib_true_abstains": 5,
+   "calib_false_accepts": 7,
+   "positive_false_rejects": 2,
+   "f1": 0.5263
+  },
+  {
+   "theta": 0.007121,
+   "calib_true_abstains": 6,
+   "calib_false_accepts": 6,
+   "positive_false_rejects": 2,
+   "f1": 0.6
+  },
+  {
+   "theta": 0.007846,
+   "calib_true_abstains": 7,
+   "calib_false_accepts": 5,
+   "positive_false_rejects": 2,
+   "f1": 0.6667
+  },
+  {
+   "theta": 0.012871,
+   "calib_true_abstains": 8,
+   "calib_false_accepts": 4,
+   "positive_false_rejects": 2,
+   "f1": 0.7273
+  },
+  {
+   "theta": 0.015845,
+   "calib_true_abstains": 9,
+   "calib_false_accepts": 3,
+   "positive_false_rejects": 2,
+   "f1": 0.7826
+  },
+  {
+   "theta": 0.017917,
+   "calib_true_abstains": 9,
+   "calib_false_accepts": 3,
+   "positive_false_rejects": 3,
+   "f1": 0.75
+  },
+  {
+   "theta": 0.092852,
+   "calib_true_abstains": 9,
+   "calib_false_accepts": 3,
+   "positive_false_rejects": 4,
+   "f1": 0.72
+  },
+  {
+   "theta": 0.10725,
+   "calib_true_abstains": 10,
+   "calib_false_accepts": 2,
+   "positive_false_rejects": 4,
+   "f1": 0.7692
+  },
+  {
+   "theta": 0.112405,
+   "calib_true_abstains": 11,
+   "calib_false_accepts": 1,
+   "positive_false_rejects": 4,
+   "f1": 0.8148
+  },
+  {
+   "theta": 0.151747,
+   "calib_true_abstains": 12,
+   "calib_false_accepts": 0,
+   "positive_false_rejects": 4,
+   "f1": 0.8571
+  },
+  {
+   "theta": 0.67662,
+   "calib_true_abstains": 12,
+   "calib_false_accepts": 0,
+   "positive_false_rejects": 4,
+   "f1": 0.8571
+  },
+  {
+   "theta": 0.774071,
+   "calib_true_abstains": 12,
+   "calib_false_accepts": 0,
+   "positive_false_rejects": 5,
+   "f1": 0.8276
+  },
+  {
+   "theta": 0.859782,
+   "calib_true_abstains": 12,
+   "calib_false_accepts": 0,
+   "positive_false_rejects": 6,
+   "f1": 0.8
+  },
+  {
+   "theta": 0.863276,
+   "calib_true_abstains": 12,
+   "calib_false_accepts": 0,
+   "positive_false_rejects": 7,
+   "f1": 0.7742
+  },
+  {
+   "theta": 0.997843,
+   "calib_true_abstains": 12,
+   "calib_false_accepts": 0,
+   "positive_false_rejects": 8,
+   "f1": 0.75
+  },
+  {
+   "theta": 0.997933,
+   "calib_true_abstains": 12,
+   "calib_false_accepts": 0,
+   "positive_false_rejects": 9,
+   "f1": 0.7273
+  },
+  {
+   "theta": 0.998103,
+   "calib_true_abstains": 12,
+   "calib_false_accepts": 0,
+   "positive_false_rejects": 10,
+   "f1": 0.7059
+  },
+  {
+   "theta": 0.999154,
+   "calib_true_abstains": 12,
+   "calib_false_accepts": 0,
+   "positive_false_rejects": 11,
+   "f1": 0.6857
+  },
+  {
+   "theta": 0.999687,
+   "calib_true_abstains": 12,
+   "calib_false_accepts": 0,
+   "positive_false_rejects": 12,
+   "f1": 0.6667
+  }
+ ]
+}
