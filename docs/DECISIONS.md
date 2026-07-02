@@ -786,6 +786,16 @@ the gating faithfulness signal**; RAGAS numbers are reported, the detector gates
 **Consequences.** ragas version recorded in every artifact stamp; RAGAS/judge scores are computed
 only inside GPU sessions over recorded transcripts; Tier-1 CI never calls a model.
 
+**Amendment (2026-07-03, P3 task 8 — implementation notes).** (1) Pinned **ragas 0.4.3** (the
+modern `metrics.collections` API: `Faithfulness(llm=…)`, `AnswerRelevancy(llm=…, embeddings=…)`
+over `llm_factory` + `OpenAIEmbeddings` on OpenAI-compatible clients — exactly the wiring option A
+promised). (2) **Dependency pin:** ragas 0.4.3 imports `langchain_community.chat_models.vertexai`
+at import time; that module was removed in langchain-community 0.4.x and ragas carries no upper
+bound → `[tool.uv] constraint-dependencies = ["langchain-community>=0.3,<0.4"]` holds the
+transitive stack; revisit on the next ragas bump. (3) Batch-safety contract: per-sample metric
+failures are recorded as `ragas_error` fields, never raised; judge/embeddings unset →
+`build_scorer` returns `(None, reason)` and callers skip cleanly.
+
 ## DEC-P3-4 — Base-model prompting freeze: system prompt + intent taxonomy + 3 disjoint exemplars (2026-07-02)
 
 **Status:** Accepted (P3 grooming; user-approved). This is the "well-prompted base" honesty bar.

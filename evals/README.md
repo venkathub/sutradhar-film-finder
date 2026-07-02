@@ -167,6 +167,28 @@ escalation is pure config — proven by test against both endpoint styles.
   percent agreement + **Cohen's κ (gate: ≥ 0.6)** → `evals/judge_validation/report.json`.
   Judge–human agreement result: _pending task 13 (the labelling + ephemeral GPU session)_.
 
+## RAGAS adapter (P3 task 8 — `sutradhar.evals.ragas_metrics`, DEC-P3-3)
+
+Supplementary Table 2 signals — RAGAS **faithfulness** + **answer relevancy** — computed
+with **zero external eval APIs**: LLM = the pinned self-hosted judge endpoint
+(`JUDGE_BASE_URL`/`JUDGE_MODEL` via `ragas.llms.llm_factory`), embeddings = **BGE-M3 in
+the same judge GPU session** (`EMBED_BASE_URL`, DEC-0002's embedder reused). The
+**gating** faithfulness signal remains the deterministic detector; RAGAS numbers are
+reported, the detector gates.
+
+- `build_scorer(settings)` → `(None, reason)` when judge/embeddings are unset — callers
+  skip cleanly (the P0 "off" posture). Construction is network-free; scoring runs as a
+  batch pass over recorded transcripts inside the GPU session.
+- Per-sample metric failures land in `RagasScores.*_error`, never raised into the batch;
+  the ragas version is stamped on every scores object (RAGAS internal prompts evolve —
+  the pin keeps runs comparable).
+- Tests drive the **real ragas pipelines** through fakes subclassing the real base
+  contracts (`InstructorBaseRagasLLM` / `BaseRagasEmbedding`) — statement-ratio
+  faithfulness, cosine relevancy, noncommittal zeroing, NaN and failure paths, all offline.
+- Dependency note: `ragas 0.4.3` is import-broken against `langchain-community ≥ 0.4`
+  (removed `vertexai` module); a `[tool.uv] constraint-dependencies` pin holds the stack
+  at `<0.4` until a ragas release absorbs it (see DEC-P3-3 amendment).
+
 ## Planned (P3+)
 - Retrieval eval harness + metrics — **landed in P2** (see above).
 - Frozen prompt artifacts — **landed in P3 task 3** (see above).

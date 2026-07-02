@@ -63,6 +63,12 @@ dev = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.uv]
+# ragas 0.4.3 imports langchain_community.chat_models.vertexai at import time; that module
+# was removed in langchain-community 0.4.x (no upper bound in ragas metadata). Constrain the
+# transitive stack until a ragas release absorbs it (P3 task 8; revisit on ragas bump).
+constraint-dependencies = ["langchain-community>=0.3,<0.4"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/sutradhar"]
 
