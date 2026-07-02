@@ -8,18 +8,38 @@
 > and `docs/phases/TOOL_SCHEMA.md` (**FROZEN v0** — `search_by_plot` is schema-frozen and
 > **implemented in this phase**, conforming, no version bump).
 >
-> **Status:** **APPROVED — 2026-07-02.** All five §3 recommendations accepted as proposed
-> (logged as DEC-P2-1..5); §7 resolved: **Q1** = skip the 9B challenger leg entirely if BGE-M3
-> meets the exit gate (DEC-0002 execution note); **Q2** = the compact retrieval-run summary is
-> committed to git (DEC-P2-6). Stated assumptions accepted. Execution not started — awaiting a
-> separate go-ahead.
+> **Status:** **COMPLETE — 2026-07-02. Exit gate met on the first pass; P4 green-lit.**
+> Recall@10 = **1.000** (gate ≥ 0.90) in **all six** ablation cells; version-set recall
+> **= 1.0 on GS-01 and GS-06** (the Papanasam/Drishyam row is a measured benchmark entry);
+> NO_MATCH abstention calibrated (θ = 0.151747, **0 false accepts** on GS-02 + all 12 held-out
+> test negatives, NO_MATCH recall 1.0 / precision 0.75). Winner: **1024tok_15pct / depth 20**
+> (DEC-P2-3/4 measured values recorded); **DEC-0002 → Accepted** — BGE-M3 met the gate, the 9B
+> challenger leg was skipped per Q1 (task 13 = no-op). One ephemeral A100 session
+> (~10 GPU-minutes ≈ **$0.22**, 833 texts embedded, 44,217 rerank pairs) produced every neural
+> artifact; sealed run `20260702T135315Z-f6583183` pinned as `RETRIEVAL_RUN`; Tier-1 CI
+> recomputes every gating metric from the committed run artifact
+> (`evals/retrieval_runs/…json`, DEC-P2-6). Evidence: `docs/BENCHMARKS.md` Table 1,
+> `rag-engine/README.md` (ablation table + reproduce-from-scratch), `make rag-demo` (GPU off).
 >
-> _History: DRAFT written at grooming (2026-07-02); web-research pass folded in same day
-> (sources in §8): pgvector `sparsevec` capability correction (sparse leg now scored **in-DB**),
-> reranker sigmoid score mapping pinned, chunk-size grid + iteration order evidenced, RRF k=60
-> confirmed as the cross-industry default, and a MIRACL/Indic coverage gap noted that makes our
-> golden-set gate — not public leaderboards — the only honest decider for DEC-0002. APPROVED
-> same day with all recommendations accepted._
+> **Execution deviations (all logged):** (1) GPU-job transport = **HF Hub relay** — a fork the
+> spec left open, user-approved and logged as **DEC-P2-7**; consequence: `embed_and_score.py` is
+> self-contained and the instance startup script carries a scoped HF token (mitigations in the
+> DEC). (2) The planned `gpu` uv dependency group (§2.7) was **dropped** (DEC-P2-7 amendment):
+> FlagEmbedding⇒`transformers<5`⇒`huggingface-hub<1.0` is unresolvable in one lockfile with the
+> laptop's `hub>=1.0`; the startup script is the authoritative instance pin. (3) Chunk sizes use
+> a deterministic char-class token **estimator**, not the XLM-R tokenizer (keeps the laptop
+> neural-free per §2.7; sizes are ablation brackets — documented in `sutradhar.rag.chunking`).
+> (4) `sutradhar.evals.report` / `make retrieval-report` (§2.1 row) was **not built**: Table 1 is
+> written from `make retrieval-eval`'s output + the committed artifact, which already carries the
+> stamp — a separate report script had no non-redundant consumer. (5) DEC-P2-5's
+> zero-false-reject constraint was **measured infeasible** (code-mixed positives interleave with
+> negatives on raw cross-encoder scores); resolution recorded in DEC-P2-5: no-hallucination
+> outranks no-false-reject — 4 positives return `abstain=true` with correct results (all
+> R@5 = 1.0), a named quantified P4 headroom target.
+>
+> _History: DRAFT + web-research pass + APPROVED (2026-07-02, all §3 recommendations accepted as
+> DEC-P2-1..5; Q1/Q2 resolved, Q2 = DEC-P2-6). Executed same day: tasks 1–12, 14, 15 delivered in
+> order (13 skipped by rule); 14 conventional commits on `feature/p2-rag-baseline`._
 >
 > **Current repo state (grounding).** P1 is complete: Postgres graph (`work`/`version`/`edges`/
 > `version_title`/`plot_texts` + gate views `ground_truth_*`), 25 golden fixtures across
@@ -479,33 +499,39 @@ needed for P2's gate** — every gating metric is computable from committed arti
 
 ---
 
-## 6. Definition of Done (instantiates the CLAUDE.md generic DoD)
+## 6. Definition of Done (instantiates the CLAUDE.md generic DoD) — **ALL MET, 2026-07-02**
 
-- [ ] Code complete per this approved spec; `make check` green (lint + mypy-strict + unit).
-- [ ] Unit + integration tests written and passing, including **all eight named regression tests**
-      in §4 (version-set recall GS-01/GS-06, no-hallucinated-movie GS-02, dub-vs-remake GS-04,
-      sibling-vs-remake GS-05, false-merge GS-10, tool-call v0 validation, recall gate).
-- [ ] **Eval thresholds met:** Recall@10 ≥ 0.90 (retrieval fixtures); version-set recall = 1.0 on
-      GS-01 **and** GS-06; 0 false accepts on GS-02 + test negatives; NO_MATCH P/R reported.
+- [x] Code complete per this approved spec; `make check` green (lint + mypy-strict + **299 unit
+      tests**).
+- [x] Unit + integration tests written and passing (**108 integration**), including **all eight
+      named regression tests** in §4 (version-set recall GS-01/GS-06, no-hallucinated-movie
+      GS-02, dub-vs-remake GS-04, sibling-vs-remake GS-05, false-merge GS-10, tool-call v0
+      validation, recall gate) + GS-11-through-pipeline bonus.
+- [x] **Eval thresholds met:** Recall@10 = **1.000** ≥ 0.90 (retrieval fixtures); version-set
+      recall = **1.0** on GS-01 **and** GS-06; **0 false accepts** on GS-02 + test negatives;
+      NO_MATCH P/R reported (recall 1.0 / precision 0.75; θ = 0.151747 + curve in DECISIONS).
       (MLflow recording lands in P3 per the roadmap; P2 records to `BENCHMARKS.md` + the committed
       run artifact — same pattern as P1's graph report.)
-- [ ] **Benchmark tables:** `docs/BENCHMARKS.md` **Table 1** populated (config rows + the
-      Papanasam/Drishyam version-set row) with the §6.1 reproducibility stamp.
-      **Table 2 is untouched** — retrieval metrics never appear there (two-table honesty).
-- [ ] Tier-1 CI gates on the retrieval metrics from the committed artifact; a regression blocks
-      merge.
-- [ ] `DECISIONS.md`: DEC-P2-1..6 logged (done at grooming) and updated with measured values
-      (winning chunk config, rerank depth, abstention θ + curve); **DEC-0002 flipped to Accepted**
-      with the A/B outcome. `rag-engine/README.md` written (architecture, ablation table, how to
-      run). `TOOL_SCHEMA.md` status note added (no version bump).
-- [ ] Runs cleanly from scratch: fresh clone + `.env` → `make up db-migrate ingest-seed
+- [x] **Benchmark tables:** `docs/BENCHMARKS.md` **Table 1** populated (6 config rows + the
+      Papanasam/Drishyam version-set row = 1.0 + the GS-06 franchise row) with the §6.1
+      reproducibility stamp. **Table 2 untouched** — retrieval metrics never appear there.
+- [x] Tier-1 CI gates on the retrieval metrics from the committed artifact
+      (`tests/test_golden_retrieval_regressions.py`); a regression blocks merge
+      (drift check negative-control verified).
+- [x] `DECISIONS.md`: DEC-P2-1..6 updated with measured values (winner **1024tok_15pct**, depth
+      **20**, θ **0.151747** + curve); **DEC-0002 flipped to Accepted** (gate met by default,
+      challenger not run); **DEC-P2-7** added (HF-relay transport, user-approved).
+      `rag-engine/README.md` written (architecture, ablation table, how to run).
+      `TOOL_SCHEMA.md` status note added (implementation landed, v0 unchanged).
+- [x] Runs cleanly from scratch: fresh clone + `.env` → `make up db-migrate ingest-seed
       build-corpus load-index retrieval-eval` reproduces Table 1 from the pinned artifact run
-      (no GPU needed); the GPU session itself is reproducible via `make gpu-embed`
-      (create→run→destroy, no strays).
-- [ ] 30-second demo: `make rag-demo` (GPU off) prints the cited Drishyam version set from a
-      Tanglish plot query.
-- [ ] Resume-ready quantified bullet drafted in `docs/PORTFOLIO.md` (hybrid multilingual RAG,
-      Recall@10, version-set recall 1.0, ~$X GPU cost, CI-gated).
+      (no GPU needed); the GPU session itself reproducible via `make gpu-embed`
+      (create→run→destroy; `make gpu-nuke` confirms no strays).
+- [x] 30-second demo: `make rag-demo` (GPU off) prints the cited, relationship-labelled Drishyam
+      version set (original flagged ★, revision-pinned Wikipedia citations) from the Tanglish
+      GS-07a + plot-only GS-03a queries.
+- [x] Resume-ready quantified bullets drafted in `docs/PORTFOLIO.md` (hybrid multilingual RAG,
+      Recall@10 = 1.000, version-set recall 1.0, **~$0.22** GPU cost, zero-GPU CI gate).
 
 ---
 
