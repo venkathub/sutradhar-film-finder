@@ -47,3 +47,48 @@ _Reproducibility stamp: base model + revision, adapter commit, TOOL_SCHEMA versi
 (vLLM), GPU type, decode params, eval-set version, date, MLflow run URL, Langfuse trace links._
 
 > **Retrieval metrics never appear in Table 2, and generation metrics never appear in Table 1.**
+
+---
+
+## Graph coverage & extraction lift (P1 — graph metrics, NOT retrieval)
+
+> P1's evidence row (P1_SPEC §1.9/§1.10). **These are graph-completeness metrics against the
+> curated seed truth — a different denominator from Table 1's retrieval recall; the two are never
+> blended.** Reproduce: `make up && make db-migrate && make ingest-seed` (offline replays of the
+> recorded snapshots; the extraction step replays its artifact), then `make graph-report`.
+
+### Version coverage (gate-visible versions / curated truth) — captured 2026-07-02
+
+| Franchise | Coverage | Notes |
+|---|---:|---|
+| drishyam (incl. sequel + foreign) | **11/11 = 1.00** | flagship |
+| baahubali | **4/4 = 1.00** | flagship; bilingual double-original + 2 verified dub tracks |
+| devdas | **4/4 = 1.00** | flagship; novella + 3 sibling adaptations |
+| vikram | **2/2 = 1.00** | flagship; false-merge pair kept distinct |
+| manichitrathazhu | **5/5 = 1.00** | flagship; transitive chain |
+| distractors | 5/5 = 1.00 | noise floor |
+| **Flagship gate (= 1.0)** | **PASS** | P1 exit criterion |
+
+Supplementary — curated-relationship **edge** coverage: **19/20 = 0.95**. The one gap is
+Rajmohol's *proximate* edge (→ Chandramukhi): no source states it (Wikipedia asserts the direct
+Manichitrathazhu lineage, which IS a verified edge) — recorded, not invented.
+
+### Extraction lift (report, not gate) — one ephemeral A100 session, 2026-07-02
+
+| Metric | Value |
+|---|---|
+| Extractor | `google/gemma-4-E4B` on vLLM (`guided_json`, temp 0), run `3e37549f492bd2fc` |
+| Pages processed | 27 (parse-failure rate **7.4%**; free-form prompting was 92.6% — DEC-P1-4 amendment) |
+| Candidates | 58 proposed → **19 confirmed / 35 rejected / 4 skipped** (human gate, reviewer: venkatesh) |
+| **Candidate precision** (confirmed/decided) | **0.352** — the honest 4B number; every reject on evidence |
+| Proposals killed by the verbatim-evidence guard | 14 (hallucinated citations never reached review) |
+| **Verified edges added beyond Wikidata** | **6** — Drishya, Drushyam, Dharmayuddhaya, Drishya 2, Drushyam 2 remake edges + the Chandramukhi→Apthamitra *proximate* edge (GS-09B) |
+| Existing edges corroborated (wikidata+wikipedia+human) | 10 |
+| GPU cost | ~50 min ephemeral A100 (created → served → extracted → destroyed; ≈ $1) |
+
+**Reproducibility stamp:** code `4a8eff3` · seed slice `9a1b87eeff15` · snapshots
+wikidata `20260702T055436Z:4ce71591d6d5` / tmdb `20260702T061520Z:3f6a68c5b1e0` /
+imdb `20260702T063039Z:219500867f63` / wikipedia `20260702T064101Z:cd62bacb51c8` /
+extraction `20260702T085302Z:debcdc270318` · decisions artifact
+`data-pipeline/review_decisions_20260702.yaml`. (MLflow wiring lands in P3; P1 metrics are
+computed by `make graph-report` + pytest per the spec's no-MLflow-in-P1 rule.)

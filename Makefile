@@ -8,7 +8,7 @@
 COMPOSE ?= docker compose -f infra/docker-compose.yml
 
 .DEFAULT_GOAL := help
-.PHONY: help setup fmt lint typecheck test test-int check up down down-v db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph extract-candidates review-candidates ingest-seed \
+.PHONY: help setup fmt lint typecheck test test-int check up down down-v db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph extract-candidates review-candidates graph-report ingest-seed \
         smoke hf-check gpu-validate gpu-nuke
 
 help: ## List available targets
@@ -70,6 +70,9 @@ extract-candidates: ## LLM candidate-edge extraction (GPU session; --offline rep
 
 review-candidates: ## Human review gate: confirm/reject candidates -> promotion (DEC-P1-6)
 	uv run python data-pipeline/review_candidates.py --reviewer $${USER}
+
+graph-report: ## Coverage per franchise + extraction lift + reproducibility stamp (task 13)
+	uv run python data-pipeline/graph_report.py
 
 ingest-seed: ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ## Full seed-slice ingestion chain (needs up + db-migrate + TMDB_API_KEY)
 

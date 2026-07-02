@@ -293,6 +293,20 @@ Chandramukhi→Apthamitra **proximate** edge (GS-09B) — plus 13 corroborations
 verifications. Graph: 15 → **21 gate-visible edges**; every curated Indian remake edge now
 exists and GS-01 is unblocked.
 
+## Reports (P1 task 13 — built + captured)
+
+`sutradhar.pipeline.report` + `make graph-report` (exit code 1 if the flagship gate fails —
+CI-usable): per-franchise **version coverage** vs the curated seed truth (backlog excluded from
+every denominator by construction), supplementary curated-relationship **edge coverage**
+(proximate targets counted, gaps named), **extraction lift** (precision, parse-failure rate,
+verified-edges-beyond-Wikidata via provenance attribution), and the §6.1 reproducibility stamp
+(code SHA, seed sha, snapshot manifest digests, model + run hash).
+
+**Captured 2026-07-02** (full numbers in `docs/BENCHMARKS.md` "Graph coverage & extraction
+lift"): flagship gate **PASS** (1.00 on all five flagships), edge coverage 19/20 (the Rajmohol
+proximate edge has no stating source — recorded, not invented), precision 0.352, **6 verified
+edges beyond Wikidata**, 10 corroborations.
+
 ## Planned (remaining P1 tasks)
 - Ingest from Wikidata SPARQL (relationship spine: P144/P1877/P4969, P155/P156/P179), TMDB
   (`translations`, `alternative_titles`, credits), IMDb `title.akas` (slice-filtered), Wikipedia
