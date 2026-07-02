@@ -42,8 +42,18 @@ TMDB + IMDb AKAs) and requires `resolve_title` to return zero candidates for eve
 at the rapidfuzz 0.80 radius (DEC-P1-5). A collision re-authors the negative, never moves
 the threshold.
 
-## Planned (P2/P3)
-- Retrieval eval harness + metrics (Recall@k / MRR / version-set recall) over the golden
-  fixtures; abstention calibration over the negatives (P2 tasks 10–11).
-- RAGAS harness; the two-table benchmark runner (base vs QLoRA) reusing
-  `expected_tool_calls` (P3+).
+## Retrieval eval harness + committed run artifacts (P2)
+
+`sutradhar.evals.retrieval` (metrics + ablation runner) and `sutradhar.evals.calibration`
+(NO_MATCH θ, DEC-P2-5) — entrypoints `make retrieval-eval` / `make calibrate-no-match`.
+`evals/retrieval_runs/` holds the **committed** per-run evidence (DEC-P2-6): the compact
+eval artifact (per-query ranked works + abstention signals for every ablation cell),
+the calibration report/curve, and the GPU-session record. Tier-1 CI
+(`tests/test_golden_retrieval_regressions.py`) recomputes every gating metric from these
+files on each PR — no DB, no GPU; a regression blocks merge. Results: `docs/BENCHMARKS.md`
+Table 1 (P2 exit gate met: Recall@10 = 1.000, version-set recall = 1.0).
+
+## Planned (P3+)
+- Retrieval eval harness + metrics — **landed in P2** (see above).
+- RAGAS harness; MLflow/Langfuse wiring; the two-table benchmark runner (base vs QLoRA)
+  reusing `expected_tool_calls` (P3+).

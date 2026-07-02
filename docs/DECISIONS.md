@@ -93,8 +93,12 @@ If, after all this, QLoRA still does not beat the base, we record the finding an
 
 ## DEC-0002 — Embedding model: A/B decided by the P2 retrieval gate (2026-07-01)
 
-**Status:** Proposed — decision deferred to P2 and resolved by measurement on the golden set. Recorded
-now so the A/B and its default are fixed before work begins.
+**Status:** **Accepted (2026-07-02, P2 execution).** BGE-M3 met the exit gate on the first pass —
+Recall@10 = **1.000** (≥ 0.90) in **every** ablation cell and version-set recall = **1.0** on
+GS-01 and GS-06 (run `20260702T135315Z-f6583183`; full grid in `docs/BENCHMARKS.md` Table 1).
+Per the execution note below, the `bge-multilingual-gemma2` 9B challenger leg was therefore
+**skipped entirely — gate met by default, challenger not run**; zero GPU time spent on it. The
+9B leg remains the recorded escalation path if a future catalog-scale regression reopens the gate.
 
 **Context.** The mission is Indic-heavy and cross-lingual; the P2 exit gate is Recall@10 ≥ 0.90 with
 version-set recall = 1.0 on GS-01/GS-06. Embedding quality is the largest single lever on whether that

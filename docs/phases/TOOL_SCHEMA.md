@@ -10,8 +10,8 @@
 > synthetic data, the tool-call-accuracy metric, and P5 orchestration validate against. This
 > document remains the prose contract; a CI sync test (`test_tool_schema_json_valid`) fails on
 > drift between the two. The graph-backed tools are implemented as repository functions
-> (`sutradhar.graph.repository`) over the P1 ground-truth views; `search_by_plot` is schema-frozen
-> now and implemented in P2.
+> (`sutradhar.graph.repository`) over the P1 ground-truth views; `search_by_plot` was
+> schema-frozen at P1 exit and **landed in P2** (implementation status note under Versioning).
 >
 > **v0 semantics pinned at freeze** (wording-level tightenings from implementation; no signature
 > changes — v0 stays v0):
@@ -117,6 +117,12 @@ Backs: GS-08 ("the one with Ajay Devgn" → "no, the original one" → "is there
 
 ## Versioning
 - **v0** — **FROZEN at P1 exit (2026-07-02).** Artifact: `tool_schema.v0.json`.
+- **Status note (P2, 2026-07-02 — wording only, no version bump):** `search_by_plot` is now
+  **implemented** (`sutradhar.graph.repository.search_by_plot`, P2 task 9), conforming exactly to
+  the frozen v0 shape (`description`, `top_k=10` → `{results[], abstain}`); the hybrid retriever
+  is injected keyword-only infrastructure, invisible to the tool surface. All five v0 tools are
+  now implemented; conformance is CI-enforced (signature + result round-trip + every recorded
+  eval result payload). `abstain` is live per DEC-P2-5 (θ = 0.151747, calibrated).
 - Any signature/label change increments the version and is logged in `DECISIONS.md`; P4 synthetic data
   and P5 orchestration always target a single pinned version, recorded in the benchmark reproducibility
   stamp (`ROADMAP.md` §6.1).

@@ -13,7 +13,8 @@ Hybrid retrieval, reranking, grounding, and guardrails — the facts live here, 
 - Retrieval eval gate: Recall@10 ≥ 0.90 on the golden set before any fine-tuning is invested.
 
 ## Status
-**P2 in progress.** Landed so far:
+**P2 complete — exit gate met** (Recall@10 = 1.000 ≥ 0.90; version-set recall GS-01/GS-06
+= 1.0; abstention calibrated, 0 false accepts). Landed, in build order:
 
 ### Corpus builder (P2 task 3)
 
@@ -174,6 +175,21 @@ sibling-vs-remake GS-05 · false-merge GS-10 (two distinct Vikram works) · tool
 validation (GS-07 calls + every recorded result) · **the Recall@10 ≥ 0.90 gate** with a
 recomputation-vs-committed-metrics drift check (negative-control verified: a doctored
 ranking fails). GS-11 fuzzy titles held through the full pipeline.
+
+## Reproduce from scratch (fresh clone + .env; GPU optional)
+
+```
+make up db-migrate ingest-seed      # P1: graph + plots (offline snapshot replays)
+make build-corpus                   # chunks for all ablation configs (deterministic)
+make load-index                     # pinned RETRIEVAL_RUN artifacts -> pgvector
+make retrieval-eval                 # Table 1 metrics from recorded scores (GPU OFF)
+make calibrate-no-match             # DEC-P2-5 θ from the committed artifact (GPU OFF)
+```
+
+Only `make gpu-embed` (re-embedding after a corpus change) needs the GPU — one ephemeral
+A100 session (~10 min ≈ $0.22), sealed artifacts pulled + verified, instance destroyed.
+Everything above reproduces `docs/BENCHMARKS.md` Table 1 from the pinned run with no GPU
+and no network beyond Postgres.
 
 ## Tests
 

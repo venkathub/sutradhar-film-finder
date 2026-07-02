@@ -40,3 +40,26 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   machine-checkable **tool contract** (JSON Schema + CI conformance gates) and a **25-fixture
   golden set** across 11 scenario categories, every fixture validator-proven against
   HIGH/human-verified graph records only.
+
+## P2 — Hybrid multilingual RAG baseline: measured retrieval gate, GPU-free CI evals
+
+- Built a **hybrid multilingual retrieval engine** (BGE-M3 dense + BGE-M3 sparse lexical weights,
+  both scored **inside Postgres/pgvector** — `sparsevec` inner product, no second vector store —
+  fused with RRF k=60, reranked by bge-reranker-v2-m3, aggregated chunk→Work) that hit the phase
+  gate **on the first pass: Recall@10 = 1.000 (gate ≥ 0.90) in all 6 ablation cells** and
+  **version-set recall = 1.0** on the flagship cross-lingual case — a Tamil "Papanaasam" query
+  returns the Malayalam original + all 4 Indian remakes, relationship-labelled, end-to-end
+  (query → Work → typed version set); the planned 9B embedder A/B was **skipped by the
+  pre-registered decision rule**, saving the GPU spend.
+- Engineered a **compute-placement discipline** that keeps every neural op off the laptop and CI:
+  one ephemeral A100 session (**~10 GPU-minutes ≈ $0.22**, HF-Hub relay, created→destroyed,
+  MANIFEST-sealed artifacts) embedded 833 texts and precomputed the **full 44k-pair query×chunk
+  reranker matrix**, making chunking/fusion/depth ablations and **every CI eval run zero-GPU** —
+  Tier-1 CI recomputes all gating metrics (Recall@k, MRR, version-set recall, no-hallucination)
+  from a 0.5 MB committed artifact on every PR and blocks merge on regression.
+- **Calibrated abstention with the failure documented, not hidden**: NO_MATCH threshold tuned on
+  a 24-query held-out negative set (calibration/test split) → **zero false accepts on all
+  out-of-catalog queries (NO_MATCH recall 1.0)**; measured that raw cross-encoder scores rank
+  code-mixed positives below fluent-English negatives (zero-false-reject infeasible — witnessed
+  per-fixture), chose no-hallucination over no-false-reject, and recorded the interleave as the
+  quantified fine-tuning headroom target for P4.
