@@ -138,6 +138,30 @@ Live run 2026-07-02 (snapshot `20260702T061520Z`): 27/27 versions enriched, **11
 TMDB agree on every checked field. Honest gap: TMDB's translations give only the Baahubali *ml*
 dub title; the ta/hi dub titles and Devadas (ta) must come from IMDb `title.akas` (task 6).
 
+## IMDb `title.akas` loader (P1 task 6 — built)
+
+`sutradhar.pipeline.imdb` + `data-pipeline/load_akas.py` (`make load-akas`):
+
+- **Streamed + slice-filtered:** the multi-GB `title.akas.tsv.gz` is streamed from
+  `datasets.imdbws.com` (env: `IMDB_DATASETS_URL`) and filtered on the fly to the slice's 27
+  tconsts — the raw dump is never stored, never committed (36 s live). Only the filtered rows
+  (546) land in the hash-recorded snapshot; a 239-row real capture is the committed CI fixture.
+- **Column contract** per developer.imdb.com (§2.9): `\N` = null, `isOriginalTitle` flag.
+  `isOriginalTitle` rows corroborate the **canonical** title; language-tagged rows map onto
+  QID-less siblings (dub / co-original guard as in TMDB); the rest are `kind=aka`.
+- **Union semantics** (`sutradhar.pipeline.titles`, shared with TMDB): a title observed by a
+  second source **merges** that ref into `sources[]` — ≥2 independent sources = HIGH per value.
+  The ref carries no per-row ordering, so multiple IMDb rows can never fake 2-source
+  corroboration; a same-pass duplicate merges instead of duplicating (flush fix, caught live).
+- **License:** IMDb datasets are **personal/non-commercial only** → `docs/LICENSING.md`
+  (drafted this task).
+
+Live run 2026-07-02 (snapshot `20260702T063039Z`): 546 filtered rows → **158 new titles
+(2 dub titles mapped, incl. Baahubali's hi बाहुबली: एक शुरुआत — the TMDB gap filled), 37
+corroborated (multi-source)**; version_title total 270. Re-run → all zeros. Honest gap:
+Devadas (ta dub of Devadasu 1953) has no language-tagged akas row — its title must come from
+Wikipedia/extraction (tasks 7/11).
+
 ## Planned (remaining P1 tasks)
 - Ingest from Wikidata SPARQL (relationship spine: P144/P1877/P4969, P155/P156/P179), TMDB
   (`translations`, `alternative_titles`, credits), IMDb `title.akas` (slice-filtered), Wikipedia

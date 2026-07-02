@@ -67,6 +67,10 @@ class Settings(BaseSettings):
         default="https://api.themoviedb.org/3",
         validation_alias="TMDB_API_URL",
     )
+    imdb_datasets_url: str = Field(
+        default="https://datasets.imdbws.com",
+        validation_alias="IMDB_DATASETS_URL",
+    )
     # WMF User-Agent policy: descriptive UA with a contact; override with your fork/contact.
     http_user_agent: str = Field(
         default="SutradharBot/0.1 (https://github.com/sutradhar/sutradhar; data-pipeline)",

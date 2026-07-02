@@ -32,9 +32,9 @@ from sqlalchemy.orm import Session
 
 from sutradhar.config import Settings, get_settings
 from sutradhar.graph.models import SourceId, SourceRef, sources_to_jsonb
-from sutradhar.graph.schema import Conflict, Person, Version, VersionCast, VersionTitle
-from sutradhar.pipeline.normalize import match_key
+from sutradhar.graph.schema import Conflict, Person, Version, VersionCast
 from sutradhar.pipeline.precedence import Observation, resolve_field
+from sutradhar.pipeline.titles import upsert_version_title
 
 LEAD_BILLING_CUTOFF = 5  # TMDB `order` < 5 → lead (top billing), else support
 CAST_LIMIT = 15  # keep the slice lean; supports the dub-vs-remake overlap rule
@@ -199,26 +199,9 @@ def _upsert_title(
     sources: list[SourceRef],
     report: EnrichReport,
 ) -> None:
-    existing = session.scalars(
-        select(VersionTitle).where(
-            VersionTitle.version_id == version.version_id,
-            VersionTitle.title == title,
-            VersionTitle.kind == kind,
-        )
-    ).first()
-    if existing is not None:
-        return
-    session.add(
-        VersionTitle(
-            version_id=version.version_id,
-            title=title,
-            kind=kind,
-            language=language,
-            match_key=match_key(title),
-            sources=sources_to_jsonb(sources),
-        )
-    )
-    report.titles_written += 1
+    outcome = upsert_version_title(session, version.version_id, title, kind, language, sources)
+    if outcome == "new":
+        report.titles_written += 1
 
 
 def _record_conflict(
