@@ -105,6 +105,21 @@ chunks are excluded (no RRF mass for no signal). `sutradhar.rag.fusion` — RRF 
 gate depends on it), and chunk→Work **max** aggregation. Scores verified against
 hand-computed inner products in integration.
 
+### Retriever pipeline + `search_by_plot` (P2 task 9)
+
+`sutradhar.rag.retrieve` wires §2.4: title channel (rapidfuzz over `match_key`, θ=0.80 →
+the matched versions' **metadata-card chunks**, so it joins chunk-level RRF like any
+other channel) + dense (pgvector cosine) + sparse (in-DB `<#>`) → RRF k=60 → cross-
+encoder rerank from the **recorded full matrix** → chunk→Work max aggregation →
+calibrated abstention. Every knob is data (`RetrievalConfig`, stampable). No neural op
+on the laptop: `ArtifactEmbeddings` + `ArtifactReranker` serve recorded vectors/scores
+and **raise** on anything unseen. `repository.search_by_plot` implements frozen
+TOOL_SCHEMA **v0 exactly** (`description`, `top_k=10` → `{results[], abstain}`); the
+retriever is injected keyword-only infrastructure, invisible to the tool surface.
+
+Live smoke (real run, 512tok config): GS-11a "Papanaasam" → Drishyam @0.998; GS-01a →
+Drishyam @0.863; Tanglish GS-07a → Drishyam top-1 → full 5-version labelled set.
+
 ## Tests
 
 ```

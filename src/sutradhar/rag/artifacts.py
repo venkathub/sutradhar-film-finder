@@ -211,3 +211,49 @@ class ArtifactEmbeddings:
                 )
             out.append(row)
         return out
+
+
+class RerankProvider(Protocol):  # P2_SPEC §2.5
+    def score(self, query: str, chunk_hashes: list[str]) -> list[float]: ...
+
+
+class ArtifactReranker:
+    """Recorded cross-encoder scores from the run's full query×chunk parquet matrix.
+
+    Keyed by ``(sha256(query_text), chunk_content_hash)``; an unseen pair raises
+    :class:`MissingArtifactError` — same no-degradation contract as embeddings. Because
+    the GPU session scored the FULL matrix, every fusion/depth/top-k ablation is served
+    from here with zero further GPU time (P2_SPEC §1.3).
+    """
+
+    def __init__(self, run: ArtifactRun, chunk_config: str) -> None:
+        import pyarrow.parquet as pq
+
+        run.verify()
+        self._run_id = run.run_id
+        table = pq.read_table(run.path(f"rerank_scores_{chunk_config}.parquet"))  # type: ignore[no-untyped-call]  # pyarrow ships incomplete stubs
+        self._scores: dict[tuple[str, str], float] = {
+            (q, c): float(s)
+            for q, c, s in zip(
+                table["query_hash"].to_pylist(),
+                table["chunk_hash"].to_pylist(),
+                table["score"].to_pylist(),
+                strict=True,
+            )
+        }
+
+    def __len__(self) -> int:
+        return len(self._scores)
+
+    def score(self, query: str, chunk_hashes: list[str]) -> list[float]:
+        query_hash = content_hash(query)
+        out: list[float] = []
+        for chunk_hash in chunk_hashes:
+            value = self._scores.get((query_hash, chunk_hash))
+            if value is None:
+                raise MissingArtifactError(
+                    f"run {self._run_id}: no recorded rerank score for query "
+                    f"{query[:50]!r}… × chunk {chunk_hash[:12]}… — re-run the GPU job"
+                )
+            out.append(value)
+        return out

@@ -13,6 +13,7 @@ from __future__ import annotations
 import inspect
 import json
 import re
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -124,17 +125,20 @@ def test_unknown_param_would_fail(schema: dict[str, Any]) -> None:
 
 
 @pytest.mark.parametrize(
-    ("fn_name", "tool"),
+    ("fn_name", "tool", "infra_params"),
     [
-        ("resolve_title", "resolve_title"),
-        ("get_work", "get_work"),
-        ("get_versions", "get_versions"),
-        ("refine_filter", "refine_filter"),
+        ("resolve_title", "resolve_title", set()),
+        ("search_by_plot", "search_by_plot", {"retriever"}),  # injected infra (P2_SPEC §2.5)
+        ("get_work", "get_work", set()),
+        ("get_versions", "get_versions", set()),
+        ("refine_filter", "refine_filter", set()),
     ],
 )
-def test_repository_matches_tool_schema(schema: dict[str, Any], fn_name: str, tool: str) -> None:
+def test_repository_matches_tool_schema(
+    schema: dict[str, Any], fn_name: str, tool: str, infra_params: set[str]
+) -> None:
     fn = getattr(repository, fn_name)
-    fn_params = set(inspect.signature(fn).parameters) - {"session"}
+    fn_params = set(inspect.signature(fn).parameters) - {"session"} - infra_params
     schema_params = set(schema["tools"][tool]["params"]["properties"])
     assert fn_params == schema_params, f"{fn_name}: signature drifted from the frozen schema"
     # Required params carry no default in the function; optional ones do.
@@ -145,8 +149,42 @@ def test_repository_matches_tool_schema(schema: dict[str, Any], fn_name: str, to
         assert has_default == (name not in required), (
             f"{fn_name}.{name}: required/optional drift vs schema"
         )
+    # Infra params are keyword-only — they can never be mistaken for tool arguments.
+    for name in infra_params:
+        assert sig.parameters[name].kind is inspect.Parameter.KEYWORD_ONLY
 
 
-def test_search_by_plot_not_implemented_yet() -> None:
-    """Frozen now, implemented in P2 — the repository must NOT ship a stub silently."""
-    assert not hasattr(repository, "search_by_plot")
+def test_search_by_plot_matches_tool_schema(schema: dict[str, Any]) -> None:
+    """P2 flip of ``test_search_by_plot_not_implemented_yet``: the result MODEL round-trips
+    against the frozen v0 result schema (live-call round-trip is the integration half)."""
+    assert hasattr(repository, "search_by_plot")  # the P1 absence assertion, inverted
+    sample = repository.SearchByPlotResult(
+        results=[
+            repository.PlotSearchHit(
+                work_id=uuid.uuid4(),
+                canonical_title="Drishyam",
+                language="ml",
+                year=2013,
+                score=0.97,
+            ),
+            repository.PlotSearchHit(
+                work_id=uuid.uuid4(),
+                canonical_title="Unknown Year Work",
+                language=None,
+                year=None,
+                score=0.11,
+            ),
+        ],
+        abstain=False,
+    )
+    sub = _tool_subschema(schema, "search_by_plot", "result")
+    payload = json.loads(sample.model_dump_json())
+    errors = [e.message for e in Draft202012Validator(sub).iter_errors(payload)]
+    assert errors == [], errors
+    # And the abstain=true shape (v0 allows results alongside abstain).
+    empty = repository.SearchByPlotResult(results=[], abstain=True)
+    errors = [
+        e.message
+        for e in Draft202012Validator(sub).iter_errors(json.loads(empty.model_dump_json()))
+    ]
+    assert errors == []

@@ -29,8 +29,7 @@ from typing import Any, Protocol
 
 import numpy as np
 
-STUB_DENSE_DIM = 16
-REAL_DENSE_DIM = 1024
+DENSE_DIM = 1024  # BGE-M3; the stub matches it so stub runs load into the same pgvector column
 
 
 # --- Providers ---
@@ -49,17 +48,25 @@ def _sha(text: str) -> str:
 
 
 class StubEmbedder:
-    """Deterministic hash-seeded vectors: same text → same embedding, forever."""
+    """Deterministic no-model embeddings: hash-seeded dense + WORD-HASH sparse weights.
+
+    Sparse token ids are derived from the text's actual words, so genuine word overlap
+    between query and chunk produces genuine sparse-channel overlap — the in-DB sparse
+    leg is meaningfully exercised by stub runs, not just present."""
 
     def embed(self, texts: list[str]) -> tuple[np.ndarray, list[dict[int, float]]]:
-        dense = np.zeros((len(texts), STUB_DENSE_DIM), dtype=np.float32)
+        dense = np.zeros((len(texts), DENSE_DIM), dtype=np.float32)
         sparse: list[dict[int, float]] = []
         for i, text in enumerate(texts):
             seed = int(_sha(text)[:8], 16)
             rng = np.random.default_rng(seed)
-            vec = rng.standard_normal(STUB_DENSE_DIM).astype(np.float32)
+            vec = rng.standard_normal(DENSE_DIM).astype(np.float32)
             dense[i] = vec / np.linalg.norm(vec)
-            sparse.append({int(seed % 250_000) + 1: 0.5, int(seed % 999) + 1: 0.25})
+            weights: dict[int, float] = {}
+            for word in text.lower().split()[:64]:
+                token = int(_sha(word)[:8], 16) % 250_000 + 1
+                weights[token] = round(min(1.0, weights.get(token, 0.0) + 0.2), 4)
+            sparse.append(weights or {seed % 250_000 + 1: 0.5})
         return dense, sparse
 
 
@@ -219,7 +226,7 @@ def run_job(
             "embed_model": inputs["embed_model"],
             "rerank_model": inputs["rerank_model"],
             "score_transform": "sigmoid",
-            "dense_dim": STUB_DENSE_DIM if stub else REAL_DENSE_DIM,
+            "dense_dim": DENSE_DIM,
             "configs": sorted(inputs["configs"]),
             "corpus_counts": counts,
             "query_count": len(queries),
