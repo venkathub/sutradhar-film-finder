@@ -53,7 +53,31 @@ the calibration report/curve, and the GPU-session record. Tier-1 CI
 files on each PR — no DB, no GPU; a regression blocks merge. Results: `docs/BENCHMARKS.md`
 Table 1 (P2 exit gate met: Recall@10 = 1.000, version-set recall = 1.0).
 
+## Frozen prompt artifacts (P3 — DEC-P3-4)
+
+`evals/prompts/` holds the **hash-pinned base-model prompting strategy** the generation benchmark
+runs under (loader: `sutradhar.evals.prompts`):
+
+- `system_v1.md` — system prompt: grounding rules (assert only tool-returned films; cite;
+  label all five relationship types; flag the original; abstain out-of-catalog), tool-usage
+  and multi-turn behaviour, and the **INTENT preamble contract**: every final prose answer per
+  user turn begins with one machine-read line `INTENT: {"intent": …, "slots": …}` — the source
+  the intent/slot-accuracy scorers parse (placement rationale in DEC-P3-4's 2026-07-03 amendment).
+- `exemplars_v1.md` — 3 handcrafted few-shot exemplars (one code-mixed Hinglish plot query, one
+  multi-turn refine, one NO_MATCH abstention), appended to the system message as one hashed unit.
+  Franchises (Ghajini, Okkadu/Ghilli, Interstellar) are deliberately **outside the golden set**;
+  disjointness is test-enforced (no fixture query substring may appear in the bundle).
+- `intent_taxonomy_v1.json` — the frozen 6-label taxonomy (`find_by_plot | find_by_title |
+  list_versions | refine | disambiguate | out_of_catalog`) + 7 slot keys (= `refine_filter.by`
+  vocabulary + `plot_description` + `title`) + the preamble format.
+- `prompts.lock.json` — pinned SHA-256 per file + the combined **`prompt_hash`** stamped into
+  every generation-run artifact and the Table 2 stamp. Any edit fails
+  `tests/test_prompt_artifacts.py` until deliberately re-pinned:
+  `uv run python -m sutradhar.evals.prompts --write-lock`. The P4 QLoRA before/after is only
+  comparable under an identical `prompt_hash`.
+
 ## Planned (P3+)
 - Retrieval eval harness + metrics — **landed in P2** (see above).
+- Frozen prompt artifacts — **landed in P3 task 3** (see above).
 - RAGAS harness; MLflow/Langfuse wiring; the two-table benchmark runner (base vs QLoRA)
   reusing `expected_tool_calls` (P3+).

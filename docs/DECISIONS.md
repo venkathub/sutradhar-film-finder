@@ -802,6 +802,18 @@ P4 evaluates the QLoRA column under the same system prompt.
 generation-fixture expansion (grooming Q1): **GS-07 → 5, GS-08 → 3, GS-02-conversational → 4**
 (~12–15 generation fixtures), all ground-truth-verified per the P1 gate before freezing.
 
+**Amendment (2026-07-03, P3 task 3 — preamble placement pinned at implementation).** §2.4 required
+a "structured preamble the frozen prompt requires" for per-turn intent/slot prediction but left its
+placement open. Pinned: the preamble (`INTENT: {"intent": …, "slots": …}`, one JSON line) sits on
+the **final prose answer of each user turn** (the assistant message without tool calls), NOT on the
+first response — `out_of_catalog` is only knowable *after* tool results, so a first-response
+preamble would force the model to predict abstention before searching. Tool-calling messages carry
+no preamble. Contract frozen in `evals/prompts/intent_taxonomy_v1.json` (`preamble` block) and
+`system_v1.md`; artifacts hash-pinned in `evals/prompts/prompts.lock.json`
+(`prompt_hash 8b0c9d54…`, regenerate only via `python -m sutradhar.evals.prompts --write-lock`).
+Exemplars use deliberately out-of-golden-set franchises (Ghajini, Okkadu/Ghilli, Interstellar);
+disjointness + taxonomy conformance are test-enforced (`tests/test_prompt_artifacts.py`).
+
 ## DEC-P3-5 — Tool-call accuracy scoring: BFCL-style two-level (2026-07-02)
 
 **Status:** Accepted (P3 grooming; user-approved).

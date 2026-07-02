@@ -1,0 +1,28 @@
+{
+  "$comment": "FROZEN prompt artifact v1 (P3, DEC-P3-4/P3_SPEC §2.2). Intent taxonomy + slot vocabulary + preamble contract, hash-pinned in prompts.lock.json as part of prompt_hash. Six labels mapping 1:1 onto the frozen TOOL_SCHEMA v0 surface; slot keys reuse the refine_filter.by vocabulary plus plot_description and title — nothing invented.",
+  "version": "v1",
+  "intents": {
+    "find_by_plot": "User describes a film by story/plot (maps to search_by_plot).",
+    "find_by_title": "User names a title, possibly misspelled/transliterated/code-mixed (maps to resolve_title).",
+    "list_versions": "User wants all language versions of a work (maps to get_versions).",
+    "refine": "Turn narrows the standing conversational version set (maps to refine_filter).",
+    "disambiguate": "Title spans more than one work; the assistant asks one clarifying question (GS-10 ask-back).",
+    "out_of_catalog": "Catalog produced no match; the assistant abstains (NO_MATCH)."
+  },
+  "slot_keys": [
+    "title",
+    "plot_description",
+    "actor",
+    "language",
+    "year",
+    "era",
+    "relationship"
+  ],
+  "preamble": {
+    "$comment": "Machine-read contract for the per-turn intent/slot prediction (P3_SPEC §2.4). Placement: the FINAL prose answer of each user turn (the assistant message without tool calls) begins with exactly one preamble line; tool-calling messages carry none — out_of_catalog is only knowable after tool results, so the preamble sits on the answer, not the first response.",
+    "prefix": "INTENT: ",
+    "format": "single line; after the prefix, one compact JSON object",
+    "required_keys": ["intent"],
+    "optional_keys": ["slots"]
+  }
+}
