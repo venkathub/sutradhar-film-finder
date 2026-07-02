@@ -96,6 +96,15 @@ Strict: MANIFEST-verified before any write; a DB chunk with no recorded vector i
 neighbor probe on the real vectors behaves (a Papanasam chunk's nearest neighbors are
 its own family).
 
+### Sparse channel + fusion (P2 task 8, DEC-P2-2)
+
+`sutradhar.rag.sparse` — query lexical weights (0-based BGE-M3 token ids) → `sparsevec`
+literal (1-based, via `pgvector.SparseVector`) → **in-DB** `<#>` top-N; zero-overlap
+chunks are excluded (no RRF mass for no signal). `sutradhar.rag.fusion` — RRF **k=60**
+(untuned industry default), deterministic key tie-breaking (the committed-artifact CI
+gate depends on it), and chunk→Work **max** aggregation. Scores verified against
+hand-computed inner products in integration.
+
 ## Tests
 
 ```
