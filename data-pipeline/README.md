@@ -162,6 +162,26 @@ corroborated (multi-source)**; version_title total 270. Re-run → all zeros. Ho
 Devadas (ta dub of Devadasu 1953) has no language-tagged akas row — its title must come from
 Wikipedia/extraction (tasks 7/11).
 
+## Wikipedia plot fetch (P1 task 7 — built)
+
+`sutradhar.pipeline.wikipedia` + `data-pipeline/fetch_plots.py` (`make fetch-plots`):
+
+- **Action API only, never HTML scraping** (DATA_SOURCES.md): one call per page —
+  `prop=extracts|revisions|info` gives plaintext with `== wiki ==` section markers, the latest
+  revision id, and the canonical URL. Endpoint env-templated (`WIKIPEDIA_API_URL` with `{lang}`).
+- **Article resolution costs zero extra calls:** titles come from the Wikidata sitelinks already
+  captured in the task-4 snapshot. Per version: the enwiki article + the version's own-language
+  wiki article.
+- **Revision-pinned + licensed per row:** every `plot_texts` row records `revision_id`,
+  `source_url`, `license='CC BY-SA 4.0'`, `retrieved_at` (attribution obligations, LICENSING.md).
+  An article edit re-pins (text + revision updated in place), never duplicates.
+- **Stored text** = lead + a Plot/Synopsis-type section (multi-language heading list) when
+  found, else the full extract — this is P2's embedding corpus and task 11's extraction input.
+
+Live run 2026-07-02 (snapshot `20260702T064101Z`): **52 pages → 52 rows** (27 enwiki + 25
+native-wiki; avg ~5.1 KB), all revision-pinned, re-run → 52 unchanged. QID-less dub tracks are
+skipped and reported (their story lives in the parent film's article — extraction's input).
+
 ## Planned (remaining P1 tasks)
 - Ingest from Wikidata SPARQL (relationship spine: P144/P1877/P4969, P155/P156/P179), TMDB
   (`translations`, `alternative_titles`, credits), IMDb `title.akas` (slice-filtered), Wikipedia
