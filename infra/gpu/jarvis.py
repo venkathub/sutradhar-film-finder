@@ -374,10 +374,11 @@ class HubRelay:
     upload_file: Callable[[Path, str], None]  # local path -> path_in_repo
     exists: Callable[[str], bool]  # path_in_repo present?
     download_dir: Callable[[str, Path], None]  # path_in_repo prefix -> local dir
+    fetch_log: Callable[[str], str | None] = lambda run_id: None  # job.log tail (diagnostics)
 
 
 def _default_hub(settings: Settings) -> HubRelay:
-    from huggingface_hub import HfApi
+    from huggingface_hub import HfApi, hf_hub_download
 
     api = HfApi(token=settings.require("hf_token"))
     repo = settings.require("hf_artifact_repo")
@@ -396,27 +397,65 @@ def _default_hub(settings: Settings) -> HubRelay:
             repo_id=repo, repo_type="dataset", allow_patterns=[f"{prefix}/*"], local_dir=dest
         )
 
-    return HubRelay(upload_file=upload_file, exists=exists, download_dir=download_dir)
+    def fetch_log(run_id: str, tail_chars: int = 4000) -> str | None:
+        try:
+            path = hf_hub_download(
+                repo_id=repo,
+                repo_type="dataset",
+                filename=f"runs/{run_id}/job.log",
+                token=settings.require("hf_token"),
+            )
+            return Path(path).read_text(encoding="utf-8", errors="replace")[-tail_chars:]
+        except Exception:  # noqa: BLE001 — diagnostics only, never mask the real failure
+            return None
+
+    return HubRelay(
+        upload_file=upload_file, exists=exists, download_dir=download_dir, fetch_log=fetch_log
+    )
 
 
 def build_embed_startup_script(token: str, repo: str, run_id: str) -> str:
-    """Bash run on instance launch: pull job+inputs from the Hub, run, push results back."""
+    """Bash run on instance launch: pull job+inputs from the Hub, run, push results back.
+
+    The job's stdout/stderr are captured to ``job.log`` and uploaded even on failure, so a
+    failed session is debuggable from the laptop without SSH."""
     return (
         "#!/bin/bash\n"
         "set -euo pipefail\n"  # no -x: the token must never echo into instance logs
         f"export HF_TOKEN={token}\n"
-        "pip install -q -U numpy pyarrow huggingface_hub FlagEmbedding\n"
+        # FlagEmbedding 1.3–1.4 targets the transformers 4.x API (its reranker calls
+        # tokenizer.prepare_for_model, removed in v5) — pin below 5 on the box.
+        "pip install -q pyarrow huggingface_hub 'transformers<5' FlagEmbedding"
+        " >/root/pip.log 2>&1 || true\n"
         "python - <<'PY'\n"
         "import subprocess, sys\n"
         "from pathlib import Path\n"
         "from huggingface_hub import HfApi, hf_hub_download\n"
         f"repo, run_id = {repo!r}, {run_id!r}\n"
         "kw = dict(repo_id=repo, repo_type='dataset')\n"
-        "inputs = hf_hub_download(filename=f'runs/{run_id}/gpu_inputs.json', **kw)\n"
-        "job = hf_hub_download(filename=f'runs/{run_id}/embed_and_score.py', **kw)\n"
-        "rc = subprocess.call([sys.executable, job, '--inputs', inputs,\n"
-        "                      '--out', '/root/artifacts', '--run-id', run_id])\n"
         "api = HfApi()\n"
+        "log = Path('/root/job.log')\n"
+        "try:\n"
+        "    inputs = hf_hub_download(filename=f'runs/{run_id}/gpu_inputs.json', **kw)\n"
+        "    job = hf_hub_download(filename=f'runs/{run_id}/embed_and_score.py', **kw)\n"
+        "    with log.open('wb') as fh:\n"
+        "        rc = subprocess.call([sys.executable, job, '--inputs', inputs,\n"
+        "                              '--out', '/root/artifacts', '--run-id', run_id],\n"
+        "                             stdout=fh, stderr=subprocess.STDOUT)\n"
+        "except Exception as exc:\n"
+        "    log.write_text(f'driver exception: {exc!r}')\n"
+        "    rc = 98\n"
+        "for extra in ('/root/pip.log',):\n"
+        "    try:\n"
+        "        api.upload_file(path_or_fileobj=extra,\n"
+        "                        path_in_repo=f'runs/{run_id}/pip.log', **kw)\n"
+        "    except Exception:\n"
+        "        pass\n"
+        "try:\n"
+        "    api.upload_file(path_or_fileobj=str(log),\n"
+        "                    path_in_repo=f'runs/{run_id}/job.log', **kw)\n"
+        "except Exception:\n"
+        "    pass\n"
         "if rc == 0:\n"
         "    api.upload_folder(folder_path=f'/root/artifacts/{run_id}',\n"
         "                      path_in_repo=f'runs/{run_id}/out', **kw)\n"
@@ -497,7 +536,11 @@ def embed_session(
 
         if not hub.exists(f"runs/{run_id}/out/MANIFEST.sha256"):
             ev.status = "error"
-            ev.detail = "job exited without a sealed artifact run (see runs/<id>/EXIT)"
+            log_tail = hub.fetch_log(run_id)
+            ev.detail = (
+                "job exited without a sealed artifact run"
+                + (f" — job.log tail:\n{log_tail}" if log_tail else " (no job.log uploaded)")
+            )
             return ev
 
         staging = artifacts_root / ".staging" / run_id

@@ -683,3 +683,14 @@ dry-run test. (2) Unlike the token-free vLLM validate script (P0 invariant, stil
 test), the embed startup script **must embed an HF token** to upload results; mitigation: use a
 fine-grained token scoped to `HF_ARTIFACT_REPO` only, no `set -x` (never echoed), and the script
 slot is removed in the same `finally` as instance teardown.
+
+**DEC-P2-7 execution amendment (2026-07-02, task 6).** The planned `gpu` uv dependency group
+(P2_SPEC §2.7) was dropped: FlagEmbedding requires `transformers<5`, which caps
+`huggingface-hub<1.0` — unresolvable in one lockfile with the laptop's `huggingface_hub>=1.0`
+(modern-token API, P0). Under the HF relay the box never sees the repo, so the **authoritative
+instance pins live in `build_embed_startup_script`** (`pip install pyarrow huggingface_hub
+'transformers<5' FlagEmbedding`); noted in `pyproject.toml`. Session evidence: 4 attempts
+(instances 438174/438176/438178/438179 — driver log-relay gap, py3.10 `datetime.UTC`,
+transformers-v5 reranker API break, then success), ~10 GPU-minutes total ≈ $0.22, sealed run
+`20260702T135315Z-f6583183` (833 unique texts, 44,217 rerank pairs) pulled, verified, pinned as
+`RETRIEVAL_RUN`; committed record in `evals/retrieval_runs/`.

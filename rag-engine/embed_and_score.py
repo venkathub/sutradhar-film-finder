@@ -23,7 +23,7 @@ import argparse
 import hashlib
 import json
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -213,7 +213,8 @@ def run_job(
         {
             "run_id": run_id,
             "run_kind": inputs.get("run_kind", "retrieval_embed_v1"),
-            "created_at": datetime.now(tz=UTC).isoformat(),
+            # noqa comment: the GPU box may run Python 3.10 (datetime.UTC is 3.11+).
+            "created_at": datetime.now(tz=timezone.utc).isoformat(),  # noqa: UP017
             "stub": stub,
             "embed_model": inputs["embed_model"],
             "rerank_model": inputs["rerank_model"],

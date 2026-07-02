@@ -45,6 +45,9 @@ class _FakeHub:
             return self.job_succeeds
         return False
 
+    def fetch_log(self, run_id: str) -> str | None:
+        return "Traceback: stub failure" if not self.job_succeeds else None
+
     def download_dir(self, prefix: str, dest: Path) -> None:
         # Materialize a real sealed run at <dest>/<prefix>/ exactly like snapshot_download.
         out = dest / prefix

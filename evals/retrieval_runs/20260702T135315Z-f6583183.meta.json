@@ -1,0 +1,68 @@
+{
+ "run_id": "20260702T135315Z-f6583183",
+ "kind": "gpu_session_record",
+ "meta": {
+  "code_sha": "f29ff6d4b31f26f818c274e730ae2f3296b9b5d8",
+  "configs": [
+   "1024tok_15pct",
+   "256tok_15pct",
+   "512tok_15pct"
+  ],
+  "corpus_counts": {
+   "1024tok_15pct": 153,
+   "256tok_15pct": 458,
+   "512tok_15pct": 256
+  },
+  "created_at": "2026-07-02T13:55:54.493562+00:00",
+  "dense_dim": 1024,
+  "embed_model": "BAAI/bge-m3",
+  "inputs_sha256": "4fb7b7e7dfced1745beb026f497db1e34204d12ba9d2548c98560709f8bbbfbb",
+  "query_count": 51,
+  "rerank_model": "BAAI/bge-reranker-v2-m3",
+  "run_id": "20260702T135315Z-f6583183",
+  "run_kind": "retrieval_embed_v1",
+  "score_transform": "sigmoid",
+  "stub": false,
+  "unique_texts_embedded": 833
+ },
+ "manifest_sha256": [
+  "08f8a3237d0a0964307d5f488499f54d8dbc304f6aad935896194257b400417d  corpus_1024tok_15pct_dense.npy",
+  "cea8e7027f0ac57779ab761a0b83955b28bccdbc09cda4eebaeaec2c1e4ffbf9  corpus_1024tok_15pct_hashes.json",
+  "803ca2d24e1f4787daaeb60dc76e88396717b7b72e3b480b7b1dd45d317c8965  corpus_1024tok_15pct_sparse.json",
+  "c9a4554cbfe3cfb3201c38dab119b980f8ba99e097e049a1d39f79da9beb6ad1  corpus_256tok_15pct_dense.npy",
+  "4c322e25af6211a322179bf70ca10d02944f7124aebe0315ffe29039e7df2f87  corpus_256tok_15pct_hashes.json",
+  "d20bde7f5348fc2dfca96c047ec2701bbcbd359d56d561ee9f91ef4969b6caee  corpus_256tok_15pct_sparse.json",
+  "c97cc59e5ce2ada12a93241413d95b1e62613046e1824ed62a574616b40df8fc  corpus_512tok_15pct_dense.npy",
+  "245c42ebe22e344e6342476f175e593b0e378477661f8f0517f85566da4fa19f  corpus_512tok_15pct_hashes.json",
+  "b003d60a038b64a07c94c3f7312ece7b8328d4e0ac64bd6cbd2e6f9dfc3ee924  corpus_512tok_15pct_sparse.json",
+  "bc3f31bb0595e35f271bad3ec3ec5fa65e0192901053f80cca4d6ad8ab865df7  meta.json",
+  "3d1d9672372ff39521f71d231d5d9e81837237eef311cef85f531610d31420d9  queries_dense.npy",
+  "f55d0eab9f03bc68be64dc84ba0c55047dca9def7782885c13136bd14ae7960b  queries_hashes.json",
+  "bdd182f17cfe5db71d9d34ff6e8fbaaefd990732449d93df5a58585b56fc16e4  queries_sparse.json",
+  "77a289bb22a8677af6c418e14e3e320ef30f952a7e4a67bc46ac4f54f0639420  rerank_scores_1024tok_15pct.parquet",
+  "ea9c4039ed799e0e9425542e1f6ea4fb90c56ea0237aae667f9f62b61c0fca90  rerank_scores_256tok_15pct.parquet",
+  "975d765a991e55bb9db43e7d8937974d475585363dea2b7caca0df8eac327b21  rerank_scores_512tok_15pct.parquet"
+ ],
+ "session": {
+  "driver": "make gpu-embed (jarvis.py embed, DEC-P2-7 HF relay)",
+  "gpu": "JarvisLabs A100 40GB (DEC-0003)",
+  "instance_ids": [
+   438174,
+   438176,
+   438178,
+   438179
+  ],
+  "attempts": 4,
+  "attempt_notes": [
+   "438174: EXIT=1, no log capture yet (driver gap, fixed: job.log relay)",
+   "438176: py3.10 on box — datetime.UTC import error (fixed)",
+   "438178: transformers v5 removed tokenizer.prepare_for_model — FlagEmbedding reranker crash (pinned transformers<5)",
+   "438179: SUCCESS — sealed run pulled + verified, instance destroyed"
+  ],
+  "wall_clock_success_attempt_s": 179,
+  "total_gpu_minutes_estimate": 10,
+  "cost_usd_estimate": 0.22,
+  "embedded_unique_texts": 833,
+  "rerank_pairs": 44217
+ }
+}

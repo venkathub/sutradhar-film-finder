@@ -42,6 +42,15 @@ neural-free (ROADMAP §2) and sizes are ablation brackets, not exact budgets. De
 Live-graph result (2026-07-02): 31 gate-visible versions, 52 plot docs → 427 / 225 / 122
 plot chunks (256/512/1024) + 31 metadata cards per config.
 
+### GPU session evidence (P2 task 6 — executed 2026-07-02)
+
+Pinned run **`RETRIEVAL_RUN=20260702T135315Z-f6583183`** (BGE-M3 + bge-reranker-v2-m3 on
+an ephemeral JarvisLabs A100, DEC-P2-7 relay): 833 unique texts embedded (3 configs +
+51 queries), **44,217 reranker pairs** (full matrix per config), sealed + verified,
+instance destroyed. ~10 GPU-minutes ≈ **$0.22** across 4 attempts (3 environment fixes,
+each diagnosed from the relayed `job.log` — see `evals/retrieval_runs/*.meta.json`).
+Instance deps are pinned in the startup script (`transformers<5` for FlagEmbedding).
+
 ### Artifact store (P2 task 4)
 
 `sutradhar.rag.artifacts` — versioned GPU-session outputs under
