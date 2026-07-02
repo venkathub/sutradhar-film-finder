@@ -94,6 +94,9 @@ build-corpus: ## P2: gate-visible plot chunks + metadata cards -> chunks table (
 gpu-embed: ## P2: ephemeral GPU embed+score session (export -> HF relay -> pull artifacts -> destroy)
 	uv run python infra/gpu/jarvis.py embed
 
+load-index: ## P2: load the pinned artifact run (RETRIEVAL_RUN) into chunk_embeddings
+	uv run python rag-engine/load_index.py
+
 golden-validate: ## Validate golden fixtures against the live graph (task 14)
 	uv run python evals/build_golden.py
 

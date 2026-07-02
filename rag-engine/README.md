@@ -82,6 +82,20 @@ its output format is locked to `sutradhar.rag.artifacts` by the `--stub` dry-run
 the instance); the laptop/CI env stays neural-free. Transport per DEC-P2-7: private HF
 dataset repo (`HF_ARTIFACT_REPO`, fine-grained token), instance destroyed in `finally`.
 
+### Index loader (P2 task 7)
+
+```
+make load-index          # loads the RETRIEVAL_RUN artifact into chunk_embeddings
+```
+
+Joins the sealed run's corpus banks onto the `chunks` table **by `content_hash`** and
+materializes pgvector rows (dense `vector(1024)` + `sparsevec`) for in-DB scoring.
+Strict: MANIFEST-verified before any write; a DB chunk with no recorded vector is a
+**hard error** (corpus drifted after the export — rebuild or re-embed); idempotent per
+`(embed_model, index_version)`. Live result: 458/256/153 embeddings loaded; cosine
+neighbor probe on the real vectors behaves (a Papanasam chunk's nearest neighbors are
+its own family).
+
 ## Tests
 
 ```
