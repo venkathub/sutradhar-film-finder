@@ -8,7 +8,7 @@
 COMPOSE ?= docker compose -f infra/docker-compose.yml
 
 .DEFAULT_GOAL := help
-.PHONY: help setup fmt lint typecheck test test-int check up down down-v db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
+.PHONY: help setup fmt lint typecheck test test-int check up down down-v mlflow-up mlflow-down db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
         smoke hf-check gpu-validate gpu-nuke
 
 help: ## List available targets
@@ -44,6 +44,14 @@ down: ## Stop the local stack (keeps the pgdata volume)
 
 down-v: ## Stop the local stack and DROP the pgdata volume
 	$(COMPOSE) down -v
+
+mlflow-up: ## Start self-hosted MLflow (idempotent: creates the `mlflow` DB if missing; DEC-P3-2)
+	$(COMPOSE) up -d --wait postgres
+	$(COMPOSE) exec -T postgres sh -c 'psql -U "$${POSTGRES_USER:-sutradhar}" -d "$${POSTGRES_DB:-sutradhar}" -tAc "SELECT 1 FROM pg_database WHERE datname='\''mlflow'\''" | grep -q 1 || createdb -U "$${POSTGRES_USER:-sutradhar}" mlflow'
+	$(COMPOSE) --profile mlflow up -d --build --wait mlflow
+
+mlflow-down: ## Stop the MLflow service (runs persist in Postgres + data/mlflow-artifacts/)
+	$(COMPOSE) --profile mlflow stop mlflow
 
 db-migrate: ## Apply graph-schema migrations (alembic upgrade head; needs `make up`)
 	uv run alembic upgrade head

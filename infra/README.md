@@ -21,6 +21,7 @@ without one):
 |---------|----------------|------|-------------|
 | `postgres` | `pgvector/pgvector:0.8.4-pg17` | `${POSTGRES_PORT:-5432}` | `pg_isready` |
 | `redis` | `redis:7-alpine` | `${REDIS_PORT:-6379}` | `redis-cli ping` |
+| `mlflow` (profile `mlflow`) | `ghcr.io/mlflow/mlflow:v3.14.0` + psycopg2 (`infra/mlflow/Dockerfile`) | `${MLFLOW_PORT:-5000}` | `GET /health` |
 
 Postgres data persists in the named volume `pgdata` (git-ignored). The pgvector tag was verified on
 Docker Hub on 2026-07-01 (P0_SPEC §2.7); pinned exactly for reproducibility. The Work/Version graph
@@ -34,14 +35,16 @@ Workaround: stage the compose inputs into a visible `$HOME` dir, preserving the 
 compose file's `../.env` reference resolves:
 
 ```bash
-mkdir -p ~/sutradhar-stack/infra
+mkdir -p ~/sutradhar-stack/infra/mlflow ~/sutradhar-stack/data/mlflow-artifacts
 cp infra/docker-compose.yml ~/sutradhar-stack/infra/
+cp infra/mlflow/Dockerfile ~/sutradhar-stack/infra/mlflow/   # mlflow build context
 cp .env ~/sutradhar-stack/.env      # or: touch ~/sutradhar-stack/.env
 cd ~/sutradhar-stack && docker compose -f infra/docker-compose.yml up -d --wait
 ```
 
-Re-copy after editing either file. (`make db-migrate` and the tests are unaffected — they reach
-Postgres over localhost.)
+Re-copy after editing any of these files. (`make db-migrate` and the tests are unaffected — they
+reach Postgres over localhost. Under this workaround the MLflow artifact store lives at
+`~/sutradhar-stack/data/mlflow-artifacts/` instead of the repo's `data/mlflow-artifacts/`.)
 
 Bring it up / down (the `make up` / `make down` wrappers land in P0 task 5):
 
@@ -56,6 +59,27 @@ Integration tests (opt-in marker `integration`, auto-skip when services are down
 ```bash
 docker compose -f infra/docker-compose.yml up -d --wait
 uv run pytest -m integration            # CREATE EXTENSION vector; + Redis PING->PONG
+```
+
+## Self-hosted MLflow (P3, DEC-P3-2)
+
+`make mlflow-up` starts the MLflow tracking server + model registry as a **profile-gated** compose
+service (`--profile mlflow`), so plain `make up` stays two-container on the low-spec laptop:
+
+- **Backend store:** a separate `mlflow` database in the same compose Postgres — DB-backed so the
+  **model registry works** (needed for the P4 adapter). `make mlflow-up` creates the database
+  idempotently (check-then-act) before starting the service, so it works on existing `pgdata`
+  volumes, not just fresh ones.
+- **Artifact store:** `data/mlflow-artifacts/` (git-ignored), bind-mounted into the container and
+  served by the tracking server (`--serve-artifacts`).
+- **Client config:** `MLFLOW_TRACKING_URI` (default `http://localhost:5000`) — env-driven, read
+  once by `src/sutradhar/config/settings.py`, never hardcoded.
+- Experiments: `sutradhar/retrieval` and `sutradhar/generation` (P3_SPEC §2.6; the logging helper
+  `sutradhar.obs.mlflow_log` lands in P3 task 10).
+
+```bash
+make mlflow-up      # postgres up -> create `mlflow` DB if missing -> mlflow up --wait
+make mlflow-down    # stop the service; runs persist in Postgres + data/mlflow-artifacts/
 ```
 
 

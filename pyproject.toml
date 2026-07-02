@@ -26,6 +26,12 @@ dependencies = [
     "rapidfuzz>=3.14.5",
     "pgvector>=0.4.2",
     "pyarrow>=24.0.0",
+    # P3 eval + observability harness (SDKs only — no local model ops on the laptop).
+    # Exact resolved versions live in uv.lock; the generation-run stamp records the
+    # ragas version per DEC-P3-3 (RAGAS internal prompts evolve between releases).
+    "ragas>=0.4.3",
+    "langfuse>=4.13",
+    "mlflow>=3.14",
 ]
 
 [dependency-groups]
