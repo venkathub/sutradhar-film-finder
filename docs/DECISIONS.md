@@ -518,3 +518,143 @@ integration result-shape round-trips of real repository calls through the frozen
 **Consequences.** P4 synthetic data and the tool-call-accuracy metric target this exact
 artifact; any change bumps to v0.1+ with a DECISIONS entry; `search_by_plot` stays
 schema-only until P2 (its absence from the repository is itself asserted by test).
+
+---
+
+## DEC-P2-1 — Vector store: Postgres + pgvector (2026-07-02)
+
+**Status:** Accepted (P2 grooming; spec `docs/phases/P2_SPEC.md` §3 — user-approved). Resolves
+the pgvector-vs-Qdrant choice CLAUDE.md/ROADMAP explicitly deferred to P2.
+
+**Options.** (A) **Postgres + pgvector** — already in compose (`pgvector/pgvector:0.8.4-pg17`);
+embeddings next to the graph (chunk→version→edges joins in one SQL hop); **native `sparsevec`
+type (since 0.7.0)** scores the BGE-M3 sparse leg in-DB. (B) Qdrant — named dense+sparse vectors,
+server-side `rrf`/`dbsf` fusion; better at 10⁶+ scale. (C) Both behind an interface.
+
+**Decision.** **A.** The hard problem is graph-adjacent retrieval; one store keeps every
+citation/provenance join trivial, adds zero services, and `sparsevec` removes Qdrant's former
+"native sparse" edge. **Revisit trigger:** catalog-breadth scale (HNSW-on-sparse's 1,000-nnz cap
+and server-side fusion become relevant there; exact scan is correct at ~10² chunks).
+
+**Consequences.** `chunks` + `chunk_embeddings` (dense `vector(1024)` + `sparse sparsevec`) land
+in the graph DB via Alembic; `CREATE EXTENSION vector` in the migration; laptop adds only the
+`pgvector` Python lib (SQLAlchemy types — SQL glue, not a model).
+
+**Sources (accessed 2026-07-02).** pgvector README (`sparsevec` reference: `8·nnz+16` bytes,
+≤16,000 nnz, `<#>`/`<=>` ops; HNSW limits; hybrid-search RRF example); Qdrant hybrid-queries docs.
+
+## DEC-P2-2 — Hybrid sparse leg + fusion: BGE-M3 lexical weights in sparsevec + RRF k=60 (2026-07-02)
+
+**Status:** Accepted (P2 grooming; user-approved).
+
+**Options.** (A) **BGE-M3 native lexical weights stored as `sparsevec`, scored in-DB via `<#>`,
+fused with RRF (k=60).** (B) Postgres FTS (tsvector) as the sparse leg. (C) Weighted score-sum
+fusion (α·dense + β·sparse).
+
+**Decision.** **A.** The sparse signal comes free from the same BGE-M3 pass as dense (the reason
+it is the DEC-0002 default); its tokens are multilingual/transliteration-aware over the 250k
+XLM-R vocab — B's English stemmers fail exactly on romanized Tamil/Hindi (GS-07/GS-11). RRF is
+rank-based (no cross-channel score normalization) and k=60 is the cross-industry default (Azure
+AI Search, OpenSearch 2.19, Qdrant `rrf`) — deliberately untuned: one less overfittable knob on a
+small eval set. **Fallback:** if RRF underperforms in the ablation, C is measured from the same
+artifacts and recorded here.
+
+**Consequences.** `sutradhar.rag.{sparse,fusion}`: query lexical-weight → sparsevec literal,
+in-DB scoring, RRF + chunk→Work max-aggregation as pure, unit-testable functions.
+
+**Sources (accessed 2026-07-02).** BAAI `bge-m3` card + FlagEmbedding docs (lexical weights at no
+extra cost; hybrid recommended); Azure AI Search RRF docs; OpenSearch 2.19 RRF; pgvector hybrid
+example.
+
+## DEC-P2-3 — Chunking of plot/metadata: recursive para-boundary + metadata header + metadata card; size ablated (2026-07-02)
+
+**Status:** Accepted (P2 grooming; user-approved). **Measured winner to be filled at execution.**
+
+**Options.** (A) **Recursive paragraph-boundary chunks, size ablated ∈ {256, 512, 1024} tokens
+(default 512), 15% overlap; a metadata header on every chunk
+(`"{title} ({year}, {lang}) — remake of {original} …"`); plus one `metadata_card` doc per Version
+(titles/AKAs/cast/director/relationship).** (B) Whole-plot single chunk. (C) Semantic/
+embedding-guided chunking.
+
+**Decision.** **A.** B is physically broken: the corpus tail (max 53.6k chars ≈ 13k tokens)
+exceeds BGE-M3's 8192 window — silent truncation of exactly the long flagship pages. C needs an
+embedder to chunk (GPU in the laptop path) and is non-deterministic — breaks the reproducibility
+stamp. The grid brackets both regimes the literature identifies (small chunks for factoid, 512–
+1024 for broader narrative context — our story-description queries); recursive 512 + 10–20%
+overlap is the benchmark-validated default. The header carries remake lineage into every dense
+unit; the card gives cast/title-anchored queries (GS-01a, GS-10) a dense target plots may lack.
+Chunking is ablated **before** any embedder swap: chunk config ≈ embedder choice in retrieval
+impact (Vectara NAACL 2025), and iterating it costs artifact-replay time, not GPU rental.
+
+**Consequences.** Deterministic chunker (`content_hash` pins it); ablation table in the
+rag-engine README; winning config recorded here with numbers. _Measured winner: — (pending P2
+execution)._
+
+**Sources (accessed 2026-07-02).** arXiv 2505.21700 (chunk size vs retrieval, multi-dataset);
+2026 chunking benchmark guides (recursive 512 tok, 10–20% overlap default); Vectara NAACL 2025
+(25 configs × 48 models).
+
+## DEC-P2-4 — Rerank depth + final top-k: fuse-50 → rerank-50 → top-10; depth ablated (2026-07-02)
+
+**Status:** Accepted (P2 grooming; user-approved). **Measured depth to be filled at execution.**
+
+**Options.** (A) **Fuse top-50 chunks → rerank all 50 → aggregate → top-10 Works; ablate depth ∈
+{20, 50}.** (B) Rerank top-20 only. (C) No reranker (fusion order only).
+
+**Decision.** **A.** At slice scale, depth-50 ≈ the whole fused candidate space → the reranker's
+recall ceiling; the precomputed full query×chunk score matrix (P2_SPEC §2.6) makes depth a free
+laptop-side parameter, so measuring {20, 50} costs nothing. B risks dropping a version-set member
+before the reranker sees it — a direct threat to the GS-01/GS-06 = 1.0 gate. C wastes the settled
+reranker (`bge-reranker-v2-m3`), the standard lever for closing the last recall/MRR gap.
+`top_k=10` matches the `search_by_plot` v0 default and the Recall@10 gate. **Revisit trigger:**
+live-path latency at catalog scale. _Measured depth: — (pending P2 execution)._
+
+## DEC-P2-5 — NO_MATCH abstention: absolute top-1 reranker score (sigmoid), calibrated on held-out negatives (2026-07-02)
+
+**Status:** Accepted (P2 grooming; user-approved). **θ to be filled at execution.**
+
+**Options.** (A) **Absolute top-1 cross-encoder score threshold, sigmoid-normalized to [0,1].**
+(B) Top-1 vs top-2 margin. (C) Fused-rank (pre-rerank) score threshold.
+
+**Decision.** **A.** Sigmoid→[0,1] is the official BGE reranker score semantics; cross-encoder
+relevance scores are query-conditioned and markedly more stable across query types than cosine
+(C's documented failure mode). B is structurally wrong for this corpus: GS-01's five near-tied
+sibling versions *should* score close — a margin rule punishes exactly the correct behaviour.
+Calibration: canary + ε-margin methodology on the calibration half of the ~24-query held-out
+negative set (`evals/negatives/heldout.yaml`, absent-from-slice-by-construction), maximizing
+NO_MATCH F1 subject to **zero false rejects** on positive golden fixtures; P/R reported on the
+test half; gate = 0 false accepts on GS-02. The title channel's 0.80 fuzzy floor (DEC-P1-5)
+composes with θ for pure-title negatives (GS-02b "Kaithi"). _Measured θ + curve: — (pending P2
+execution)._
+
+**Sources (accessed 2026-07-02).** BAAI `bge-reranker-v2-m3` card (sigmoid mapping); retrieval-
+abstention practice (cross-encoder score stability; canary-threshold methodology); UAEval4RAG
+(arXiv 2412.12300).
+
+## DEC-P2-6 — Tier-1 CI gates on a committed retrieval-run artifact (2026-07-02)
+
+**Status:** Accepted (P2 grooming; user-confirmed — spec §7 Q2).
+
+**Context.** Tier-1 CI (no GPU, no model calls — ROADMAP §6.2) must recompute Recall@k / MRR /
+version-set recall / abstention metrics on every PR and block regressions.
+
+**Options.** (A) **Commit the compact retrieval-run summary (~1–5 MB JSON,
+`evals/retrieval_runs/<run_id>.json`: per-query ranked candidates + all channel scores) to git;**
+raw embeddings/matrices stay git-ignored under `data/artifacts/` (MANIFEST-hashed, optionally on
+HF Hub). (B) HF Hub + download step in CI.
+
+**Decision.** **A.** Zero external dependency and secret-free for forks; CI recomputes every
+gating metric from the pinned run (`RETRIEVAL_RUN` env). B adds a network/auth dependency to the
+merge gate for no benefit at this artifact size. The committed run id appears in the Table 1
+reproducibility stamp, so every benchmark row maps to an exact committed input.
+
+## DEC-0002 execution note (2026-07-02, P2 grooming — user-confirmed)
+
+Within DEC-0002's settled decision rule (default BGE-M3; adopt the 9B challenger only if it
+clears a gate BGE-M3 cannot): **if BGE-M3 meets the P2 exit gate on the first pass, the
+`bge-multilingual-gemma2` leg is skipped entirely** — no GPU time is spent on the challenger, and
+DEC-0002 flips to Accepted recording "gate met by default; challenger not run". The 9B leg
+remains the escalation path inside the P2 iteration loop (chunking → fusion → embedder, in that
+order). Context worth recording: MIRACL — the public benchmark behind both embedders'
+cross-lingual claims — covers hi/bn/te but **not ta/ml/kn**, so the golden-set gate (not
+leaderboards) is the only measurement that answers Sutradhar's question.
