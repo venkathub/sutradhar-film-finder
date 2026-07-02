@@ -39,6 +39,9 @@ mlartifacts/
 data/raw/
 data/interim/
 data/processed/
+# Retrieval artifacts (GPU-session outputs; MANIFEST-hashed, optionally pushed to HF Hub).
+# The compact committed run summary lives in evals/retrieval_runs/ instead (DEC-P2-6).
+data/artifacts/
 *.duckdb
 *.sqlite
 

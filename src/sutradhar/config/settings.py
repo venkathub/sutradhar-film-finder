@@ -53,6 +53,11 @@ class Settings(BaseSettings):
         default="BAAI/bge-reranker-v2-m3",
         validation_alias="RERANK_MODEL",
     )
+    # P5 live path: OpenAI-compatible /v1/embeddings on the on-demand GPU (DEC-P0-4
+    # status:"off" contract). Unset by default — P2 runs from recorded artifacts.
+    embed_base_url: str | None = Field(default=None, validation_alias="EMBED_BASE_URL")
+    # Pinned artifact run id (data/artifacts/retrieval/<run_id>) that CI/demo read.
+    retrieval_run: str | None = Field(default=None, validation_alias="RETRIEVAL_RUN")
 
     # --- Data-source endpoints (P1 ingestion; env-swappable, never hardcoded in code) ---
     wikidata_api_url: str = Field(
