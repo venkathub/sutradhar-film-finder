@@ -93,8 +93,12 @@ If, after all this, QLoRA still does not beat the base, we record the finding an
 
 ## DEC-0002 — Embedding model: A/B decided by the P2 retrieval gate (2026-07-01)
 
-**Status:** Proposed — decision deferred to P2 and resolved by measurement on the golden set. Recorded
-now so the A/B and its default are fixed before work begins.
+**Status:** **Accepted (2026-07-02, P2 execution).** BGE-M3 met the exit gate on the first pass —
+Recall@10 = **1.000** (≥ 0.90) in **every** ablation cell and version-set recall = **1.0** on
+GS-01 and GS-06 (run `20260702T135315Z-f6583183`; full grid in `docs/BENCHMARKS.md` Table 1).
+Per the execution note below, the `bge-multilingual-gemma2` 9B challenger leg was therefore
+**skipped entirely — gate met by default, challenger not run**; zero GPU time spent on it. The
+9B leg remains the recorded escalation path if a future catalog-scale regression reopens the gate.
 
 **Context.** The mission is Indic-heavy and cross-lingual; the P2 exit gate is Recall@10 ≥ 0.90 with
 version-set recall = 1.0 on GS-01/GS-06. Embedding quality is the largest single lever on whether that
@@ -518,3 +522,204 @@ integration result-shape round-trips of real repository calls through the frozen
 **Consequences.** P4 synthetic data and the tool-call-accuracy metric target this exact
 artifact; any change bumps to v0.1+ with a DECISIONS entry; `search_by_plot` stays
 schema-only until P2 (its absence from the repository is itself asserted by test).
+
+---
+
+## DEC-P2-1 — Vector store: Postgres + pgvector (2026-07-02)
+
+**Status:** Accepted (P2 grooming; spec `docs/phases/P2_SPEC.md` §3 — user-approved). Resolves
+the pgvector-vs-Qdrant choice CLAUDE.md/ROADMAP explicitly deferred to P2.
+
+**Options.** (A) **Postgres + pgvector** — already in compose (`pgvector/pgvector:0.8.4-pg17`);
+embeddings next to the graph (chunk→version→edges joins in one SQL hop); **native `sparsevec`
+type (since 0.7.0)** scores the BGE-M3 sparse leg in-DB. (B) Qdrant — named dense+sparse vectors,
+server-side `rrf`/`dbsf` fusion; better at 10⁶+ scale. (C) Both behind an interface.
+
+**Decision.** **A.** The hard problem is graph-adjacent retrieval; one store keeps every
+citation/provenance join trivial, adds zero services, and `sparsevec` removes Qdrant's former
+"native sparse" edge. **Revisit trigger:** catalog-breadth scale (HNSW-on-sparse's 1,000-nnz cap
+and server-side fusion become relevant there; exact scan is correct at ~10² chunks).
+
+**Consequences.** `chunks` + `chunk_embeddings` (dense `vector(1024)` + `sparse sparsevec`) land
+in the graph DB via Alembic; `CREATE EXTENSION vector` in the migration; laptop adds only the
+`pgvector` Python lib (SQLAlchemy types — SQL glue, not a model).
+
+**Sources (accessed 2026-07-02).** pgvector README (`sparsevec` reference: `8·nnz+16` bytes,
+≤16,000 nnz, `<#>`/`<=>` ops; HNSW limits; hybrid-search RRF example); Qdrant hybrid-queries docs.
+
+## DEC-P2-2 — Hybrid sparse leg + fusion: BGE-M3 lexical weights in sparsevec + RRF k=60 (2026-07-02)
+
+**Status:** Accepted (P2 grooming; user-approved).
+
+**Options.** (A) **BGE-M3 native lexical weights stored as `sparsevec`, scored in-DB via `<#>`,
+fused with RRF (k=60).** (B) Postgres FTS (tsvector) as the sparse leg. (C) Weighted score-sum
+fusion (α·dense + β·sparse).
+
+**Decision.** **A.** The sparse signal comes free from the same BGE-M3 pass as dense (the reason
+it is the DEC-0002 default); its tokens are multilingual/transliteration-aware over the 250k
+XLM-R vocab — B's English stemmers fail exactly on romanized Tamil/Hindi (GS-07/GS-11). RRF is
+rank-based (no cross-channel score normalization) and k=60 is the cross-industry default (Azure
+AI Search, OpenSearch 2.19, Qdrant `rrf`) — deliberately untuned: one less overfittable knob on a
+small eval set. **Fallback:** if RRF underperforms in the ablation, C is measured from the same
+artifacts and recorded here.
+
+**Consequences.** `sutradhar.rag.{sparse,fusion}`: query lexical-weight → sparsevec literal,
+in-DB scoring, RRF + chunk→Work max-aggregation as pure, unit-testable functions.
+
+**Sources (accessed 2026-07-02).** BAAI `bge-m3` card + FlagEmbedding docs (lexical weights at no
+extra cost; hybrid recommended); Azure AI Search RRF docs; OpenSearch 2.19 RRF; pgvector hybrid
+example.
+
+## DEC-P2-3 — Chunking of plot/metadata: recursive para-boundary + metadata header + metadata card; size ablated (2026-07-02)
+
+**Status:** Accepted (P2 grooming; user-approved). **Measured winner to be filled at execution.**
+
+**Options.** (A) **Recursive paragraph-boundary chunks, size ablated ∈ {256, 512, 1024} tokens
+(default 512), 15% overlap; a metadata header on every chunk
+(`"{title} ({year}, {lang}) — remake of {original} …"`); plus one `metadata_card` doc per Version
+(titles/AKAs/cast/director/relationship).** (B) Whole-plot single chunk. (C) Semantic/
+embedding-guided chunking.
+
+**Decision.** **A.** B is physically broken: the corpus tail (max 53.6k chars ≈ 13k tokens)
+exceeds BGE-M3's 8192 window — silent truncation of exactly the long flagship pages. C needs an
+embedder to chunk (GPU in the laptop path) and is non-deterministic — breaks the reproducibility
+stamp. The grid brackets both regimes the literature identifies (small chunks for factoid, 512–
+1024 for broader narrative context — our story-description queries); recursive 512 + 10–20%
+overlap is the benchmark-validated default. The header carries remake lineage into every dense
+unit; the card gives cast/title-anchored queries (GS-01a, GS-10) a dense target plots may lack.
+Chunking is ablated **before** any embedder swap: chunk config ≈ embedder choice in retrieval
+impact (Vectara NAACL 2025), and iterating it costs artifact-replay time, not GPU rental.
+
+**Consequences.** Deterministic chunker (`content_hash` pins it); ablation table in the
+rag-engine README; winning config recorded here with numbers. _Measured winner (2026-07-02, run
+`20260702T135315Z-f6583183`, 13 retrieval fixtures): **1024tok_15pct** — every config passed the
+Recall@10 ≥ 0.90 gate at 1.000 and VSR-01/06 = 1.0; 1024tok won on Recall@1 0.923 / MRR@10 0.962
+(at depth 20). Consistent with the arXiv 2505.21700 finding that 512–1024 tok favours
+broader-context/narrative retrieval — our story-description queries. Full grid in the rag-engine
+README ablation table._
+
+**Sources (accessed 2026-07-02).** arXiv 2505.21700 (chunk size vs retrieval, multi-dataset);
+2026 chunking benchmark guides (recursive 512 tok, 10–20% overlap default); Vectara NAACL 2025
+(25 configs × 48 models).
+
+## DEC-P2-4 — Rerank depth + final top-k: fuse-50 → rerank-50 → top-10; depth ablated (2026-07-02)
+
+**Status:** Accepted (P2 grooming; user-approved). **Measured depth to be filled at execution.**
+
+**Options.** (A) **Fuse top-50 chunks → rerank all 50 → aggregate → top-10 Works; ablate depth ∈
+{20, 50}.** (B) Rerank top-20 only. (C) No reranker (fusion order only).
+
+**Decision.** **A.** At slice scale, depth-50 ≈ the whole fused candidate space → the reranker's
+recall ceiling; the precomputed full query×chunk score matrix (P2_SPEC §2.6) makes depth a free
+laptop-side parameter, so measuring {20, 50} costs nothing. B risks dropping a version-set member
+before the reranker sees it — a direct threat to the GS-01/GS-06 = 1.0 gate. C wastes the settled
+reranker (`bge-reranker-v2-m3`), the standard lever for closing the last recall/MRR gap.
+`top_k=10` matches the `search_by_plot` v0 default and the Recall@10 gate. **Revisit trigger:**
+live-path latency at catalog scale. _Measured depth (2026-07-02, run
+`20260702T135315Z-f6583183`): **20** — Recall@5/@10 identical at both depths (1.000); depth 20
+beat 50 on Recall@1/MRR (0.923/0.962 vs 0.846/0.910 at 1024tok): at slice scale the extra 30
+fused candidates only admit distractor chunks whose max-aggregated works can outrank the target.
+Depth stays an env-free config knob; 50 remains the recorded catalog-scale starting point._
+
+## DEC-P2-5 — NO_MATCH abstention: absolute top-1 reranker score (sigmoid), calibrated on held-out negatives (2026-07-02)
+
+**Status:** Accepted (P2 grooming; user-approved). **θ to be filled at execution.**
+
+**Options.** (A) **Absolute top-1 cross-encoder score threshold, sigmoid-normalized to [0,1].**
+(B) Top-1 vs top-2 margin. (C) Fused-rank (pre-rerank) score threshold.
+
+**Decision.** **A.** Sigmoid→[0,1] is the official BGE reranker score semantics; cross-encoder
+relevance scores are query-conditioned and markedly more stable across query types than cosine
+(C's documented failure mode). B is structurally wrong for this corpus: GS-01's five near-tied
+sibling versions *should* score close — a margin rule punishes exactly the correct behaviour.
+Calibration: canary + ε-margin methodology on the calibration half of the ~24-query held-out
+negative set (`evals/negatives/heldout.yaml`, absent-from-slice-by-construction), maximizing
+NO_MATCH F1 subject to **zero false rejects** on positive golden fixtures; P/R reported on the
+test half; gate = 0 false accepts on GS-02. The title channel's 0.80 fuzzy floor (DEC-P1-5)
+composes with θ for pure-title negatives (GS-02b "Kaithi").
+
+_Measured outcome (2026-07-02, run `20260702T135315Z-f6583183`, winner cell 1024tok/d20):_
+**θ = 0.151747** = 1.35 × the top calibration canary (NEG-17 "toddy-shop accountant wins the
+Fields Medal" = 0.11241 — thematically Indian negatives score highest, as expected). **Hard gate
+met: 0 false accepts on GS-02 and on all 12 untouched test negatives (NO_MATCH recall = 1.0;
+precision 0.75 over the validation population).** The zero-false-reject side constraint was
+**measured infeasible** — witness: GS-07a (Tanglish positive) = 0.00084 ≤ NEG-17 = 0.11241; the
+cross-encoder scores code-mixed/vague-plot positives below fluent-English out-of-catalog plots.
+Consequence, chosen deliberately: the no-hallucination gate outranks the no-false-reject
+preference, so four weak-scoring positives (GS-03a/c, GS-07a/b) return `abstain=true` **with
+their correct results** (v0 allows both) — they degrade to "low confidence", never to a
+fabricated match, and all four still rank the right Work top-5 (Recall@5 = 1.0). This measured
+positive/negative interleave on raw cross-encoder scores is a primary P4 headroom target
+(code-mixed intent parsing before retrieval). Identical false-reject set across all six ablation
+cells (structural, not config noise). θ wired as
+`sutradhar.rag.retrieve.CALIBRATED_NO_MATCH_THRESHOLD` (drift-checked against the artifact by
+`test_recorded_calibration_outcome_holds`); full curve committed at
+`evals/retrieval_runs/<run>.calibration.json`.
+
+**Sources (accessed 2026-07-02).** BAAI `bge-reranker-v2-m3` card (sigmoid mapping); retrieval-
+abstention practice (cross-encoder score stability; canary-threshold methodology); UAEval4RAG
+(arXiv 2412.12300).
+
+## DEC-P2-6 — Tier-1 CI gates on a committed retrieval-run artifact (2026-07-02)
+
+**Status:** Accepted (P2 grooming; user-confirmed — spec §7 Q2).
+
+**Context.** Tier-1 CI (no GPU, no model calls — ROADMAP §6.2) must recompute Recall@k / MRR /
+version-set recall / abstention metrics on every PR and block regressions.
+
+**Options.** (A) **Commit the compact retrieval-run summary (~1–5 MB JSON,
+`evals/retrieval_runs/<run_id>.json`: per-query ranked candidates + all channel scores) to git;**
+raw embeddings/matrices stay git-ignored under `data/artifacts/` (MANIFEST-hashed, optionally on
+HF Hub). (B) HF Hub + download step in CI.
+
+**Decision.** **A.** Zero external dependency and secret-free for forks; CI recomputes every
+gating metric from the pinned run (`RETRIEVAL_RUN` env). B adds a network/auth dependency to the
+merge gate for no benefit at this artifact size. The committed run id appears in the Table 1
+reproducibility stamp, so every benchmark row maps to an exact committed input.
+
+## DEC-0002 execution note (2026-07-02, P2 grooming — user-confirmed)
+
+Within DEC-0002's settled decision rule (default BGE-M3; adopt the 9B challenger only if it
+clears a gate BGE-M3 cannot): **if BGE-M3 meets the P2 exit gate on the first pass, the
+`bge-multilingual-gemma2` leg is skipped entirely** — no GPU time is spent on the challenger, and
+DEC-0002 flips to Accepted recording "gate met by default; challenger not run". The 9B leg
+remains the escalation path inside the P2 iteration loop (chunking → fusion → embedder, in that
+order). Context worth recording: MIRACL — the public benchmark behind both embedders'
+cross-lingual claims — covers hi/bn/te but **not ta/ml/kn**, so the golden-set gate (not
+leaderboards) is the only measurement that answers Sutradhar's question.
+
+## DEC-P2-7 — GPU-job transport: HF Hub relay (2026-07-02, execution — user-confirmed)
+
+**Context.** P2 task 5's `make gpu-embed` must ship `gpu_inputs.json` + the job code to the
+ephemeral JarvisLabs instance and pull the sealed artifact run back (P2_SPEC §2.6 names the
+lifecycle but not the channel). The P0/P1 sessions never moved files — they drove a remote vLLM
+API — so there was no precedent to reuse.
+
+**Options.** (A) **HF Hub relay:** laptop uploads inputs + the *self-contained*
+`rag-engine/embed_and_score.py` to a private HF **dataset** repo (`HF_ARTIFACT_REPO`); the
+instance startup script downloads both, runs the job, uploads the sealed run + an `EXIT` marker;
+the laptop polls, downloads into `data/artifacts/retrieval/<run_id>/`, MANIFEST-verifies, then
+destroys the instance. (B) SSH/scp direct — no relay repo, but untested SDK SSH surface + key
+management. (C) Manual runbook — least code, but no automated ephemeral driver (weak DEC-P0-5
+story).
+
+**Decision.** **A** (user-approved at task 5). It matches CLAUDE.md's "HF Hub = artifact
+registry / reproducibility bridge" and the delete-the-volume lifecycle, and is fully
+mock-testable like `extract_session`. Two deliberate consequences: (1) `embed_and_score.py` is
+**self-contained** (stdlib+numpy+pyarrow+FlagEmbedding, no `sutradhar` import — no repo clone on
+the box); its output format is locked to `sutradhar.rag.artifacts` by the laptop-side stub
+dry-run test. (2) Unlike the token-free vLLM validate script (P0 invariant, still enforced by
+test), the embed startup script **must embed an HF token** to upload results; mitigation: use a
+fine-grained token scoped to `HF_ARTIFACT_REPO` only, no `set -x` (never echoed), and the script
+slot is removed in the same `finally` as instance teardown.
+
+**DEC-P2-7 execution amendment (2026-07-02, task 6).** The planned `gpu` uv dependency group
+(P2_SPEC §2.7) was dropped: FlagEmbedding requires `transformers<5`, which caps
+`huggingface-hub<1.0` — unresolvable in one lockfile with the laptop's `huggingface_hub>=1.0`
+(modern-token API, P0). Under the HF relay the box never sees the repo, so the **authoritative
+instance pins live in `build_embed_startup_script`** (`pip install pyarrow huggingface_hub
+'transformers<5' FlagEmbedding`); noted in `pyproject.toml`. Session evidence: 4 attempts
+(instances 438174/438176/438178/438179 — driver log-relay gap, py3.10 `datetime.UTC`,
+transformers-v5 reranker API break, then success), ~10 GPU-minutes total ≈ $0.22, sealed run
+`20260702T135315Z-f6583183` (833 unique texts, 44,217 rerank pairs) pulled, verified, pinned as
+`RETRIEVAL_RUN`; committed record in `evals/retrieval_runs/`.

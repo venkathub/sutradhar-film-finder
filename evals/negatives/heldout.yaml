@@ -1,0 +1,252 @@
+# Held-out negative set — NO_MATCH abstention calibration (P2 task 1, DEC-P2-5).
+#
+# Deliberately NOT golden fixtures (tuning θ on the golden set would contaminate the
+# GS-02 gate). GS-02-schema-compatible + `kind` (plot|title) and `split`
+# (calibration|test). 24 fixtures, 12/12 split, 6 plot + 6 title in each half.
+#
+# kind=plot  : out-of-catalog plot descriptions (varied language/register, incl.
+#              code-mixed) — nothing thematically close to a catalogued plot.
+# kind=title : real but uncatalogued films — chosen outside the rapidfuzz 0.80
+#              radius of every slice title/AKA; enforced by the integration
+#              validator (absent-from-slice-by-construction, verified not asserted).
+fixtures:
+  - id: NEG-01
+    name: Fisherman befriends a mermaid (Kochi)
+    kind: plot
+    split: calibration
+    query: a Malayalam movie where a fisherman befriends a mermaid off the Kochi coast
+    query_lang: en
+    expected: {no_match: true}
+    must_not:
+      - return any catalogued Malayalam film as if it matched
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-02
+    name: Uncatalogued Tamil film (Master)
+    kind: title
+    split: calibration
+    query: Master
+    query_lang: en
+    expected: {no_match: true}
+    must_not:
+      - fuzzy-attach a real but uncatalogued film to a slice record
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-03
+    name: Robot dog saves child (Tanglish)
+    kind: plot
+    split: test
+    query: oru robot dog train accident la irundhu oru kuzhandhaiya kaapathum padam
+    query_lang: ta-latin
+    expected: {no_match: true}
+    must_not:
+      - fabricate a title, year, or cast
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-04
+    name: Uncatalogued Telugu film (Pushpa)
+    kind: title
+    split: test
+    query: "Pushpa: The Rise"
+    query_lang: en
+    expected: {no_match: true}
+    must_not:
+      - fuzzy-attach a real but uncatalogued film to a slice record
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-05
+    name: Chess champion in Antarctica (Hinglish)
+    kind: plot
+    split: calibration
+    query: wo movie jisme ek chess champion Antarctica me tournament khelta hai
+    query_lang: hi-latin
+    expected: {no_match: true}
+    must_not:
+      - return any catalogued Hindi film as if it matched
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-06
+    name: Uncatalogued Tamil film (Jailer)
+    kind: title
+    split: calibration
+    query: Jailer
+    query_lang: en
+    expected: {no_match: true}
+    must_not:
+      - fuzzy-attach a real but uncatalogued film to a slice record
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-07
+    name: Grandmothers' kabaddi team
+    kind: plot
+    split: test
+    query: Telugu film about a competitive kabaddi team of grandmothers
+    query_lang: en
+    expected: {no_match: true}
+    must_not:
+      - fabricate a title, year, or cast
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-08
+    name: Uncatalogued Hindi film (Dangal)
+    kind: title
+    split: test
+    query: Dangal
+    query_lang: en
+    expected: {no_match: true}
+    must_not:
+      - fuzzy-attach a real but uncatalogued film to a slice record
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-09
+    name: Talking-parrot lawyer courtroom drama
+    kind: plot
+    split: calibration
+    query: a Kannada courtroom drama where the defence lawyer is a talking parrot
+    query_lang: en
+    expected: {no_match: true}
+    must_not:
+      - return any catalogued Kannada film as if it matched
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-10
+    name: Uncatalogued Kannada film (Kantara)
+    kind: title
+    split: calibration
+    query: Kantara
+    query_lang: en
+    expected: {no_match: true}
+    must_not:
+      - fuzzy-attach a real but uncatalogued film to a slice record
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-11
+    name: Submarine chef WWI musical
+    kind: plot
+    split: test
+    query: Bollywood musical about a submarine chef during World War One
+    query_lang: en
+    expected: {no_match: true}
+    must_not:
+      - fabricate a title, year, or cast
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-12
+    name: Uncatalogued Hindi film (Andhadhun)
+    kind: title
+    split: test
+    query: Andhadhun
+    query_lang: en
+    expected: {no_match: true}
+    must_not:
+      - fuzzy-attach a real but uncatalogued film to a slice record
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-13
+    name: Aliens open a bakery in Ooty
+    kind: plot
+    split: calibration
+    query: a Tamil movie where aliens land in a tea estate in Ooty and open a bakery
+    query_lang: en
+    expected: {no_match: true}
+    must_not:
+      - return any catalogued Tamil film as if it matched
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-14
+    name: Uncatalogued Hindi film, native script (Tumbbad)
+    kind: title
+    split: calibration
+    query: तुम्बाड
+    query_lang: hi
+    expected: {no_match: true}
+    must_not:
+      - fuzzy-attach a transliterated uncatalogued title to a slice record
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-15
+    name: Postman befriends a yeti (native Hindi)
+    kind: plot
+    split: test
+    query: एक फिल्म जिसमें एक डाकिया हिमालय में चिट्ठियाँ पहुँचाते हुए यति से दोस्ती करता है
+    query_lang: hi
+    expected: {no_match: true}
+    must_not:
+      - fabricate a title, year, or cast
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-16
+    name: Uncatalogued Malayalam film (Kumbalangi Nights)
+    kind: title
+    split: test
+    query: Kumbalangi Nights
+    query_lang: en
+    expected: {no_match: true}
+    must_not:
+      - fuzzy-attach a real but uncatalogued film to a slice record
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-17
+    name: Toddy-shop accountant wins the Fields Medal
+    kind: plot
+    split: calibration
+    query: Malayalam film where a toddy shop accountant wins the Fields Medal
+    query_lang: en
+    expected: {no_match: true}
+    must_not:
+      - return any catalogued Malayalam film as if it matched
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-18
+    name: Uncatalogued Tamil film (Super Deluxe)
+    kind: title
+    split: calibration
+    query: Super Deluxe
+    query_lang: en
+    expected: {no_match: true}
+    must_not:
+      - fuzzy-attach a real but uncatalogued film to a slice record
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-19
+    name: Mumbai local time-travels to 1947
+    kind: plot
+    split: test
+    query: movie about a Mumbai local train that time travels to 1947
+    query_lang: en
+    expected: {no_match: true}
+    must_not:
+      - fabricate a title, year, or cast
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-20
+    name: Uncatalogued Tamil film (Ratsasan)
+    kind: title
+    split: test
+    query: Ratsasan
+    query_lang: en
+    expected: {no_match: true}
+    must_not:
+      - fuzzy-attach a real but uncatalogued film to a slice record
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-21
+    name: Sentient auto-rickshaw runs for election (Tenglish)
+    kind: plot
+    split: calibration
+    query: auto rickshaw ki pranam vachi municipal elections lo nilabadutundi, ee cinema em iti
+    query_lang: te-latin
+    expected: {no_match: true}
+    must_not:
+      - return any catalogued Telugu film as if it matched
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-22
+    name: Uncatalogued Hollywood film (Interstellar)
+    kind: title
+    split: calibration
+    query: Interstellar
+    query_lang: en
+    expected: {no_match: true}
+    must_not:
+      - return an unrelated catalogued film
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-23
+    name: Jatra troupe stranded on a spaceship
+    kind: plot
+    split: test
+    query: Bengali film about a jatra troupe stranded on a spaceship
+    query_lang: en
+    expected: {no_match: true}
+    must_not:
+      - return any catalogued Bengali film as if it matched
+    verify_source: [absent-from-seed-slice-by-construction]
+  - id: NEG-24
+    name: Uncatalogued Korean film (Parasite)
+    kind: title
+    split: test
+    query: Parasite
+    query_lang: en
+    expected: {no_match: true}
+    must_not:
+      - return an unrelated catalogued film
+    verify_source: [absent-from-seed-slice-by-construction]

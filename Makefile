@@ -21,8 +21,9 @@ setup: ## Install the locked Python environment (uv sync)
 fmt: ## Auto-format the codebase (ruff format)
 	uv run ruff format .
 
-lint: ## Lint the codebase (ruff check)
+lint: ## Lint + format check (ruff) — matches the Tier-1 CI job exactly
 	uv run ruff check .
+	uv run ruff format --check .
 
 typecheck: ## Static type check (mypy, strict)
 	uv run mypy src
@@ -87,6 +88,24 @@ gpu-validate: ## One-time ephemeral JarvisLabs create->serve->smoke->destroy val
 
 gpu-nuke: ## Safety: destroy any stray tagged JarvisLabs instance (no leaked GPU)
 	uv run python infra/gpu/jarvis.py nuke
+
+build-corpus: ## P2: gate-visible plot chunks + metadata cards -> chunks table (all ablation configs)
+	uv run python rag-engine/build_corpus.py
+
+gpu-embed: ## P2: ephemeral GPU embed+score session (export -> HF relay -> pull artifacts -> destroy)
+	uv run python infra/gpu/jarvis.py embed
+
+load-index: ## P2: load the pinned artifact run (RETRIEVAL_RUN) into chunk_embeddings
+	uv run python rag-engine/load_index.py
+
+retrieval-eval: ## P2: run the retrieval eval + ablation grid; write the committed run artifact
+	uv run python evals/run_retrieval_eval.py
+
+calibrate-no-match: ## P2: tune the NO_MATCH abstention threshold from the committed artifact
+	uv run python evals/calibrate_no_match.py
+
+rag-demo: ## P2: 30-second demo — recorded golden queries -> cited, labelled version sets (GPU off)
+	uv run python rag-engine/demo.py
 
 golden-validate: ## Validate golden fixtures against the live graph (task 14)
 	uv run python evals/build_golden.py

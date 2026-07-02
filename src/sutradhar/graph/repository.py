@@ -15,13 +15,16 @@ v0 semantics implemented (wording-level tightenings, pinned at the task-15 freez
   ``is_sequel_of`` relative to the queried work; its remakes keep ``is_remake_of``.
 - ``era`` in ``refine_filter`` resolves against the set's original version's year
   (``newer`` = strictly later, ``older`` = strictly earlier, ``original`` = the flag).
-- ``search_by_plot`` is NOT here — it needs P2 retrieval + calibrated abstain.
+- ``search_by_plot`` (landed in P2): v0-conformant wrapper over the hybrid retriever
+  (``sutradhar.rag.retrieve``) — dense+sparse+title → RRF → rerank → Work aggregation →
+  calibrated abstain. The ``retriever`` is injected infrastructure (like ``session``),
+  not a tool parameter; the tool surface stays exactly ``description`` + ``top_k``.
 """
 
 from __future__ import annotations
 
 import uuid
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import Boolean, Column, Integer, MetaData, Table, Text, Uuid, select
@@ -30,6 +33,9 @@ from sqlalchemy.orm import Session
 
 from sutradhar.graph.schema import Person, VersionCast, VersionTitle
 from sutradhar.pipeline.normalize import best_matches, match_key
+
+if TYPE_CHECKING:  # retrieval imports repository (resolve_title) — avoid the cycle
+    from sutradhar.rag.retrieve import Retriever
 
 # --- The verification-gate views, mapped read-only (separate MetaData: never migrated) ---
 
@@ -418,4 +424,57 @@ def refine_filter(
             )
             for r in kept
         ]
+    )
+
+
+# --- search_by_plot (P2 task 9; TOOL_SCHEMA v0, frozen shape) ---
+
+
+class PlotSearchHit(BaseModel):
+    """One results[] item — mirrors tool_schema.v0.json exactly."""
+
+    model_config = ConfigDict(frozen=True)
+
+    work_id: uuid.UUID
+    canonical_title: str
+    language: str | None
+    year: int | None
+    score: float
+
+
+class SearchByPlotResult(BaseModel):
+    results: list[PlotSearchHit]
+    abstain: bool
+
+
+def search_by_plot(
+    session: Session,
+    description: str,
+    top_k: int = 10,
+    *,
+    retriever: Retriever,
+) -> SearchByPlotResult:
+    """Semantic Work retrieval from a plot/story description (v0; abstain per DEC-P2-5).
+
+    ``session`` and ``retriever`` are injected infrastructure (the retriever wraps this
+    same session plus the artifact-backed providers); the tool-visible parameters are
+    exactly ``description`` and ``top_k``. ``abstain=true`` when the top reranked score
+    falls below the calibrated NO_MATCH threshold — results are still returned (v0
+    allows both), letting callers show "low confidence" rather than fabricate a match.
+    """
+    if top_k < 1:
+        raise ValueError("top_k must be >= 1")
+    outcome = retriever.retrieve(description)
+    return SearchByPlotResult(
+        results=[
+            PlotSearchHit(
+                work_id=hit.work_id,
+                canonical_title=hit.canonical_title,
+                language=hit.language,
+                year=hit.year,
+                score=hit.score,
+            )
+            for hit in outcome.works[:top_k]
+        ],
+        abstain=outcome.abstain,
     )

@@ -30,6 +30,9 @@ EXPECTED_TABLES = {
     "candidate_edges",
     "conflicts",
     "plot_texts",
+    # P2 (P2_SPEC §2.3): the retrieval store — chunks + per-model embeddings.
+    "chunks",
+    "chunk_embeddings",
 }
 
 
@@ -99,6 +102,27 @@ def test_ground_truth_view_names_pinned() -> None:
         "ground_truth_versions",
         "ground_truth_edges",
     )
+
+
+def test_chunk_schema_inventory() -> None:
+    """P2_SPEC §2.3 pins: kind CHECK, per-config uniqueness, embedding dims + A/B PK."""
+    from sutradhar.graph.schema import CHUNK_KINDS, DENSE_DIM, SPARSE_DIM
+
+    assert set(CHUNK_KINDS) == {"plot", "metadata_card"}
+    names = _constraint_names(_table("chunks"))
+    assert "ck_chunks_kind" in names
+    assert "uq_chunks_version_id" in names  # (version_id, kind, chunker, chunk_config, seq)
+    uq = next(
+        c
+        for c in _table("chunks").constraints
+        if isinstance(c, UniqueConstraint) and c.name == "uq_chunks_version_id"
+    )
+    assert [c.name for c in uq.columns] == ["version_id", "kind", "chunker", "chunk_config", "seq"]
+    emb = _table("chunk_embeddings")
+    assert {c.name for c in emb.primary_key.columns} == {"chunk_id", "embed_model", "index_version"}
+    assert emb.columns["dense"].type.dim == DENSE_DIM  # type: ignore[attr-defined]
+    assert emb.columns["sparse"].type.dim == SPARSE_DIM  # type: ignore[attr-defined]
+    assert (DENSE_DIM, SPARSE_DIM) == (1024, 250_002)  # BGE-M3 dense / XLM-R vocab
 
 
 def test_postgres_url_is_env_driven() -> None:

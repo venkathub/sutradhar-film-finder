@@ -19,6 +19,7 @@ import sys
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from sutradhar.config import Settings, get_settings
@@ -345,6 +346,234 @@ def extract_session(
         deps.close_client(client)
 
 
+# --- P2 embed+score session (DEC-P2-7: HF Hub relay) --------------------------------
+#
+# The GPU box has no repo checkout and no Postgres. The laptop uploads gpu_inputs.json +
+# the self-contained rag-engine/embed_and_score.py to a PRIVATE HF dataset repo
+# (HF_ARTIFACT_REPO); the instance startup script downloads both, pip-installs the gpu
+# deps, runs the job, uploads the sealed run dir + an EXIT marker back to the Hub; the
+# laptop polls for EXIT, downloads the run into data/artifacts/retrieval/<run_id>/,
+# verifies its MANIFEST, and destroys the instance (teardown in `finally`, as always).
+#
+# Secret note: unlike the vLLM validate script (ungated model, no token), this startup
+# script MUST embed an HF token — upload back to the Hub is impossible without one. Use a
+# fine-grained token scoped to HF_ARTIFACT_REPO only; the script slot is removed in the
+# same `finally` (remove_scripts), so the token never outlives the session.
+
+EMBED_JOB_SCRIPT = Path(__file__).resolve().parent.parent.parent / "rag-engine/embed_and_score.py"
+EMBED_EXPORT_SCRIPT = "rag-engine/export_gpu_inputs.py"
+EMBED_INPUTS_PATH = Path("data/interim/gpu_inputs.json")
+EMBED_ARTIFACTS_ROOT = Path("data/artifacts/retrieval")
+DEFAULT_EMBED_TIMEOUT_S = 3600  # embed+score is minutes; 1 h is a generous hard cap
+
+
+@dataclass
+class HubRelay:
+    """Injectable HF Hub side effects for the embed session (fakes in tests)."""
+
+    upload_file: Callable[[Path, str], None]  # local path -> path_in_repo
+    exists: Callable[[str], bool]  # path_in_repo present?
+    download_dir: Callable[[str, Path], None]  # path_in_repo prefix -> local dir
+    fetch_log: Callable[[str], str | None] = lambda run_id: None  # job.log tail (diagnostics)
+
+
+def _default_hub(settings: Settings) -> HubRelay:
+    from huggingface_hub import HfApi, hf_hub_download
+
+    api = HfApi(token=settings.require("hf_token"))
+    repo = settings.require("hf_artifact_repo")
+    api.create_repo(repo, repo_type="dataset", private=True, exist_ok=True)
+
+    def upload_file(local: Path, path_in_repo: str) -> None:
+        api.upload_file(
+            path_or_fileobj=local, path_in_repo=path_in_repo, repo_id=repo, repo_type="dataset"
+        )
+
+    def exists(path_in_repo: str) -> bool:
+        return bool(api.file_exists(repo, path_in_repo, repo_type="dataset"))
+
+    def download_dir(prefix: str, dest: Path) -> None:
+        api.snapshot_download(
+            repo_id=repo, repo_type="dataset", allow_patterns=[f"{prefix}/*"], local_dir=dest
+        )
+
+    def fetch_log(run_id: str, tail_chars: int = 4000) -> str | None:
+        try:
+            path = hf_hub_download(
+                repo_id=repo,
+                repo_type="dataset",
+                filename=f"runs/{run_id}/job.log",
+                token=settings.require("hf_token"),
+            )
+            return Path(path).read_text(encoding="utf-8", errors="replace")[-tail_chars:]
+        except Exception:  # noqa: BLE001 — diagnostics only, never mask the real failure
+            return None
+
+    return HubRelay(
+        upload_file=upload_file, exists=exists, download_dir=download_dir, fetch_log=fetch_log
+    )
+
+
+def build_embed_startup_script(token: str, repo: str, run_id: str) -> str:
+    """Bash run on instance launch: pull job+inputs from the Hub, run, push results back.
+
+    The job's stdout/stderr are captured to ``job.log`` and uploaded even on failure, so a
+    failed session is debuggable from the laptop without SSH."""
+    return (
+        "#!/bin/bash\n"
+        "set -euo pipefail\n"  # no -x: the token must never echo into instance logs
+        f"export HF_TOKEN={token}\n"
+        # FlagEmbedding 1.3–1.4 targets the transformers 4.x API (its reranker calls
+        # tokenizer.prepare_for_model, removed in v5) — pin below 5 on the box.
+        "pip install -q pyarrow huggingface_hub 'transformers<5' FlagEmbedding"
+        " >/root/pip.log 2>&1 || true\n"
+        "python - <<'PY'\n"
+        "import subprocess, sys\n"
+        "from pathlib import Path\n"
+        "from huggingface_hub import HfApi, hf_hub_download\n"
+        f"repo, run_id = {repo!r}, {run_id!r}\n"
+        "kw = dict(repo_id=repo, repo_type='dataset')\n"
+        "api = HfApi()\n"
+        "log = Path('/root/job.log')\n"
+        "try:\n"
+        "    inputs = hf_hub_download(filename=f'runs/{run_id}/gpu_inputs.json', **kw)\n"
+        "    job = hf_hub_download(filename=f'runs/{run_id}/embed_and_score.py', **kw)\n"
+        "    with log.open('wb') as fh:\n"
+        "        rc = subprocess.call([sys.executable, job, '--inputs', inputs,\n"
+        "                              '--out', '/root/artifacts', '--run-id', run_id],\n"
+        "                             stdout=fh, stderr=subprocess.STDOUT)\n"
+        "except Exception as exc:\n"
+        "    log.write_text(f'driver exception: {exc!r}')\n"
+        "    rc = 98\n"
+        "for extra in ('/root/pip.log',):\n"
+        "    try:\n"
+        "        api.upload_file(path_or_fileobj=extra,\n"
+        "                        path_in_repo=f'runs/{run_id}/pip.log', **kw)\n"
+        "    except Exception:\n"
+        "        pass\n"
+        "try:\n"
+        "    api.upload_file(path_or_fileobj=str(log),\n"
+        "                    path_in_repo=f'runs/{run_id}/job.log', **kw)\n"
+        "except Exception:\n"
+        "    pass\n"
+        "if rc == 0:\n"
+        "    api.upload_folder(folder_path=f'/root/artifacts/{run_id}',\n"
+        "                      path_in_repo=f'runs/{run_id}/out', **kw)\n"
+        "api.upload_file(path_or_fileobj=str(rc).encode(),\n"
+        "                path_in_repo=f'runs/{run_id}/EXIT', **kw)\n"
+        "PY\n"
+    )
+
+
+def _run_export(out_path: Path) -> tuple[int, str, str]:
+    """Laptop-side input export (needs the local DB). Injectable for tests."""
+    import subprocess
+
+    proc = subprocess.run(  # noqa: S603 — our own entrypoint, controlled args
+        [sys.executable, EMBED_EXPORT_SCRIPT, "--out", str(out_path)],
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )
+    return proc.returncode, proc.stdout, proc.stderr
+
+
+def embed_session(
+    settings: Settings | None = None,
+    deps: Deps | None = None,
+    hub: HubRelay | None = None,
+    *,
+    job_timeout_s: float = DEFAULT_EMBED_TIMEOUT_S,
+    poll_interval_s: float = DEFAULT_POLL_INTERVAL_S,
+    run_export: Callable[[Path], tuple[int, str, str]] = _run_export,
+    artifacts_root: Path = EMBED_ARTIFACTS_ROOT,
+    inputs_path: Path = EMBED_INPUTS_PATH,
+) -> Evidence:
+    """P2 task 5/6: export inputs -> create -> embed+score on the box -> pull -> destroy."""
+    from sutradhar.rag.artifacts import ArtifactRun, new_run_id
+
+    settings = settings or get_settings()
+    deps = deps or _default_deps()
+    hub = hub or _default_hub(settings)
+    ev = Evidence(requested_model=settings.embed_model, gpu_type=settings.gpu_type)
+    run_id = new_run_id()
+
+    deps.log(f"[gpu-embed] exporting inputs for run {run_id} …")
+    returncode, stdout, stderr = run_export(inputs_path)
+    deps.log(stdout)
+    if returncode != 0:
+        ev.status = "error"
+        ev.detail = f"input export failed: {stderr.strip()[-300:]}"
+        return ev
+
+    hub.upload_file(inputs_path, f"runs/{run_id}/gpu_inputs.json")
+    hub.upload_file(EMBED_JOB_SCRIPT, f"runs/{run_id}/embed_and_score.py")
+
+    client = deps.create_client(settings)
+    instance: Any = None
+    try:
+        deps.log(f"  creating {settings.gpu_type} for embed+score (run {run_id}) …")
+        t0 = deps.monotonic()
+        script = build_embed_startup_script(
+            settings.require("hf_token"), settings.require("hf_artifact_repo"), run_id
+        )
+        instance = deps.create_instance(client, settings, script)
+        ev.machine_id = getattr(instance, "machine_id", None)
+        deps.log(f"  instance {ev.machine_id} running; waiting for runs/{run_id}/EXIT …")
+
+        deadline = deps.monotonic() + job_timeout_s
+        exit_seen = False
+        while deps.monotonic() < deadline:
+            if hub.exists(f"runs/{run_id}/EXIT"):
+                exit_seen = True
+                break
+            deps.sleep(poll_interval_s)
+        if not exit_seen:
+            ev.status = "off"
+            ev.detail = f"embed job did not finish within {job_timeout_s}s"
+            return ev
+        ev.create_to_up_s = round(deps.monotonic() - t0, 1)
+
+        if not hub.exists(f"runs/{run_id}/out/MANIFEST.sha256"):
+            ev.status = "error"
+            log_tail = hub.fetch_log(run_id)
+            ev.detail = "job exited without a sealed artifact run" + (
+                f" — job.log tail:\n{log_tail}" if log_tail else " (no job.log uploaded)"
+            )
+            return ev
+
+        staging = artifacts_root / ".staging" / run_id
+        hub.download_dir(f"runs/{run_id}/out", staging)
+        src = staging / "runs" / run_id / "out"
+        dest = artifacts_root / run_id
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        src.rename(dest)
+        ArtifactRun.open(artifacts_root, run_id)  # hard verification before we celebrate
+        ev.booted = True
+        ev.status = "up"
+        ev.detail = (
+            f"sealed artifact run pulled + verified: {dest} — set RETRIEVAL_RUN={run_id} in .env"
+        )
+        return ev
+    except Exception as exc:  # noqa: BLE001 — record, then guarantee teardown in finally
+        ev.status = "error"
+        ev.detail = f"{type(exc).__name__}: {exc}"
+        return ev
+    finally:
+        if instance is not None and ev.machine_id is not None:
+            try:
+                ev.destroyed = deps.destroy_instance(client, ev.machine_id)
+                deps.log(f"  destroyed instance {ev.machine_id}: {ev.destroyed}")
+            except Exception as exc:  # noqa: BLE001
+                ev.detail += f" | TEARDOWN FAILED: {exc} — run `make gpu-nuke`"
+                deps.log(f"  TEARDOWN FAILED for {ev.machine_id}: {exc}")
+        try:  # script-quota hygiene + the embedded token dies with the script slot
+            deps.remove_scripts(client)
+        except Exception as exc:  # noqa: BLE001
+            deps.log(f"  script cleanup failed (non-fatal): {exc}")
+        deps.close_client(client)
+
+
 def nuke(settings: Settings | None = None, deps: Deps | None = None) -> list[int]:
     """Destroy any stray instance carrying our tag — a leaked billing GPU is a defect."""
     settings = settings or get_settings()
@@ -383,10 +612,14 @@ def main(argv: list[str] | None = None) -> int:
         ev = extract_session()
         _write_evidence(ev)
         return 0 if ev.status == "up" and ev.destroyed else 1
+    if cmd == "embed":
+        ev = embed_session()
+        _write_evidence(ev)
+        return 0 if ev.status == "up" and ev.destroyed else 1
     if cmd == "nuke":
         nuke()
         return 0
-    print(f"usage: jarvis.py [validate|extract|nuke]  (got {cmd!r})")
+    print(f"usage: jarvis.py [validate|extract|embed|nuke]  (got {cmd!r})")
     return 2
 
 

@@ -16,19 +16,45 @@
 Populated in **P2** (hybrid retrieval + reranker), gated by **Recall@10 ≥ 0.90** on the golden set
 before any fine-tuning is invested. Metrics are computed over `docs/GOLDEN_SET_SCENARIOS.md`.
 
-| Config | Recall@1 | Recall@5 | Recall@10 | MRR@10 | Version-set recall | Notes |
-|--------|---------:|---------:|----------:|-------:|-------------------:|-------|
-| _BGE-M3 dense + sparse + reranker_ | _—_ | _—_ | _—_ | _—_ | _—_ | _populated in P2_ |
+**Captured 2026-07-02** — 13 retrieval fixtures (GS-01/03/06/07/11: flagship, plot-only,
+franchise, code-mixed, fuzzy-title) through the full §2.4 pipeline (title + BGE-M3 dense +
+BGE-M3 sparse → RRF k=60 → bge-reranker-v2-m3 → Work aggregation → calibrated abstention).
+**Exit gate met in every ablation cell on the first pass → P4 is green-lit; the DEC-0002 9B
+challenger leg was not needed.** Reproduce with the GPU **off**: `make retrieval-eval`
+(recomputes from the pinned artifact run), or from scratch per `rag-engine/README.md`.
+
+| Config (chunk × rerank depth) | Recall@1 | Recall@5 | Recall@10 | MRR@10 | VSR GS-01 | VSR GS-06 | Notes |
+|--------|---------:|---------:|----------:|-------:|----------:|----------:|-------|
+| **1024tok_15pct / d20** ★ winner | **0.923** | **1.000** | **1.000** | **0.962** | **1.0** | **1.0** | DEC-P2-3/4 measured |
+| 1024tok_15pct / d50 | 0.846 | 1.000 | 1.000 | 0.910 | 1.0 | 1.0 | |
+| 512tok_15pct / d50 | 0.923 | 1.000 | 1.000 | 0.949 | 1.0 | 1.0 | |
+| 512tok_15pct / d20 | 0.846 | 1.000 | 1.000 | 0.923 | 1.0 | 1.0 | |
+| 256tok_15pct / d20 | 0.846 | 1.000 | 1.000 | 0.923 | 1.0 | 1.0 | |
+| 256tok_15pct / d50 | 0.769 | 1.000 | 1.000 | 0.846 | 1.0 | 1.0 | |
+
+Winner-cell per-slice detail: flagship / plot-only / franchise / fuzzy-title all 1.000 across
+R@1/5/10; code-mixed R@1 0.5, R@5 1.0 (GS-07b Hinglish ranks Drishyam #2 on the raw query —
+the accepted P2 limitation and the named P4 headroom target, per DEC-P2-5's measured
+positive/negative interleave). **NO_MATCH abstention (DEC-P2-5): θ = 0.151747, 0 false accepts
+on GS-02 + all 12 held-out test negatives (NO_MATCH recall 1.0, precision 0.75); 4 weak-scoring
+positives flagged low-confidence with correct results (all R@5 = 1.0).**
 
 **Version-set recall** = fraction of a Work's full set of language versions (original + all
 remakes/dubs) returned for a query. The gating case:
 
 | Query | Expected version set | Version-set recall | Notes |
 |-------|----------------------|-------------------:|-------|
-| "Papanasam" (Tamil) | Drishyam (2013 ML, original) + Drishya (2014 KN) + Drushyam (2014 TE) + Papanasam (2015 TA) + Drishyam (2015 HI) | _—_ | _populated in P2_ |
+| "Papanaasam" (fuzzy, GS-11a) → and GS-01a plot query | Drishyam (2013 ML, **original**) + Drishya (2014 KN) + Drushyam (2014 TE) + Papanasam (2015 TA) + Drishyam (2015 HI) — all relationship-labelled | **1.0** | end-to-end: query → top-1 Work → `get_versions`; labels verified (remake ≠ dub) |
+| "show me every Drishyam film" (franchise, GS-06a) | the 5 above + Drishyam 2 (2021 ML, sequel-original) + Drishya 2 (KN) + Drushyam 2 (TE) + Drishyam 2 (2022 HI) | **1.0** | `include_sequels` walk; sequel never conflated with remake |
 
-_Reproducibility stamp (per row): embedder id + revision, index type, chunker, reranker, golden-set
-version, date, MLflow run URL._
+**Reproducibility stamp (all rows):** embedder `BAAI/bge-m3` · reranker `BAAI/bge-reranker-v2-m3`
+(sigmoid scores) · chunker `recursive_para` (deterministic, char-class token estimate) · artifact
+run `20260702T135315Z-f6583183` (sealed, MANIFEST-verified; GPU job code SHA `f29ff6d`) · index
+`chunk_embeddings@(BAAI/bge-m3, 20260702T135315Z-f6583183)` · golden set frozen 2026-07-02
+(25 fixtures) + 24 held-out negatives · committed run artifact
+`evals/retrieval_runs/20260702T135315Z-f6583183.json` (+ `.calibration.json`) — Tier-1 CI
+recomputes every gating metric from it on each PR. (MLflow wiring lands in P3 per the roadmap;
+P2 records here + in the committed artifact, same pattern as P1's graph report.)
 
 ---
 

@@ -24,6 +24,8 @@ dependencies = [
     "typer>=0.12",
     "indic-transliteration>=2.3.82",
     "rapidfuzz>=3.14.5",
+    "pgvector>=0.4.2",
+    "pyarrow>=24.0.0",
 ]
 
 [dependency-groups]
@@ -40,6 +42,13 @@ dev = [
     "types-pyyaml>=6.0",
     "jsonschema>=4.26.0",
 ]
+# NOTE (P2 execution): P2_SPEC §2.7 planned a `gpu` dependency group here
+# (FlagEmbedding+torch for `uv sync --group gpu` on the instance). Dropped during task 6:
+# FlagEmbedding needs transformers<5, which requires huggingface-hub<1.0 — unresolvable in
+# one lockfile with the laptop's huggingface_hub>=1.0 (modern token API). Under DEC-P2-7
+# the box never sees the repo anyway; the AUTHORITATIVE instance deps are pinned in
+# infra/gpu/jarvis.py::build_embed_startup_script (pip: pyarrow, huggingface_hub,
+# transformers<5, FlagEmbedding).
 
 [build-system]
 requires = ["hatchling"]
@@ -67,6 +76,11 @@ disallow_untyped_defs = true
 [[tool.mypy.overrides]]
 # Third-party SDK without type stubs (used only by infra/gpu/jarvis.py).
 module = ["jarvislabs.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# pgvector-python ships no py.typed; its SQLAlchemy types (Vector/SPARSEVEC) are SQL glue.
+module = ["pgvector.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

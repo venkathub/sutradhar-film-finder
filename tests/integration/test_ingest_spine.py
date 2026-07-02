@@ -50,6 +50,8 @@ def session(engine: Engine) -> Iterator[Session]:
         # Isolate from any previously-ingested live data: the ingest is upsert-keyed on
         # QIDs, so a clean slate makes count assertions deterministic.
         for table in (
+            "chunk_embeddings",
+            "chunks",
             "candidate_edges",
             "edges",
             "conflicts",

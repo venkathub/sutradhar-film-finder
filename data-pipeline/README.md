@@ -27,6 +27,8 @@ make db-migrate  # alembic upgrade head — env-driven POSTGRES_*, nothing hardc
 | `candidate_edges` | LLM proposals awaiting the human gate — **not** an edge table, never read by views |
 | `conflicts` | Multi-source disagreements, never silently resolved |
 | `plot_texts` | Wikipedia/TMDB plot prose (revision-pinned, license recorded) — the P2 embedding corpus |
+| `chunks` | P2 (P2_SPEC §2.3): embeddable retrieval units — plot chunks + per-Version metadata cards, ablation-keyed by `chunk_config`, `content_hash`-addressable |
+| `chunk_embeddings` | P2: BGE-M3 dense `vector(1024)` + `sparsevec` lexical weights per chunk, PK `(chunk_id, embed_model, index_version)` so A/B legs and re-embeds coexist; sparse leg scored in-DB via `<#>` |
 
 Every gated record/edge carries `confidence` (`HIGH`/`MEDIUM`) + inline `jsonb sources[]`
 (DEC-P1-3) + `human_verified`. `is_original_of` is **derived** (from `version.is_original` +

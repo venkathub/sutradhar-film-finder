@@ -51,6 +51,8 @@ def session(engine: Engine) -> Iterator[Session]:
         outer = conn.begin()
         s = Session(bind=conn, join_transaction_mode="create_savepoint", autoflush=False)
         for table in (
+            "chunk_embeddings",
+            "chunks",
             "candidate_edges",
             "edges",
             "conflicts",
@@ -176,7 +178,23 @@ def test_gs10_false_merge(built: Session) -> None:
 def test_rule_disagreement_opens_conflict_and_hides_edge(built: Session) -> None:
     """Doctor a remake edge to share lead cast → builder must open an edge_type conflict
     (not re-type it), and the gate view must hide the edge until resolution."""
-    remake = built.scalars(select(Edge).where(Edge.edge_type == "is_remake_of")).first()
+    # Deterministic pick: a remake edge whose dst actually has lead cast (unordered
+    # .first() depended on heap order and went flaky once more tables joined the DB).
+    remake = next(
+        (
+            e
+            for e in built.scalars(
+                select(Edge).where(Edge.edge_type == "is_remake_of").order_by(Edge.edge_id)
+            )
+            if built.scalars(
+                select(VersionCast).where(
+                    VersionCast.version_id == e.dst_id, VersionCast.role_kind == "lead"
+                )
+            ).first()
+            is not None
+        ),
+        None,
+    )
     assert remake is not None
     dst_leads = built.scalars(
         select(VersionCast).where(
