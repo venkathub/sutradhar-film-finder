@@ -587,8 +587,12 @@ Chunking is ablated **before** any embedder swap: chunk config ≈ embedder choi
 impact (Vectara NAACL 2025), and iterating it costs artifact-replay time, not GPU rental.
 
 **Consequences.** Deterministic chunker (`content_hash` pins it); ablation table in the
-rag-engine README; winning config recorded here with numbers. _Measured winner: — (pending P2
-execution)._
+rag-engine README; winning config recorded here with numbers. _Measured winner (2026-07-02, run
+`20260702T135315Z-f6583183`, 13 retrieval fixtures): **1024tok_15pct** — every config passed the
+Recall@10 ≥ 0.90 gate at 1.000 and VSR-01/06 = 1.0; 1024tok won on Recall@1 0.923 / MRR@10 0.962
+(at depth 20). Consistent with the arXiv 2505.21700 finding that 512–1024 tok favours
+broader-context/narrative retrieval — our story-description queries. Full grid in the rag-engine
+README ablation table._
 
 **Sources (accessed 2026-07-02).** arXiv 2505.21700 (chunk size vs retrieval, multi-dataset);
 2026 chunking benchmark guides (recursive 512 tok, 10–20% overlap default); Vectara NAACL 2025
@@ -607,7 +611,11 @@ laptop-side parameter, so measuring {20, 50} costs nothing. B risks dropping a v
 before the reranker sees it — a direct threat to the GS-01/GS-06 = 1.0 gate. C wastes the settled
 reranker (`bge-reranker-v2-m3`), the standard lever for closing the last recall/MRR gap.
 `top_k=10` matches the `search_by_plot` v0 default and the Recall@10 gate. **Revisit trigger:**
-live-path latency at catalog scale. _Measured depth: — (pending P2 execution)._
+live-path latency at catalog scale. _Measured depth (2026-07-02, run
+`20260702T135315Z-f6583183`): **20** — Recall@5/@10 identical at both depths (1.000); depth 20
+beat 50 on Recall@1/MRR (0.923/0.962 vs 0.846/0.910 at 1024tok): at slice scale the extra 30
+fused candidates only admit distractor chunks whose max-aggregated works can outrank the target.
+Depth stays an env-free config knob; 50 remains the recorded catalog-scale starting point._
 
 ## DEC-P2-5 — NO_MATCH abstention: absolute top-1 reranker score (sigmoid), calibrated on held-out negatives (2026-07-02)
 

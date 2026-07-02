@@ -97,6 +97,9 @@ gpu-embed: ## P2: ephemeral GPU embed+score session (export -> HF relay -> pull 
 load-index: ## P2: load the pinned artifact run (RETRIEVAL_RUN) into chunk_embeddings
 	uv run python rag-engine/load_index.py
 
+retrieval-eval: ## P2: run the retrieval eval + ablation grid; write the committed run artifact
+	uv run python evals/run_retrieval_eval.py
+
 golden-validate: ## Validate golden fixtures against the live graph (task 14)
 	uv run python evals/build_golden.py
 

@@ -120,6 +120,35 @@ retriever is injected keyword-only infrastructure, invisible to the tool surface
 Live smoke (real run, 512tok config): GS-11a "Papanaasam" → Drishyam @0.998; GS-01a →
 Drishyam @0.863; Tanglish GS-07a → Drishyam top-1 → full 5-version labelled set.
 
+### Eval harness + ablation grid (P2 task 10)
+
+```
+make retrieval-eval      # full grid; writes the committed evals/retrieval_runs/<run_id>.json
+```
+
+Recall@1/5/10, MRR@10, version-set recall per slice, over the 3×2 ablation grid
+(chunk config × rerank depth) — computed entirely from stored artifacts, zero GPU.
+The committed run artifact (DEC-P2-6, 0.54 MB) records per-query ranked works + channel
+sizes + the raw abstention signal for all 13 retrieval fixtures **and** all 24 held-out
+negatives, per cell; CI recomputes every gating metric from it with the same functions.
+
+**Ablation results (run `20260702T135315Z-f6583183`, 13 retrieval fixtures — GS-01/03/06/07/11):**
+
+| config | R@1 | R@5 | R@10 | MRR@10 | VSR GS-01 | VSR GS-06 |
+|---|---|---|---|---|---|---|
+| 256tok/d20 | 0.846 | 1.000 | 1.000 | 0.923 | 1.0 | 1.0 |
+| 256tok/d50 | 0.769 | 1.000 | 1.000 | 0.846 | 1.0 | 1.0 |
+| 512tok/d20 | 0.846 | 1.000 | 1.000 | 0.923 | 1.0 | 1.0 |
+| 512tok/d50 | 0.923 | 1.000 | 1.000 | 0.949 | 1.0 | 1.0 |
+| **1024tok/d20** ★ | **0.923** | **1.000** | **1.000** | **0.962** | **1.0** | **1.0** |
+| 1024tok/d50 | 0.846 | 1.000 | 1.000 | 0.910 | 1.0 | 1.0 |
+
+**Exit gate met on the first pass: Recall@10 = 1.000 (≥ 0.90) in every cell; version-set
+recall GS-01 = GS-06 = 1.0.** Per the DEC-0002 execution note, the 9B challenger leg is
+skipped. Known non-gating miss: GS-07b (Hinglish) ranks Drishyam #2 (R@5=1.0, VSR via
+top-1 misses) — the raw-code-mixed-query limitation P2 accepts by design; LLM intent
+parsing is the P4 headroom story.
+
 ## Tests
 
 ```
