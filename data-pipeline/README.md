@@ -227,6 +227,25 @@ ta), 0 conflicts, 0 anomalies; graph = 15 works / 31 versions / 15 edges. Re-run
 Named regressions green here: `test_gs04_dub_vs_remake`, `test_gs05_sibling_vs_remake`,
 `test_gs10_false_merge`, + the rule-disagreement conflict gate.
 
+## Repository — the tool contract, satisfied (P1 task 10)
+
+`src/sutradhar/graph/repository.py` implements the graph-backed **TOOL_SCHEMA v0** signatures
+as plain functions over the **ground-truth views only** (CANDIDATE rows and conflicted records
+are structurally invisible — tested end-to-end):
+
+| Tool (v0) | Behaviour |
+|---|---|
+| `resolve_title(title, language?)` | match-key index + rapidfuzz; exact = score 1.0; `ambiguous=true` when candidates span >1 Work ("Vikram" → 2 works, GS-10); native-script and perturbed queries resolve (GS-11) |
+| `get_work(work_id)` | Work + `source_work` (the novella for Devadasu — GS-05) + `based_on[]` |
+| `get_versions(work_id, scope, include_sequels)` | `scope` via `version.country`; `include_sequels` = transitive `is_sequel_of` walk (GS-06); labels: root original → derived `is_original_of`, sequel-work original → `is_sequel_of`, verified remake/dub edges → their type, no verified edge → `null` (honest gap until extraction+review) |
+| `refine_filter(version_set, by)` | actor (lead-name match), language, year, `era` resolved against the set's original's year, relationship (GS-08 backtracking) |
+| `search_by_plot` | **not implemented** — needs P2 retrieval + calibrated abstain; schema frozen at task 15 |
+
+Named regressions green here: `test_gs02_no_hallucinated_movie` (decoys resolve to nothing),
+`test_gs06_franchise_version_set_recall` (9/9 franchise versions, sequel-vs-remake labels never
+conflated), `test_gs09_scoping` (indian/foreign/all partition exact), `test_gs09_transitive_lineage`
+(full lineage, sole ml original — the proximate-edge assertion joins with the task-14 fixtures).
+
 ## Planned (remaining P1 tasks)
 - Ingest from Wikidata SPARQL (relationship spine: P144/P1877/P4969, P155/P156/P179), TMDB
   (`translations`, `alternative_titles`, credits), IMDb `title.akas` (slice-filtered), Wikipedia

@@ -223,3 +223,85 @@ def test_build_graph_idempotent(built: Session) -> None:
     assert first.dub_edges_derived == 0 and first.rule_conflicts_opened == 0
     assert first.rule_agreements > 0  # wikidata remake edges confirmed by disjoint casts
     assert first.anomalies == []
+
+
+# --- Task 10: repository-backed named regressions (GS-02 / GS-06 / GS-09) ---
+
+
+def test_gs02_no_hallucinated_movie(built: Session) -> None:
+    """Decoy titles resolve to NOTHING in the graph — nothing is returnable for them."""
+    from sutradhar.graph.repository import resolve_title
+
+    for decoy in ("Inception", "Kaithi", "Pather Panchali", "Minnal Murali"):
+        result = resolve_title(built, decoy)
+        assert result.candidates == [], f"{decoy!r} must not resolve"
+        assert result.ambiguous is False
+
+
+def test_gs06_franchise_version_set_recall(built: Session) -> None:
+    """include_sequels traverses is_sequel_of; sequel vs remake labels never conflated."""
+    from sutradhar.graph.repository import get_versions
+
+    work, _ = _work_versions(built, "Drishyam")
+    result = get_versions(built, work.work_id, scope="indian", include_sequels=True)
+    titles_years = {(v.title, v.year) for v in result.versions}
+    # Curated truth: 5 Drishyam-1 Indian versions + 4 Drishyam-2 versions → recall = 1.0.
+    expected = {
+        ("Drishyam", 2013),
+        ("Drishya", 2014),
+        ("Drushyam", 2014),
+        ("Papanasam", 2015),
+        ("Drishyam", 2015),
+        ("Drishyam 2", 2021),
+        ("Drishya 2", 2021),
+        ("Drushyam 2", 2021),
+        ("Drishyam 2", 2022),
+    }
+    assert titles_years == expected, f"version-set recall < 1.0: {titles_years ^ expected}"
+    by_key = {(v.title, v.year): v for v in result.versions}
+    # The queried work's original is is_original_of; the SEQUEL work's own original is
+    # is_sequel_of; the sequel's hi remake keeps is_remake_of (never conflated).
+    assert by_key[("Drishyam", 2013)].relationship == "is_original_of"
+    assert by_key[("Drishyam 2", 2021)].relationship == "is_sequel_of"
+    assert by_key[("Drishyam 2", 2022)].relationship == "is_remake_of"
+    assert result.original is not None and result.original.year == 2013
+
+
+def test_gs09_scoping(built: Session) -> None:
+    """Foreign versions exist but are excluded at scope=indian, returned at scope=foreign."""
+    from sutradhar.graph.repository import get_versions
+
+    work, _ = _work_versions(built, "Drishyam")
+    indian = get_versions(built, work.work_id, scope="indian")
+    foreign = get_versions(built, work.work_id, scope="foreign")
+    everything = get_versions(built, work.work_id, scope="all")
+    assert {v.language for v in indian.versions} == {"ml", "kn", "te", "ta", "hi"}
+    assert {v.language for v in foreign.versions} == {"si", "zh"}
+    assert len(everything.versions) == len(indian.versions) + len(foreign.versions)
+    # The foreign zh remake carries its verified label (Wikidata P144 in the fixture).
+    zh = next(v for v in foreign.versions if v.language == "zh")
+    assert zh.relationship == "is_remake_of" and zh.is_original is False
+
+
+def test_gs09_transitive_lineage(built: Session) -> None:
+    """Full Manichitrathazhu lineage returned with the ml original SOLE is_original —
+    'the original of Bhool Bhulaiyaa' resolves regardless of edge depth. (The proximate
+    Chandramukhi→Apthamitra edge itself arrives via extraction+review; asserted in the
+    task-14 golden fixtures.)"""
+    from sutradhar.graph.repository import get_versions
+
+    work, _ = _work_versions(built, "Manichitrathazhu")
+    result = get_versions(built, work.work_id, scope="indian")
+    assert {v.title for v in result.versions} == {
+        "Manichitrathazhu",
+        "Apthamitra",
+        "Chandramukhi",
+        "Rajmohol",
+        "Bhool Bhulaiyaa",
+    }
+    originals = [v for v in result.versions if v.is_original]
+    assert len(originals) == 1 and originals[0].title == "Manichitrathazhu"
+    assert result.original is not None and result.original.language == "ml"
+    # Chandramukhi's fixture edge (Wikidata, direct-to-ml) is remake-typed — never original.
+    chandramukhi = next(v for v in result.versions if v.title == "Chandramukhi")
+    assert chandramukhi.relationship == "is_remake_of" and not chandramukhi.is_original

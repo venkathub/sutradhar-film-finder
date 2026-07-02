@@ -20,6 +20,17 @@ from sutradhar.graph.models import (
     passes_gate_view,
     sources_to_jsonb,
 )
+from sutradhar.graph.repository import (
+    GetVersionsResult,
+    GetWorkResult,
+    RefineBy,
+    RefineFilterResult,
+    ResolveTitleResult,
+    get_versions,
+    get_work,
+    refine_filter,
+    resolve_title,
+)
 from sutradhar.graph.schema import Base
 
 __all__ = [
@@ -27,8 +38,13 @@ __all__ = [
     "Confidence",
     "EdgeRecord",
     "EdgeType",
+    "GetVersionsResult",
+    "GetWorkResult",
     "NodeKind",
     "PersonRecord",
+    "RefineBy",
+    "RefineFilterResult",
+    "ResolveTitleResult",
     "RoleKind",
     "SourceId",
     "SourceRef",
@@ -40,8 +56,12 @@ __all__ = [
     "WorkType",
     "create_graph_engine",
     "create_session_factory",
+    "get_versions",
+    "get_work",
     "golden_eligible",
     "passes_gate_view",
     "postgres_url",
+    "refine_filter",
+    "resolve_title",
     "sources_to_jsonb",
 ]

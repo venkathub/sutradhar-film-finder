@@ -1621,5 +1621,251 @@
     }
    ]
   }
+ },
+ "Q79325356": {
+  "id": "Q79325356",
+  "labels": {
+   "en": {
+    "language": "en",
+    "value": "Sheep Without a Shepherd"
+   }
+  },
+  "descriptions": {
+   "en": {
+    "language": "en",
+    "value": "2019 Chinese film"
+   }
+  },
+  "claims": {
+   "P495": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q148",
+        "numeric-id": 148
+       }
+      },
+      "property": "P495",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P577": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 11,
+        "time": "+2019-12-13T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P364": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q727694",
+        "numeric-id": 727694
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    },
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q9217",
+        "numeric-id": 9217
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P345": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "tt11210032"
+      },
+      "property": "P345",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P57": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q85881417",
+        "numeric-id": 85881417
+       }
+      },
+      "property": "P57",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P144": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q15401703",
+        "numeric-id": 15401703
+       }
+      },
+      "property": "P144",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P4947": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "652783"
+      },
+      "property": "P4947",
+      "snaktype": "value"
+     }
+    }
+   ]
+  }
+ },
+ "Q30647147": {
+  "id": "Q30647147",
+  "labels": {
+   "en": {
+    "language": "en",
+    "value": "Dharmayudhaya"
+   }
+  },
+  "descriptions": {
+   "en": {
+    "language": "en",
+    "value": "2017 film by Cheyyar Ravi"
+   }
+  },
+  "claims": {
+   "P495": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q854",
+        "numeric-id": 854
+       }
+      },
+      "property": "P495",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P577": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "time",
+       "value": {
+        "after": 0,
+        "before": 0,
+        "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+        "precision": 9,
+        "time": "+2017-00-00T00:00:00Z",
+        "timezone": 0
+       }
+      },
+      "property": "P577",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P364": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q13267",
+        "numeric-id": 13267
+       }
+      },
+      "property": "P364",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P345": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "tt7051292"
+      },
+      "property": "P345",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P57": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "wikibase-entityid",
+       "value": {
+        "entity-type": "item",
+        "id": "Q21932318",
+        "numeric-id": 21932318
+       }
+      },
+      "property": "P57",
+      "snaktype": "value"
+     }
+    }
+   ],
+   "P4947": [
+    {
+     "mainsnak": {
+      "datavalue": {
+       "type": "string",
+       "value": "506576"
+      },
+      "property": "P4947",
+      "snaktype": "value"
+     }
+    }
+   ]
+  }
  }
 }
