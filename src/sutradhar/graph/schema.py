@@ -26,6 +26,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
+from pgvector.sqlalchemy import SPARSEVEC, Vector
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
@@ -40,6 +41,7 @@ from sqlalchemy import (
     Uuid,
     text,
 )
+from sqlalchemy import text as sql_text  # alias: Chunk has a `text` column that shadows it
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -63,6 +65,13 @@ CANDIDATE_STATUSES = ("proposed", "confirmed", "rejected")
 CONFLICT_ENTITY_KINDS = ("work", "version", "edge")
 CONFLICT_STATUSES = ("open", "resolved")
 PLOT_SOURCES = ("wikipedia", "tmdb")
+CHUNK_KINDS = ("plot", "metadata_card")  # P2_SPEC §2.2: plot chunks + per-Version metadata cards
+
+# Embedding dimensions (P2_SPEC §2.3). Dense dim is per embed_model row — 1024 = BGE-M3
+# (DEC-0002 default); a DEC-0002 A/B challenger with another dim would land as a second
+# column/migration, an accepted cost of keeping the common case typed.
+DENSE_DIM = 1024
+SPARSE_DIM = 250_002  # XLM-RoBERTa vocab (BGE-M3 lexical weights)
 
 # Names of the verification-gate views (DDL lives in the initial migration).
 GROUND_TRUTH_VIEWS = ("ground_truth_works", "ground_truth_versions", "ground_truth_edges")
@@ -325,3 +334,66 @@ class PlotText(Base):
     retrieved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     __table_args__ = (CheckConstraint(f"source IN {_sql_in(PLOT_SOURCES)}", name="source"),)
+
+
+class Chunk(Base):
+    """Embeddable retrieval unit (P2_SPEC §2.3): plot chunk or per-Version metadata card.
+
+    ``text`` is header + body — exactly what gets embedded, so ``content_hash`` keys the
+    recorded-artifact lookup (``ArtifactEmbeddings``). ``chunk_config`` is the ablation key
+    (e.g. ``512tok_15pct``); the same source doc yields one chunk row set per config.
+    """
+
+    __tablename__ = "chunks"
+
+    chunk_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    version_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("version.version_id"), nullable=False, index=True
+    )
+    # Denormalized for chunk→Work aggregation (one hop, no join through version).
+    work_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("work.work_id"), nullable=False, index=True
+    )
+    plot_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("plot_texts.plot_id")
+    )  # NULL for metadata cards
+    kind: Mapped[str] = mapped_column(Text, nullable=False)
+    seq: Mapped[int] = mapped_column(Integer, nullable=False)  # order within source doc
+    text: Mapped[str] = mapped_column(Text, nullable=False)  # header + body (what was embedded)
+    language: Mapped[str | None] = mapped_column(Text)
+    chunker: Mapped[str] = mapped_column(Text, nullable=False)  # e.g. 'recursive_para'
+    chunk_config: Mapped[str] = mapped_column(Text, nullable=False)  # e.g. '512tok_15pct'
+    content_hash: Mapped[str] = mapped_column(Text, nullable=False)  # sha256(text)
+    license: Mapped[str] = mapped_column(Text, nullable=False)  # carries CC BY-SA from plot_texts
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=sql_text("now()")
+    )
+
+    __table_args__ = (
+        CheckConstraint(f"kind IN {_sql_in(CHUNK_KINDS)}", name="kind"),
+        UniqueConstraint("version_id", "kind", "chunker", "chunk_config", "seq"),
+    )
+
+
+class ChunkEmbedding(Base):
+    """BGE-M3 dense + sparse vectors per chunk (P2_SPEC §2.3).
+
+    Separate table so the DEC-0002 A/B and re-embeds coexist: PK is
+    ``(chunk_id, embed_model, index_version)``. Sparse scoring runs IN-DB via ``<#>``
+    (sparsevec negative inner product, native since pgvector 0.7.0) — no app-side math.
+    Exact scan at seed-slice scale; HNSW is a recorded catalog-scale revisit, not built.
+    """
+
+    __tablename__ = "chunk_embeddings"
+
+    chunk_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("chunks.chunk_id", ondelete="CASCADE"), primary_key=True
+    )
+    embed_model: Mapped[str] = mapped_column(Text, primary_key=True)  # id+revision
+    index_version: Mapped[str] = mapped_column(Text, primary_key=True)  # artifact run id
+    dense: Mapped[Any] = mapped_column(Vector(DENSE_DIM), nullable=False)
+    # BGE-M3 lexical weights over the 250,002-dim XLM-R vocab; ~10²–10³ nnz per chunk,
+    # far under sparsevec's 16,000-nnz storage cap.
+    sparse: Mapped[Any] = mapped_column(SPARSEVEC(SPARSE_DIM), nullable=False)

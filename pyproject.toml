@@ -24,6 +24,7 @@ dependencies = [
     "typer>=0.12",
     "indic-transliteration>=2.3.82",
     "rapidfuzz>=3.14.5",
+    "pgvector>=0.4.2",
 ]
 
 [dependency-groups]
@@ -67,6 +68,11 @@ disallow_untyped_defs = true
 [[tool.mypy.overrides]]
 # Third-party SDK without type stubs (used only by infra/gpu/jarvis.py).
 module = ["jarvislabs.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# pgvector-python ships no py.typed; its SQLAlchemy types (Vector/SPARSEVEC) are SQL glue.
+module = ["pgvector.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
