@@ -25,7 +25,7 @@ Assistant: INTENT: {"intent": "find_by_plot", "slots": {"plot_description": "a m
 
 Ye **Ghajini** hai! Iske do versions catalog mein hain:
 
-- **Ghajini (2005, Tamil)** — Suriya — **original** (Wikidata Q574798)
+- **Ghajini (2005, Tamil)** — Suriya — original (Wikidata Q574798)
 - Ghajini (2008, Hindi) — Aamir Khan — remake of the Tamil original (Wikidata Q862359)
 
 ## Example 2 — title lookup, then a refinement on the standing version set
@@ -41,7 +41,7 @@ Assistant: INTENT: {"intent": "list_versions", "slots": {"title": "Ghilli"}}
 
 Ghilli ek remake hai — ye raha poora set:
 
-- **Okkadu (2003, Telugu)** — Mahesh Babu — **original** (Wikidata Q3348960)
+- **Okkadu (2003, Telugu)** — Mahesh Babu — original (Wikidata Q3348960)
 - Ghilli (2004, Tamil) — Vijay — remake of Okkadu (Wikidata Q3522062)
 
 User: sirf Telugu wala chahiye
@@ -51,7 +51,7 @@ User: sirf Telugu wala chahiye
 
 Assistant: INTENT: {"intent": "refine", "slots": {"language": "te"}}
 
-Telugu version: **Okkadu (2003)** — Mahesh Babu — yehi is kahani ka **original** hai
+Telugu version: **Okkadu (2003)** — Mahesh Babu — yehi is kahani ka original hai
 (Wikidata Q3348960).
 
 ## Example 3 — out-of-catalog: abstain, never fabricate

@@ -810,9 +810,18 @@ first response — `out_of_catalog` is only knowable *after* tool results, so a 
 preamble would force the model to predict abstention before searching. Tool-calling messages carry
 no preamble. Contract frozen in `evals/prompts/intent_taxonomy_v1.json` (`preamble` block) and
 `system_v1.md`; artifacts hash-pinned in `evals/prompts/prompts.lock.json`
-(`prompt_hash 8b0c9d54…`, regenerate only via `python -m sutradhar.evals.prompts --write-lock`).
+(regenerate only via `python -m sutradhar.evals.prompts --write-lock`).
 Exemplars use deliberately out-of-golden-set franchises (Ghajini, Okkadu/Ghilli, Interstellar);
 disjointness + taxonomy conformance are test-enforced (`tests/test_prompt_artifacts.py`).
+
+**Amendment (2026-07-03, P3 task 5 — bold-title formatting contract, deliberate re-pin).** The
+deterministic no-hallucinated-movie detector needs a machine-readable title surface. Added to
+`system_v1.md`: every asserted film title is wrapped in `**bold**` and nothing else is bold
+(exemplars revised to match — "original" un-bolded). Detector extraction = bold spans (contract)
++ an unbolded `Title (year)` fallback pattern with a language/meta-word guard; a prose invention
+carrying neither marker is out of deterministic reach — RAGAS faithfulness is the documented
+supplementary net (P3_SPEC §2.4). Lock regenerated: **`prompt_hash 78215ccc…`** (the P4
+before/after runs under this hash).
 
 ## DEC-P3-5 — Tool-call accuracy scoring: BFCL-style two-level (2026-07-02)
 

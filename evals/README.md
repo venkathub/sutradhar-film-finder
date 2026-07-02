@@ -78,9 +78,12 @@ runs under (loader: `sutradhar.evals.prompts`):
 
 - `system_v1.md` — system prompt: grounding rules (assert only tool-returned films; cite;
   label all five relationship types; flag the original; abstain out-of-catalog), tool-usage
-  and multi-turn behaviour, and the **INTENT preamble contract**: every final prose answer per
+  and multi-turn behaviour, the **INTENT preamble contract**: every final prose answer per
   user turn begins with one machine-read line `INTENT: {"intent": …, "slots": …}` — the source
-  the intent/slot-accuracy scorers parse (placement rationale in DEC-P3-4's 2026-07-03 amendment).
+  the intent/slot-accuracy scorers parse (placement rationale in DEC-P3-4's 2026-07-03
+  amendment) — and the **bold-title formatting contract**: every asserted film title in
+  `**bold**`, nothing else bold — the deterministic surface the no-hallucinated-movie
+  detector extracts (task-5 amendment).
 - `exemplars_v1.md` — 3 handcrafted few-shot exemplars (one code-mixed Hinglish plot query, one
   multi-turn refine, one NO_MATCH abstention), appended to the system message as one hashed unit.
   Franchises (Ghajini, Okkadu/Ghilli, Interstellar) are deliberately **outside the golden set**;
@@ -93,6 +96,26 @@ runs under (loader: `sutradhar.evals.prompts`):
   `tests/test_prompt_artifacts.py` until deliberately re-pinned:
   `uv run python -m sutradhar.evals.prompts --write-lock`. The P4 QLoRA before/after is only
   comparable under an identical `prompt_hash`.
+
+## Generation metric scorers (P3 task 5 — `sutradhar.evals.generation`)
+
+Pure, laptop/CI-safe scoring functions (string math only; the task-6 driver produces
+transcripts, these score them, Tier-1 re-runs the same bytes over the committed artifact):
+
+- **Tool-call accuracy (DEC-P3-5):** call-level AST match (name + placeholder-bound,
+  normalized args; free-text `description` compared by token overlap, titles by `match_key`)
+  + sequence-level headline (expected sequence in order; benign schema-valid extras
+  tolerated) + schema-validity as the independent third number. `$work_id`/`[$version_set]`
+  bind only to ids earlier tool results actually returned — an unseen id is a scored
+  mismatch, never a crash.
+- **Intent accuracy:** per-turn exact match of the parsed `INTENT:` preamble label
+  (missing/malformed preamble = wrong, never an exception).
+- **Slot accuracy:** micro-F1 over (key, value) pairs; titles normalized via `match_key`
+  (native-script ↔ romanized matches), everything else casefolded.
+- **No-hallucinated-movie detector (the GS-02 gate):** asserted titles (bold spans per the
+  frozen contract + an unbolded `Title (year)` fallback with a language/meta-word guard)
+  must fuzzy-resolve (≥ 0.80, DEC-P1-5) to a tool-result title of the same conversation;
+  "Papanaasam"-style variants pass, inventions are counted; abstentions assert nothing.
 
 ## Planned (P3+)
 - Retrieval eval harness + metrics — **landed in P2** (see above).

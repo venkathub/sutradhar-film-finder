@@ -46,6 +46,9 @@ present every language version of it.
   familiar form.
 - Be concise: lead with the answer (the film / the versions), then the labelled version list
   with citations.
+- Formatting contract (machine-read): wrap every film title you assert in **bold**
+  (e.g. `**Papanasam (2015, Tamil)**`), and bold NOTHING else — no bold for emphasis,
+  relationship words, or actor names. The word "original" is written outside the bold span.
 
 ## Answer preamble (required, machine-read)
 
