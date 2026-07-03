@@ -235,5 +235,68 @@ def validate(
     typer.echo("OK — dataset passes all validation layers")
 
 
+@app.command()
+def teach(
+    dataset: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/scaffolds.jsonl"), "--dataset"
+    ),
+    out: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/taught.jsonl")
+    ),
+    cache_dir: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/teacher_runs")
+    ),
+    revision: str = typer.Option("main", help="Teacher model revision recorded on the stamp."),
+    limit: int = typer.Option(0, help="Rewrite only the first N conversations (0 = all)."),
+) -> None:
+    """Teacher surface pass (task 6): rewrite surfaces around sentinel locks (DEC-P4-1/2).
+
+    Requires TEACHER_BASE_URL/TEACHER_MODEL (blank => clear skip, exit 0 — the scaffold
+    dataset remains valid on its own). Raw outputs cached as a versioned artifact.
+    """
+    from datetime import UTC, datetime
+
+    from sutradhar.config import get_settings
+    from sutradhar.finetune.dataset import read_jsonl, write_jsonl
+    from sutradhar.finetune.teacher import ESCALATION_REJECTION_RATE, TeacherClient, surface_pass
+
+    settings = get_settings()
+    client = TeacherClient(settings)
+    if not client.available:
+        typer.echo("teacher off (TEACHER_BASE_URL/TEACHER_MODEL unset) — surface pass skipped")
+        raise typer.Exit(0)
+
+    conversations = read_jsonl(dataset)
+    if limit:
+        conversations = conversations[:limit]
+    stamp = client.stamp(revision=revision)
+    taught, records, summary = surface_pass(conversations, client.rewrite, stamp)
+
+    out.parent.mkdir(parents=True, exist_ok=True)
+    sha = write_jsonl(out, taught)
+    run_dir = cache_dir / datetime.now(tz=UTC).strftime("%Y%m%dT%H%M%SZ")
+    run_dir.mkdir(parents=True, exist_ok=True)
+    (run_dir / "records.jsonl").write_text(
+        "".join(r.model_dump_json() + "\n" for r in records), encoding="utf-8"
+    )
+    (run_dir / "summary.json").write_text(
+        summary.model_dump_json(indent=2) + "\n", encoding="utf-8"
+    )
+    typer.echo(
+        f"taught {len(taught)} conversations -> {out} sha256={sha}\n"
+        f"rewrites: {summary.texts_total} (accepted {summary.accepted}, "
+        f"rejected {summary.rejected}, rate {summary.rejection_rate:.2%})\n"
+        f"raw cache: {run_dir}"
+    )
+    if summary.escalation_triggered:
+        typer.echo(
+            f"!! rejection rate > {ESCALATION_REJECTION_RATE:.0%} — DEC-P4-1 escalation "
+            "trigger: revise the rewrite prompt once; if still failing, the frontier-API "
+            "escalation applies (LICENSING.md ToS row FIRST)",
+            err=True,
+        )
+        raise typer.Exit(2)
+
+
 if __name__ == "__main__":
     app()

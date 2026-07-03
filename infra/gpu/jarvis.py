@@ -687,6 +687,117 @@ def judge_session(
         deps.close_client(client)
 
 
+# --- P4 teacher session (DEC-P4-1: Sarvam-M 24B, 8-bit weight-only, ephemeral) --------
+#
+# Serves the synthetic-data teacher (TEACHER_MODEL, e.g. sarvamai/sarvam-m) via vLLM with
+# --quantization fp8 — on the Ampere A100 40 GB this runs as W8A16 WEIGHT-ONLY via Marlin
+# kernels (~24 GB weights + KV headroom; P4_SPEC §3 D1). If bring-up disappoints, the
+# recorded plan-B SKU is the RTX 6000 Ada 48 GB (native FP8, DEC-0003 value alternative).
+# The work is `build_dataset.py teach` running ON THE LAPTOP against the fresh endpoint
+# (JudgeClient/judge_session pattern): create -> serve -> teach -> destroy. Cost ~1-2 h.
+
+DEFAULT_TEACH_TIMEOUT_S = 3 * 3600  # ~6k short rewrites; hard cap keeps DEC-0003 honest
+
+
+def build_teacher_startup_script(teacher_model: str) -> str:
+    """Serve the teacher via vLLM, 8-bit weight-only (no HF token — Sarvam-M is ungated)."""
+    return (
+        "#!/bin/bash\n"
+        "set -euxo pipefail\n"
+        "pip install -U vllm\n"
+        f"vllm serve {teacher_model} --quantization fp8 --max-model-len 8192 "
+        f"--host 0.0.0.0 --port {SERVE_PORT}\n"
+    )
+
+
+def _run_teach(base_url: str, teacher_model: str) -> tuple[int, str, str]:
+    """Default in-session runner: the surface pass against the fresh teacher endpoint."""
+    import os
+    import subprocess
+
+    env = {**os.environ, "TEACHER_BASE_URL": base_url, "TEACHER_MODEL": teacher_model}
+    proc = subprocess.run(  # noqa: S603 — our own entrypoint, controlled args
+        [sys.executable, "finetune/build_dataset.py", "teach"],
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=DEFAULT_TEACH_TIMEOUT_S,
+    )
+    return proc.returncode, proc.stdout, proc.stderr
+
+
+def teacher_session(
+    settings: Settings | None = None,
+    deps: Deps | None = None,
+    *,
+    run_teach: Callable[[str, str], tuple[int, str, str]] = _run_teach,
+    health_timeout_s: float = DEFAULT_HEALTH_TIMEOUT_S,
+    poll_interval_s: float = DEFAULT_POLL_INTERVAL_S,
+) -> Evidence:
+    """P4 task 6/7: create -> serve Sarvam-M -> run the surface pass -> destroy.
+
+    Teardown guaranteed in ``finally``; the taught dataset + raw-output cache persist
+    under data/artifacts/finetune/ before the instance dies. Exit code 2 from the teach
+    runner = the DEC-P4-1 escalation trigger (rejection rate > 30%) — surfaced, and the
+    instance is still destroyed.
+    """
+    settings = settings or get_settings()
+    deps = deps or _default_deps()
+    teacher_model = settings.require("teacher_model")  # clear var-named error when unset
+    ev = Evidence(requested_model=teacher_model, gpu_type=settings.gpu_type)
+
+    client = deps.create_client(settings)
+    instance: Any = None
+    try:
+        deps.log(f"[gpu-teacher] creating {settings.gpu_type} to serve {teacher_model} …")
+        t0 = deps.monotonic()
+        script = build_teacher_startup_script(teacher_model)
+        instance = deps.create_instance(client, settings, script)
+        ev.machine_id = getattr(instance, "machine_id", None)
+        deps.log(f"  instance {ev.machine_id} running; waiting for vLLM /health …")
+
+        base_url = _wait_for_endpoint(
+            instance, deps, timeout_s=health_timeout_s, poll_interval_s=poll_interval_s
+        )
+        if base_url is None:
+            ev.status = "off"
+            ev.detail = f"vLLM did not become healthy within {health_timeout_s}s"
+            return ev
+        ev.create_to_up_s = round(deps.monotonic() - t0, 1)
+        ev.booted = True
+
+        deps.log(f"  running teacher surface pass against {base_url} …")
+        returncode, stdout, stderr = run_teach(base_url, teacher_model)
+        deps.log(stdout)
+        if stderr:
+            deps.log(stderr)
+        ev.status = "up" if returncode == 0 else "error"
+        ev.detail = (
+            "surface pass complete (taught.jsonl + raw cache persisted)"
+            if returncode == 0
+            else f"teach exited {returncode}"
+            + (" — rejection rate > 30% (DEC-P4-1 escalation trigger)" if returncode == 2 else "")
+        )
+        return ev
+    except Exception as exc:  # noqa: BLE001 — record, then guarantee teardown in finally
+        ev.status = "error"
+        ev.detail = f"{type(exc).__name__}: {exc}"
+        return ev
+    finally:
+        if instance is not None and ev.machine_id is not None:
+            try:
+                ev.destroyed = deps.destroy_instance(client, ev.machine_id)
+                deps.log(f"  destroyed instance {ev.machine_id}: {ev.destroyed}")
+            except Exception as exc:  # noqa: BLE001
+                ev.detail += f" | TEARDOWN FAILED: {exc} — run `make gpu-nuke`"
+                deps.log(f"  TEARDOWN FAILED for {ev.machine_id}: {exc}")
+        try:  # script-quota hygiene: a leaked startup script blocks future runs
+            deps.remove_scripts(client)
+        except Exception as exc:  # noqa: BLE001
+            deps.log(f"  script cleanup failed (non-fatal): {exc}")
+        deps.close_client(client)
+
+
 def nuke(settings: Settings | None = None, deps: Deps | None = None) -> list[int]:
     """Destroy any stray instance carrying our tag — a leaked billing GPU is a defect."""
     settings = settings or get_settings()
@@ -733,10 +844,14 @@ def main(argv: list[str] | None = None) -> int:
         ev = judge_session()
         _write_evidence(ev)
         return 0 if ev.status == "up" and ev.destroyed else 1
+    if cmd == "teacher":
+        ev = teacher_session()
+        _write_evidence(ev)
+        return 0 if ev.status == "up" and ev.destroyed else 1
     if cmd == "nuke":
         nuke()
         return 0
-    print(f"usage: jarvis.py [validate|extract|embed|judge|nuke]  (got {cmd!r})")
+    print(f"usage: jarvis.py [validate|extract|embed|judge|teacher|nuke]  (got {cmd!r})")
     return 2
 
 

@@ -8,7 +8,7 @@
 COMPOSE ?= docker compose -f infra/docker-compose.yml
 
 .DEFAULT_GOAL := help
-.PHONY: help setup fmt lint typecheck test test-int check up down down-v mlflow-up mlflow-down db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ingest-training resolve-conflicts export-training-entities ft-snapshot build-ft-scaffold validate-dataset extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
+.PHONY: help setup fmt lint typecheck test test-int check up down down-v mlflow-up mlflow-down db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ingest-training resolve-conflicts export-training-entities ft-snapshot build-ft-scaffold validate-dataset teach-dataset gpu-teacher extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
         smoke hf-check gpu-validate gpu-nuke
 
 help: ## List available targets
@@ -117,6 +117,12 @@ build-ft-scaffold: ## P4: generate the scaffold-only dataset from the committed 
 
 validate-dataset: ## P4: run every dataset validation layer (v0 schema, grounding, decontamination, quotas)
 	uv run python finetune/build_dataset.py validate
+
+teach-dataset: ## P4: teacher surface pass against TEACHER_BASE_URL (blank => clean skip)
+	uv run python finetune/build_dataset.py teach
+
+gpu-teacher: ## P4: ephemeral Sarvam-M session -> surface pass -> destroy (DEC-P4-1)
+	uv run python infra/gpu/jarvis.py teacher
 
 smoke: ## LLM connectivity smoke test (green whether the GPU endpoint is up or off)
 	uv run python -m sutradhar.serving.smoke

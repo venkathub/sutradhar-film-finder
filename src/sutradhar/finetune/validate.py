@@ -356,7 +356,10 @@ def lock_entities(text: str, entities: list[str]) -> tuple[str, dict[str, str]]:
     locked = text
     for i, entity in enumerate(sorted(set(entities), key=len, reverse=True), start=1):
         sentinel = f"⟦T{i}⟧"
-        pattern = re.compile(re.escape(entity), re.IGNORECASE)
+        if entity.isdigit():  # years: don't lock digit runs inside larger numbers/ids
+            pattern = re.compile(rf"(?<!\d){re.escape(entity)}(?!\d)")
+        else:
+            pattern = re.compile(re.escape(entity), re.IGNORECASE)
         if pattern.search(locked):
             locked = pattern.sub(sentinel, locked)
             mapping[sentinel] = entity
