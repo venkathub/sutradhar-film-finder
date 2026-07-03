@@ -106,6 +106,8 @@ class Settings(BaseSettings):
     langfuse_public_key: str | None = Field(default=None, validation_alias="LANGFUSE_PUBLIC_KEY")
     langfuse_secret_key: str | None = Field(default=None, validation_alias="LANGFUSE_SECRET_KEY")
     langfuse_host: str | None = Field(default=None, validation_alias="LANGFUSE_HOST")
+    # DEC-P3-7: AIC Cloud VPS provisioning for the self-hosted Langfuse (make langfuse-up).
+    aiccloud_api_key: str | None = Field(default=None, validation_alias="AICCLOUD_API_KEY")
 
     # --- MLflow tracking + registry (P3, DEC-P3-2: self-hosted compose service) ---
     mlflow_tracking_uri: str = Field(

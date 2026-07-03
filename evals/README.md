@@ -208,6 +208,23 @@ turn), the Table 2 aggregates (`MetricsBlock` incl. per-slice breakdown and the
   task 11) / `make benchmark-generation` (live `LLM_BASE_URL` + `--with-judge
   --with-ragas`). Exit code 3 = the GS-02 zero-inventions gate failed.
 
+## Observability (P3 task 10 — `sutradhar.obs`, DEC-P3-6/P3-2/P3-7)
+
+- **Langfuse tracing** (`sutradhar.obs.tracing`): one thin explicit span seam (`Tracer.span`)
+  around exactly four chokepoints — fixture loop (`agent`), each `chat()` round
+  (`generation`), each tool execution (`tool`), judge calls (`evaluator`). **No-ops without
+  `LANGFUSE_*` keys** (test-proven: the SDK is never even imported); P5's FastAPI middleware
+  reuses the same seam. Backend = self-hosted Langfuse v3 on the AIC Cloud VPS —
+  `make langfuse-up` is the DEC-P3-7 idempotent from-scratch bootstrap (see
+  `infra/langfuse/README.md`). Benchmark-cited traces are exported
+  (`sutradhar.obs.tracing.export_trace`) and committed so evidence outlives the VPS.
+- **MLflow** (`sutradhar.obs.mlflow_log`): experiments `sutradhar/generation` (every run:
+  §6.1 stamp as params, Table 2 aggregates as metrics, run JSON as artifact) and
+  `sutradhar/retrieval` (`make mlflow-backfill` logs the committed P2 Table 1 run,
+  discharging its "(MLflow wiring lands in P3)" stamp note). The runner logs automatically
+  and degrades with a clear message when the server is down — observability never fails
+  an eval.
+
 ## Planned (P3+)
 - Retrieval eval harness + metrics — **landed in P2** (see above).
 - Frozen prompt artifacts — **landed in P3 task 3** (see above).
