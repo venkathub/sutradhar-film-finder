@@ -62,6 +62,9 @@ langfuse-up: ## P3: idempotent from-scratch Langfuse bootstrap on AIC Cloud (DEC
 db-migrate: ## Apply graph-schema migrations (alembic upgrade head; needs `make up`)
 	uv run alembic upgrade head
 
+seed-graph-ci: ## Seed the graph from RECORDED fixtures (offline; fresh-clone + Tier-2 path)
+	uv run python data-pipeline/seed_graph_ci.py
+
 ingest-spine: ## Ingest the Wikidata spine for the seed slice (snapshot-first; needs db-migrate)
 	uv run python data-pipeline/ingest_spine.py
 

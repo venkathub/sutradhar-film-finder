@@ -310,6 +310,24 @@ class GenerationRunArtifact(BaseModel):
         return self
 
 
+def load_generation_run(
+    runs_dir: Path = GENERATION_RUNS_DIR,
+    run_id: str | None = None,
+) -> GenerationRunArtifact:
+    """The pinned committed generation run: ``run_id`` (GENERATION_RUN env) or the latest
+    committed artifact — the Tier-1 gate source between GPU windows (DEC-P2-6 posture)."""
+    if run_id:
+        path = runs_dir / f"{run_id}.json"
+        if not path.exists():
+            raise FileNotFoundError(f"pinned GENERATION_RUN {run_id!r} not found in {runs_dir}")
+    else:
+        runs = [f for f in sorted(runs_dir.glob("*.json")) if not f.name.endswith(".trace.json")]
+        if not runs:
+            raise FileNotFoundError(f"no committed generation run under {runs_dir}")
+        path = runs[-1]
+    return GenerationRunArtifact.model_validate_json(path.read_text(encoding="utf-8"))
+
+
 def code_sha() -> str | None:
     env = os.environ.get("GITHUB_SHA")
     if env:

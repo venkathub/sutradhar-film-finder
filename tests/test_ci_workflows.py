@@ -48,7 +48,9 @@ def test_tier1_pr_path_has_no_gpu_or_model_steps() -> None:
             assert not _UNSAFE.search(str(step.get("run", ""))), (
                 f"unsafe step in PR job {job_name}: {step}"
             )
-    assert "artifact-validate stub" in text or "recorded artifacts" in text
+    # P3 task 12: the P0 artifact-validate echo stub is RETIRED — recorded-artifact
+    # validation lives entirely inside pytest (golden retrieval + generation regressions).
+    assert "artifact-validate stub" not in text
 
 
 def test_no_secret_literals_in_tracked_files() -> None:
@@ -90,10 +92,25 @@ def test_tier2_is_workflow_dispatch_only() -> None:
     assert "push" not in keys
 
 
-def test_tier2_is_placeholder_only() -> None:
-    """P0 Tier-2 is a no-op shell; guard against accidental early GPU/model wiring."""
-    text = _TIER2.read_text(encoding="utf-8")
-    assert "placeholder" in text.lower()
+def test_tier2_real_dispatch_job_shape() -> None:
+    """P3 task 12: the placeholder is replaced by the real benchmark job — dispatch inputs
+    (run_mode choice + reason), secrets-provided endpoints (never literals), and the
+    sealed-artifact upload for human review (grooming Q5, DEC-P2-6 posture)."""
     wf = _load(_TIER2)
-    for step in wf["jobs"]["eval-harness"].get("steps", []):
-        assert not _UNSAFE.search(str(step.get("run", "")))
+    on = wf["on"] if "on" in wf else wf[True]
+    inputs = on["workflow_dispatch"]["inputs"]
+    assert set(inputs["run_mode"]["options"]) == {"dry_run", "live"}
+    assert "reason" in inputs
+    text = _TIER2.read_text(encoding="utf-8")
+    assert "placeholder" not in text.lower()
+    assert "make benchmark-generation" in text and "make generation-dryrun" in text
+    # Endpoints come from secrets, never hardcoded.
+    for var in ("LLM_BASE_URL", "JUDGE_BASE_URL", "EMBED_BASE_URL"):
+        assert f"{var}: ${{{{ secrets.{var} }}}}" in text, f"{var} must come from secrets"
+    steps = wf["jobs"]["eval-harness"]["steps"]
+    upload = [s for s in steps if "upload-artifact" in str(s.get("uses", ""))]
+    assert upload, "sealed run must be uploaded as a workflow artifact"
+    assert "evals/generation_runs" in str(upload[0]["with"]["path"])
+    # The job seeds the graph from recorded fixtures + gates on golden validation.
+    runs = " ".join(str(s.get("run", "")) for s in steps)
+    assert "seed_graph_ci.py" in runs and "build_golden.py" in runs

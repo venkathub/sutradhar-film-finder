@@ -250,6 +250,27 @@ outlives the tunnel URL.
   and degrades with a clear message when the server is down — observability never fails
   an eval.
 
+## Two-tier CI (P3 task 12 — ROADMAP §6.2, made real)
+
+- **Tier-1 (every PR — no GPU, no model calls, no network):**
+  `tests/test_golden_generation_regressions.py` loads the pinned `GENERATION_RUN` artifact
+  (default: latest committed) and **recomputes every deterministic metric from the recorded
+  transcripts with the same scorer bytes**, asserting equality with the committed metrics
+  block (drift gate) plus the hard gates: GS-02 = 0 inventions, every invalid call flagged +
+  accounted, the two seeded faults visibly caught, dry-run honesty invariants, stamp pins
+  current prompt/schema/golden hashes (a stale artifact after a re-pin fails CI). Judge/RAGAS
+  fields are shape-checked, never re-judged. `tests/test_emitted_tool_calls_validate.py`
+  proves the 3 seeded fault classes (hallucinated tool, hallucinated parameter, wrong type)
+  are caught 3/3 and that every executed call in the committed run validates against frozen
+  v0. The P0 "artifact-validate stub" step is retired — validation lives entirely in pytest.
+- **Tier-2 (`workflow_dispatch` only, never PRs):** inputs `run_mode` (`dry_run`|`live`) +
+  `reason`; brings up Postgres, seeds the graph from recorded fixtures
+  (`make seed-graph-ci`, proven to reproduce the exact 15-work/31-version state with all 34
+  fixtures golden-valid), gates on `build_golden.py`, runs `make benchmark-generation`
+  (live: secrets-provided `LLM_BASE_URL` + judge/RAGAS endpoints) or `make generation-dryrun`,
+  and uploads the sealed run JSON as a workflow artifact — **a human reviews and commits it
+  via PR** (grooming Q5; CI never auto-commits benchmark numbers).
+
 ## Planned (P3+)
 - Retrieval eval harness + metrics — **landed in P2** (see above).
 - Frozen prompt artifacts — **landed in P3 task 3** (see above).

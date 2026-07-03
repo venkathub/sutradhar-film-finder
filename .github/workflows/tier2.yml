@@ -1,13 +1,28 @@
-# Tier-2 CI — GPU-window shell. workflow_dispatch ONLY (never on PR/push): it may run
-# GPU/model/eval steps that cost money and need secrets. P0 ships it as an empty placeholder;
-# P2/P3 fill in the real eval-harness run (RAGAS + the two-table benchmark) inside a GPU window.
+# Tier-2 CI — the GPU-window generation benchmark (P3 task 12; P3_SPEC §2.7, ROADMAP §6.2).
+# workflow_dispatch ONLY (never on PR/push): it may call paid endpoints and needs secrets.
+#
+# run_mode=dry_run: full harness against the scripted mock (no secrets needed) — the same
+#   30-second demo path as `make generation-dryrun`, useful to validate the job itself.
+# run_mode=live: `make benchmark-generation` against the secrets-provided LLM_BASE_URL
+#   (vLLM in an on-demand GPU window) + the judge/RAGAS batch pass against JUDGE_BASE_URL
+#   (the self-hosted judge served in the same window, DEC-P3-1/P3-3).
+#
+# The sealed run JSON is uploaded as a workflow artifact; A HUMAN reviews and commits it
+# via PR, updating GENERATION_RUN (grooming Q5 — the DEC-P2-6 committed-artifact posture;
+# CI never auto-commits benchmark numbers).
 name: tier-2
 
 on:
   workflow_dispatch:
     inputs:
+      run_mode:
+        description: "dry_run (mock, no secrets) | live (GPU window, needs secrets)"
+        required: true
+        type: choice
+        options: [dry_run, live]
+        default: dry_run
       reason:
-        description: "Why this GPU-window run is being triggered"
+        description: "Why this run is being triggered (recorded in the job log)"
         required: false
         default: "manual eval-harness run"
 
@@ -17,14 +32,52 @@ concurrency:
 
 jobs:
   eval-harness:
-    name: eval-harness (placeholder)
+    name: generation benchmark (${{ github.event.inputs.run_mode }})
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
-      - name: Eval-harness placeholder
-        # P0 no-op. P2/P3 replace this with the RAGAS eval + two-table benchmark run,
-        # executed only inside an on-demand GPU window (never on a PR).
+      - name: Set up uv (with cache)
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install locked environment
+        run: uv sync --frozen
+      - name: Seed .env from template
+        run: cp .env.example .env
+      - name: Bring up the stack (Postgres+pgvector)
+        run: docker compose -f infra/docker-compose.yml up -d --wait
+      - name: Apply graph migrations
+        run: uv run alembic upgrade head
+      - name: Seed the graph from recorded fixtures
+        run: uv run python data-pipeline/seed_graph_ci.py
+      - name: Golden gate (fixtures validate against the seeded graph)
+        run: uv run python evals/build_golden.py
+      - name: Run the generation benchmark harness
+        env:
+          # Live runs read the GPU-window endpoints from repo secrets; dry_run ignores
+          # them (mock endpoint, no secrets required). Judge/RAGAS skip cleanly when unset.
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          JUDGE_BASE_URL: ${{ secrets.JUDGE_BASE_URL }}
+          JUDGE_MODEL: ${{ secrets.JUDGE_MODEL }}
+          JUDGE_API_KEY: ${{ secrets.JUDGE_API_KEY }}
+          EMBED_BASE_URL: ${{ secrets.EMBED_BASE_URL }}
+          LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          LANGFUSE_HOST: ${{ secrets.LANGFUSE_HOST }}
         run: |
-          echo "Tier-2 eval-harness placeholder — no-op until P2/P3."
-          echo "Runs only inside an on-demand GPU window; never gates PRs."
           echo "reason: ${{ github.event.inputs.reason }}"
+          if [ "${{ github.event.inputs.run_mode }}" = "live" ]; then
+            make benchmark-generation
+          else
+            make generation-dryrun
+          fi
+      - name: Upload the sealed run artifact (human reviews + commits via PR)
+        uses: actions/upload-artifact@v4
+        with:
+          name: generation-run-${{ github.event.inputs.run_mode }}-${{ github.run_id }}
+          path: evals/generation_runs/*.json
+          if-no-files-found: error
+          retention-days: 90

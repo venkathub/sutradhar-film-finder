@@ -32,9 +32,6 @@ jobs:
         run: uv run mypy src
       - name: Unit tests (integration excluded)
         run: uv run pytest
-      - name: Validate against recorded artifacts (placeholder)
-        # P0 stub. P2+ replaces this with real validation of recorded retrieval/eval artifacts.
-        run: echo "artifact-validate stub — no recorded artifacts to validate in P0"
 
   integration:
     name: compose stack (Postgres+pgvector, Redis)
