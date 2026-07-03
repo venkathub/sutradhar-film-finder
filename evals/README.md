@@ -208,6 +208,27 @@ turn), the Table 2 aggregates (`MetricsBlock` incl. per-slice breakdown and the
   task 11) / `make benchmark-generation` (live `LLM_BASE_URL` + `--with-judge
   --with-ragas`). Exit code 3 = the GS-02 zero-inventions gate failed.
 
+### Committed dry-run (P3 task 11 — machinery evidence, never Table 2)
+
+`evals/generation_runs/20260703T001051Z-c62806c0.json` — the scripted mock
+(`evals/mock_llm.py`, a canned-transcript player derived from the golden labels with
+placeholder binding against real tool results) driven through the full harness against the
+live graph + the pinned P2 retrieval replay:
+
+| Signal | Value | Meaning |
+|---|---|---|
+| fixtures completed | 12/12 | all generation-slice conversations end-to-end |
+| tool-call sequence / call level | 1.0 / 1.0 | expected sequences matched, placeholder-bound |
+| schema validity | 35/36 (0.972) | **exactly the seeded `lookup_movie` hallucinated tool on GS-07a** — caught by validation, error fed back, conversation recovered |
+| faithfulness | 17/18 (0.944) | **exactly the seeded invented movie ("Chokher Aloy") on GS-07e** — caught by the detector |
+| GS-02 inventions | **0** | the hard gate, green |
+| intent / slots | 1.0 / 1.0 | preamble parsing + micro-F1 across all 12 fixtures |
+| latency / tokens-per-sec | null | dry_run invariant (mock timings never look like GPU numbers) |
+
+MLflow evidence: generation dry-run → run `cc6cc337566940a1bcc272dcc5b6724b`
+(`sutradhar/generation`); Table 1 backfill → run `26dc04707c7d4efda4c07dff64a7b8ba`
+(`sutradhar/retrieval`, discharging the P2 stamp note).
+
 ## Observability (P3 task 10 — `sutradhar.obs`, DEC-P3-6/P3-2/P3-7)
 
 - **Langfuse tracing** (`sutradhar.obs.tracing`): one thin explicit span seam (`Tracer.span`)
