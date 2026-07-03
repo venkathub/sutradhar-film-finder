@@ -146,7 +146,7 @@ def _default_deps() -> Deps:
             gpu_type=settings.gpu_type,
             num_gpus=1,
             template="pytorch",
-            storage=80,
+            storage=settings.gpu_storage_gb,
             name=INSTANCE_NAME,
             http_ports=str(SERVE_PORT),
             script_id=str(script_id) if script_id is not None else None,
@@ -697,13 +697,24 @@ def judge_session(
 # (JudgeClient/judge_session pattern): create -> serve -> teach -> destroy. Cost ~1-2 h.
 
 DEFAULT_TEACH_TIMEOUT_S = 3 * 3600  # ~6k short rewrites; hard cap keeps DEC-0003 honest
+# 48 GB bf16 download (unauthenticated) + on-the-fly fp8 quantization outlasts the 25-min
+# default health cap comfortably on a slow mirror — 45 min for the teacher bring-up.
+TEACHER_HEALTH_TIMEOUT_S = 2700
 
 
 def build_teacher_startup_script(teacher_model: str) -> str:
-    """Serve the teacher via vLLM, 8-bit weight-only (no HF token — Sarvam-M is ungated)."""
+    """Serve the teacher via vLLM, 8-bit weight-only (no HF token — Sarvam-M is ungated).
+
+    HF_HOME is redirected to /home: on JarvisLabs the purchased storage volume mounts at
+    /home while /root sits on a small fixed overlay — the ~48 GB Sarvam-M bf16 download
+    filled it on the first live bring-up (2026-07-03; docs.jarvislabs.ai/getting_started:
+    "always use /home for storage").
+    """
     return (
         "#!/bin/bash\n"
         "set -euxo pipefail\n"
+        "export HF_HOME=/home/hf_cache\n"
+        "mkdir -p $HF_HOME\n"
         "pip install -U vllm\n"
         f"vllm serve {teacher_model} --quantization fp8 --max-model-len 8192 "
         f"--host 0.0.0.0 --port {SERVE_PORT}\n"
@@ -731,7 +742,7 @@ def teacher_session(
     deps: Deps | None = None,
     *,
     run_teach: Callable[[str, str], tuple[int, str, str]] = _run_teach,
-    health_timeout_s: float = DEFAULT_HEALTH_TIMEOUT_S,
+    health_timeout_s: float = TEACHER_HEALTH_TIMEOUT_S,
     poll_interval_s: float = DEFAULT_POLL_INTERVAL_S,
 ) -> Evidence:
     """P4 task 6/7: create -> serve Sarvam-M -> run the surface pass -> destroy.
@@ -744,6 +755,9 @@ def teacher_session(
     settings = settings or get_settings()
     deps = deps or _default_deps()
     teacher_model = settings.require("teacher_model")  # clear var-named error when unset
+    # Sarvam-M fp8-on-the-fly downloads the FULL bf16 checkpoint (~48 GB) before
+    # quantizing — the 80 GB default disk ran out on the first live bring-up (2026-07-03).
+    settings = settings.model_copy(update={"gpu_storage_gb": max(settings.gpu_storage_gb, 150)})
     ev = Evidence(requested_model=teacher_model, gpu_type=settings.gpu_type)
 
     client = deps.create_client(settings)

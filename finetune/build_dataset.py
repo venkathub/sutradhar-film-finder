@@ -248,6 +248,7 @@ def teach(
     ),
     revision: str = typer.Option("main", help="Teacher model revision recorded on the stamp."),
     limit: int = typer.Option(0, help="Rewrite only the first N conversations (0 = all)."),
+    workers: int = typer.Option(16, help="Concurrent conversations (vLLM batches requests)."),
 ) -> None:
     """Teacher surface pass (task 6): rewrite surfaces around sentinel locks (DEC-P4-1/2).
 
@@ -270,7 +271,9 @@ def teach(
     if limit:
         conversations = conversations[:limit]
     stamp = client.stamp(revision=revision)
-    taught, records, summary = surface_pass(conversations, client.rewrite, stamp)
+    taught, records, summary = surface_pass(
+        conversations, client.rewrite, stamp, max_workers=workers
+    )
 
     out.parent.mkdir(parents=True, exist_ok=True)
     sha = write_jsonl(out, taught)
@@ -296,6 +299,164 @@ def teach(
             err=True,
         )
         raise typer.Exit(2)
+
+
+@app.command()
+def seal(
+    dataset: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/taught.jsonl"), "--dataset"
+    ),
+    out_dir: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/sealed")
+    ),
+    snapshot_path: Path = typer.Option(SNAPSHOT_PATH, "--snapshot"),  # noqa: B008 — typer idiom
+    split_seed: int = typer.Option(7),
+    val_share: float = typer.Option(0.05),
+    sample_size: int = typer.Option(100),
+    sample_out: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("finetune/ft_v1_sample.jsonl"), help="Committed Tier-1 sample."
+    ),
+    card_out: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("finetune/dataset_card.json"), help="Committed dataset card."
+    ),
+) -> None:
+    """Seal the dataset (task 7, DEC-P4-7): validate -> split -> card -> sample.
+
+    Refuses to seal anything that fails a validation layer. Split is stratified by
+    behaviour under ``split_seed``; the committed sample is a stratified slice of train.
+    """
+    from sutradhar.config import get_settings
+    from sutradhar.finetune.dataset import DatasetCard, read_jsonl, write_card, write_jsonl
+    from sutradhar.finetune.scaffold import _Rng, mix_stats
+    from sutradhar.finetune.snapshot import snapshot_sha256
+    from sutradhar.finetune.validate import validate_dataset
+
+    conversations = read_jsonl(dataset)
+    report = validate_dataset(conversations)
+    if not report.ok:
+        for issue in report.issues[:20]:
+            typer.echo(f"  ! {issue.conv_id} [{issue.kind}] {issue.detail}", err=True)
+        typer.echo(
+            f"REFUSING to seal: {len(report.issues)} issues, "
+            f"{len(report.decontamination.violations)} decontamination violations",
+            err=True,
+        )
+        raise typer.Exit(1)
+
+    stamps = {c.teacher.model_dump_json() if c.teacher else None for c in conversations}
+    if len(stamps) != 1:
+        typer.echo(f"REFUSING to seal: {len(stamps)} distinct teacher stamps", err=True)
+        raise typer.Exit(1)
+    teacher_stamp = conversations[0].teacher
+
+    # Stratified 95/5 split under split_seed (deterministic; behaviour-balanced val).
+    rng = _Rng(split_seed)
+    by_behaviour: dict[str, list[int]] = {}
+    for i, conv in enumerate(conversations):
+        by_behaviour.setdefault(conv.behaviour, []).append(i)
+    val_idx: set[int] = set()
+    for behaviour in sorted(by_behaviour):
+        indices = list(by_behaviour[behaviour])
+        rng.shuffle(indices)
+        n_val = max(1, round(len(indices) * val_share))
+        val_idx.update(indices[:n_val])
+    train = [c for i, c in enumerate(conversations) if i not in val_idx]
+    val = [c for i, c in enumerate(conversations) if i in val_idx]
+
+    settings = get_settings()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    full_path = out_dir / f"{settings.ft_dataset_id}.jsonl"
+    sha = write_jsonl(full_path, conversations)
+    write_jsonl(out_dir / "train.jsonl", train)
+    write_jsonl(out_dir / "val.jsonl", val)
+
+    # Committed Tier-1 sample: stratified slice of TRAIN (never val — CI sees no held-out
+    # row), deterministic under split_seed.
+    per_behaviour = max(1, sample_size // len(by_behaviour))
+    sample: list = []
+    for behaviour in sorted(by_behaviour):
+        bucket = [c for c in train if c.behaviour == behaviour]
+        sample.extend(bucket[:per_behaviour])
+    sample = sample[:sample_size]
+    write_jsonl(sample_out, sample)
+
+    card = DatasetCard(
+        dataset_id=settings.ft_dataset_id,
+        counts=mix_stats(conversations),
+        graph_snapshot=snapshot_sha256(snapshot_path),
+        teacher=teacher_stamp,
+        seed=int(conversations[0].conv_id.split("-")[1]),  # scaffold seed (ft-<seed>-<i>)
+        decontamination=report.decontamination,
+        split={"train": len(train), "val": len(val), "split_seed": split_seed},
+        licenses=[
+            "Graph facts: Wikidata (CC0); TMDB (attribution; community-editable);",
+            "IMDb title.akas (personal/non-commercial ONLY -> dataset repo private-first,"
+            " DEC-P4-7);",
+            "Plot excerpts: Wikipedia (CC BY-SA 4.0, revision-pinned via P1 plot_texts);",
+            "Teacher surfaces: sarvamai/sarvam-m outputs (Apache 2.0 - unencumbered, DEC-P4-1).",
+        ],
+        sha256=sha,
+    )
+    write_card(card_out, card)
+    typer.echo(
+        f"sealed {settings.ft_dataset_id}: {len(conversations)} conversations "
+        f"(train {len(train)} / val {len(val)}, split_seed {split_seed})\n"
+        f"sha256: {sha}\nfull:   {full_path}\ncard:   {card_out}\n"
+        f"sample: {sample_out} ({len(sample)} conversations)"
+    )
+
+
+@app.command()
+def push(
+    sealed_dir: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/sealed"), "--sealed-dir"
+    ),
+    card_path: Path = typer.Option(Path("finetune/dataset_card.json")),  # noqa: B008
+) -> None:
+    """Push the sealed dataset to the PRIVATE HF dataset repo (DEC-P4-7)."""
+    from huggingface_hub import HfApi
+
+    from sutradhar.config import get_settings
+    from sutradhar.finetune.dataset import read_card
+
+    settings = get_settings()
+    repo = settings.require("ft_dataset_repo")
+    token = settings.require("hf_token")
+    card = read_card(card_path)
+
+    api = HfApi(token=token)
+    api.create_repo(repo_id=repo, repo_type="dataset", private=True, exist_ok=True)
+    for name in (f"{card.dataset_id}.jsonl", "train.jsonl", "val.jsonl"):
+        api.upload_file(
+            path_or_fileobj=sealed_dir / name,
+            path_in_repo=name,
+            repo_id=repo,
+            repo_type="dataset",
+        )
+    api.upload_file(
+        path_or_fileobj=card_path,
+        path_in_repo="dataset_card.json",
+        repo_id=repo,
+        repo_type="dataset",
+    )
+    readme = (
+        f"---\nlicense: other\nlicense_name: mixed-see-card\n"
+        f"license_link: https://github.com/\npretty_name: {card.dataset_id}\n---\n\n"
+        f"# {card.dataset_id} (PRIVATE-first, DEC-P4-7)\n\n"
+        "Synthetic, record-grounded, code-mixed multi-turn tool-calling SFT dataset for "
+        "Sutradhar (P4). Every tool call validates against frozen TOOL_SCHEMA v0; every "
+        "asserted title resolves to in-conversation tool results; decontaminated against "
+        "the golden set, prompt exemplars, and all negative surfaces. See "
+        "dataset_card.json for counts, provenance, licensing (IMDb-derived rows keep this "
+        f"repo private), and sha256 ({card.sha256}).\n"
+    )
+    api.upload_file(
+        path_or_fileobj=readme.encode("utf-8"),
+        path_in_repo="README.md",
+        repo_id=repo,
+        repo_type="dataset",
+    )
+    typer.echo(f"pushed {card.dataset_id} (private) to {repo}: full/train/val/card/README")
 
 
 if __name__ == "__main__":

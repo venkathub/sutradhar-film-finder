@@ -343,11 +343,12 @@ def validate_quotas(
 
 # --- Layer 5: teacher placeholder lock (consumed by task 6) ---
 
-SENTINEL_RE = re.compile(r"⟦T(\d+)⟧")
+SENTINEL_RE = re.compile(r"\[\[T(\d+)\]\]")
 
 
 def lock_entities(text: str, entities: list[str]) -> tuple[str, dict[str, str]]:
-    """Replace entity spans with ⟦Tn⟧ sentinels (longest-first, case-insensitive).
+    """Replace entity spans with [[Tn]] sentinels (longest-first, case-insensitive;
+    ASCII-safe — rare glyphs like ⟦⟧ get mangled by byte-level BPE teachers).
 
     Returns ``(locked_text, mapping)`` where mapping is sentinel -> original span. The
     teacher may rewrite everything EXCEPT sentinels; :func:`verify_locked` enforces it.
@@ -355,7 +356,7 @@ def lock_entities(text: str, entities: list[str]) -> tuple[str, dict[str, str]]:
     mapping: dict[str, str] = {}
     locked = text
     for i, entity in enumerate(sorted(set(entities), key=len, reverse=True), start=1):
-        sentinel = f"⟦T{i}⟧"
+        sentinel = f"[[T{i}]]"
         if entity.isdigit():  # years: don't lock digit runs inside larger numbers/ids
             pattern = re.compile(rf"(?<!\d){re.escape(entity)}(?!\d)")
         else:
@@ -375,20 +376,74 @@ def verify_locked(
     """Rejection reasons for a teacher rewrite of a locked text (empty list = accept).
 
     Rejects when: a locked sentinel was dropped or duplicated-away, an unknown sentinel
-    appears, a NEW title assertion (bold span or Title (year) pattern) was added, or the
-    INTENT preamble was dropped/altered while required.
+    appears, a NEW title assertion (bold span or Title (year) pattern) was added, a
+    bolded sentinel lost its bold, list lines were collapsed, the NO_MATCH token was
+    dropped, words were glued together, Indic script was flipped to Latin, or the INTENT
+    preamble was dropped/altered while required. (The last five are 2026-07-03 live-pilot
+    failure modes — deterministic checks, not vibes.)
     """
     reasons: list[str] = []
     for sentinel in mapping:
         if original.count(sentinel) != rewritten.count(sentinel):
             reasons.append(f"locked span altered: {sentinel} ({mapping[sentinel]!r})")
+        bold = f"**{sentinel}**"
+        if original.count(bold) > rewritten.count(bold):
+            reasons.append(f"bold stripped from locked title: {sentinel} ({mapping[sentinel]!r})")
     for found in set(SENTINEL_RE.findall(rewritten)):
-        if f"⟦T{found}⟧" not in mapping:
-            reasons.append(f"unknown sentinel introduced: ⟦T{found}⟧")
+        if f"[[T{found}]]" not in mapping:
+            reasons.append(f"unknown sentinel introduced: [[T{found}]]")
     # No new title assertions: any bold span in the rewrite must be a sentinel.
     for span in re.findall(r"\*\*(.+?)\*\*", rewritten):
         if not SENTINEL_RE.fullmatch(span.strip()):
             reasons.append(f"new bold title asserted: {span!r}")
+    # Structure: list lines survive as list lines (rule 4 of the rewrite prompt).
+    original_items = sum(1 for line in original.splitlines() if line.startswith("- "))
+    rewritten_items = sum(1 for line in rewritten.splitlines() if line.startswith("- "))
+    if original_items and rewritten_items != original_items:
+        reasons.append(f"list structure changed: {original_items} items -> {rewritten_items}")
+    # Abstention token survives (rule 5) — a NO_MATCH answer may not stop abstaining.
+    if "NO_MATCH" in original and "NO_MATCH" not in rewritten:
+        reasons.append("NO_MATCH token dropped")
+    # Whitespace-collapse guard (2026-07-03 pilot: the teacher occasionally glues words —
+    # "amanwithphasmophobia"): a rewrite may not contain absurdly longer "words" than the
+    # original had.
+    def _max_wordlen(text: str) -> int:
+        return max((len(w) for w in text.split()), default=0)
+
+    if rewritten and _max_wordlen(rewritten) > max(_max_wordlen(original) + 10, 30):
+        reasons.append("whitespace collapsed (words glued together)")
+
+    # Script preservation: a native-script text may not flip to Latin wholesale.
+    def _indic_share(text: str) -> float:
+        chars = [c for c in text if c.isalpha()]
+        if not chars:
+            return 0.0
+        return sum(1 for c in chars if ord(c) >= 0x0900) / len(chars)
+
+    if _indic_share(original) >= 0.20 and _indic_share(rewritten) < 0.10:
+        reasons.append("native script flipped to Latin")
+
+    # Meta-leak guard (2026-07-03 pilot 5: the teacher sometimes answers the REWRITE
+    # PROMPT itself — "Please provide the input text you'd like me to rewrite…").
+    lowered = rewritten.casefold()
+    if any(
+        phrase in lowered
+        for phrase in (
+            "rewrite",
+            "rewritten text",
+            "placeholder",
+            "guidelines",
+            "provide the input",
+            "input text",
+            "surface realization",
+        )
+    ):
+        reasons.append("meta leak: rewrite talks about the rewriting task")
+    # Length-ratio guard: a rewrite is a register change, not an essay or a stub.
+    if original.strip() and rewritten.strip():
+        ratio = len(rewritten) / max(len(original), 1)
+        if ratio > 2.5 or ratio < 0.3:
+            reasons.append(f"length ratio out of bounds ({ratio:.2f}x)")
     if require_preamble:
         original_head = original.split("\n", 1)[0]
         rewritten_head = rewritten.split("\n", 1)[0]

@@ -144,6 +144,10 @@ class Settings(BaseSettings):
 
     # --- On-demand GPU ---
     gpu_type: str = Field(default="A100", validation_alias="GPU_TYPE")
+    # Instance disk (GB). Sessions that download large bf16 checkpoints for on-the-fly
+    # quantization (P4 teacher: Sarvam-M ~48 GB) raise this themselves; 80 GB suits the
+    # 4B-class serve/train sessions.
+    gpu_storage_gb: int = Field(default=80, validation_alias="GPU_STORAGE_GB")
 
     def require(self, field: str) -> str:
         """Return ``field``'s value or raise a clear, var-named :class:`ConfigError`.

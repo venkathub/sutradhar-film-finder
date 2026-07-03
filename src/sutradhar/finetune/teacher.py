@@ -79,8 +79,59 @@ def render_prompt(text: str, register: str, kind: str, path: Path = PROMPT_PATH)
     return template
 
 
+# --- vLLM/Sarvam-M output hygiene (found live, 2026-07-03 pilot) -----------------------
+# vLLM 0.24.0 intermittently leaks GPT-2 byte-encoder pieces (Ġ=space, Ċ=newline) in
+# chat-completion content for this model. The mapping is bijective, so the repair is a
+# deterministic inverse of the byte-encoder table — applied only when leakage is present.
+
+
+def _bytes_to_unicode() -> dict[int, str]:
+    bs = (
+        list(range(ord("!"), ord("~") + 1))
+        + list(range(ord("¡"), ord("¬") + 1))
+        + list(range(ord("®"), ord("ÿ") + 1))
+    )
+    cs = bs[:]
+    n = 0
+    for b in range(256):
+        if b not in bs:
+            bs.append(b)
+            cs.append(256 + n)
+            n += 1
+    return dict(zip(bs, [chr(c) for c in cs], strict=True))
+
+
+_UNICODE_TO_BYTE = {v: k for k, v in _bytes_to_unicode().items()}
+
+
+def repair_bpe_leak(text: str) -> str:
+    """Invert leaked byte-encoder pieces back to UTF-8; no-op on clean text."""
+    if "Ġ" not in text and "Ċ" not in text:
+        return text
+    try:
+        return bytes(_UNICODE_TO_BYTE[ch] for ch in text).decode("utf-8")
+    except (KeyError, UnicodeDecodeError):
+        return text
+
+
+def clean_teacher_output(text: str) -> str:
+    """Deterministic output hygiene: BPE-leak repair, think-tag strip, unwrap quotes."""
+    text = repair_bpe_leak(text).strip()
+    if "</think>" in text:  # think-mode reasoning block precedes the rewrite
+        text = text.split("</think>")[-1].strip()
+    if len(text) >= 2 and text[0] == text[-1] and text[0] in "\"'“”":
+        text = text[1:-1].strip()
+    return text
+
+
 class TeacherClient:
-    """Env-driven teacher over the shared OpenAI-compatible client (JudgeClient pattern)."""
+    """Env-driven teacher over the shared OpenAI-compatible client (JudgeClient pattern).
+
+    Sarvam-M specifics (model card + 2026-07-03 live pilots): think mode ON
+    (``enable_thinking=true``, temperature 0.5 per the card) — the no-think path
+    translated answers to English instead of register-matching (pilots 5/6); think-mode
+    outputs pass through :func:`clean_teacher_output` which strips the reasoning block.
+    """
 
     def __init__(
         self,
@@ -88,11 +139,13 @@ class TeacherClient:
         *,
         http_client: httpx.Client | None = None,
         prompt_path: Path = PROMPT_PATH,
-        temperature: float = 0.7,  # register diversity; reproducibility = the cache
-        max_tokens: int = 1024,
+        temperature: float = 0.5,  # Sarvam-M think-mode recommendation (model card)
+        max_tokens: int = 3072,  # thinking budget + the rewrite
+        enable_thinking: bool = True,
     ) -> None:
         self._settings = settings
         self._prompt_path = prompt_path
+        self._enable_thinking = enable_thinking
         self._temperature = temperature
         self._max_tokens = max_tokens
         self._client: LLMClient | None = None
@@ -127,10 +180,11 @@ class TeacherClient:
             [{"role": "user", "content": prompt}],
             temperature=self._temperature,
             max_tokens=self._max_tokens,
+            extra_body={"chat_template_kwargs": {"enable_thinking": self._enable_thinking}},
         )
         if result.status != "up":
             raise RuntimeError(f"teacher call failed: {result.detail}")
-        return (result.content or "").strip()
+        return clean_teacher_output(result.content or "")
 
 
 # --- The surface pass ---
@@ -169,19 +223,47 @@ def _rewrite_one(
 ) -> tuple[str, bool, list[str], int, str, str]:
     """Lock → teach → verify (retry once) → unlock.
 
+    The INTENT preamble line is NEVER sent to the teacher (2026-07-03 pilot finding:
+    Sarvam-M minifies the JSON — spaces dropped — tripping the byte-identical contract);
+    it is split off structurally and reattached verbatim, so the contract holds by
+    construction and the teacher only ever sees prose.
+
     Returns ``(final_text, accepted, reasons, retries, locked_input, raw_output)`` — on
     rejection the original text is kept (scaffold fallback; dataset stays complete) and
     ``raw_output`` is the last raw teacher output, cached for the audit artifact.
     """
-    locked, mapping = lock_entities(text, entities)
-    require_preamble = kind == "answer" and locked.startswith("INTENT: ")
+    preamble = ""
+    body = text
+    if kind == "answer" and text.startswith("INTENT: "):
+        head, _, rest = text.partition("\n")
+        preamble = head
+        body = rest.lstrip("\n")
+    # List lines are frozen verbatim (pilot 4: the teacher flattens markdown lists and
+    # strips bold) — only the prose block above them is taught; register lives there.
+    frozen_tail = ""
+    if kind == "answer":
+        lines = body.split("\n")
+        first_item = next((i for i, ln in enumerate(lines) if ln.startswith("- ")), None)
+        if first_item is not None:
+            frozen_tail = "\n".join(lines[first_item:])
+            body = "\n".join(lines[:first_item]).rstrip("\n")
+    # Bold title spans are locked WITH their stars ("**X**" sorts longer than "X", so it
+    # sentinels first) — pilot 4: the teacher likes stripping markdown bold.
+    entities = list(entities) + [f"**{e}**" for e in entities if not e.isdigit()]
+    locked, mapping = lock_entities(body, entities)
     reasons: list[str] = []
     raw = ""
     for attempt in range(max_retries + 1):
         raw = rewrite(locked, register, kind)
-        reasons = verify_locked(locked, raw, mapping, require_preamble=require_preamble)
+        reasons = verify_locked(locked, raw, mapping)
         if not reasons:
-            return unlock_entities(raw, mapping), True, [], attempt, locked, raw
+            taught = unlock_entities(raw, mapping)
+            final = taught
+            if frozen_tail:
+                final = f"{final}\n{frozen_tail}"
+            if preamble:
+                final = f"{preamble}\n\n{final}"
+            return final, True, [], attempt, locked, raw
     return text, False, reasons, max_retries, locked, raw
 
 
@@ -189,16 +271,33 @@ def surface_pass(
     conversations: list[TrainingConversation],
     rewrite: RewriteFn,
     stamp: TeacherStamp,
+    max_workers: int = 1,
 ) -> tuple[list[TrainingConversation], list[RewriteRecord], TeacherRunSummary]:
     """Rewrite every user utterance + final prose answer; entities sentinel-locked.
 
+    ``max_workers`` > 1 parallelizes ACROSS conversations (vLLM batches concurrent
+    requests); within a conversation rewrites stay sequential. Output order is by input
+    conversation order regardless of completion order.
+
     Returns (taught conversations, the raw-output cache records, the run summary).
     """
-    taught: list[TrainingConversation] = []
-    records: list[RewriteRecord] = []
-    for conv in conversations:
+
+    def _teach_conv(
+        conv: TrainingConversation,
+    ) -> tuple[TrainingConversation, list[RewriteRecord]]:
         entities = _result_entities(conv)
+        # Slot-label surface values (perturbed/transliterated query titles, actor names)
+        # are contracts too: the label must keep matching the utterance after the rewrite
+        # (2026-07-03 pilot: "Apareechitudu" was shortened to "Apa", breaking the slot).
+        slot_values = {
+            str(value)
+            for slots in conv.slot_labels
+            for key, value in slots.items()
+            if key in ("title", "actor") and isinstance(value, str) and len(str(value)) >= 3
+        }
+        entities = sorted(set(entities) | slot_values)
         register = conv.query_lang
+        conv_records: list[RewriteRecord] = []
         new_conv = TrainingConversation.model_validate(conv.model_dump())
         for index, turn in enumerate(new_conv.turns):
             if turn.role == "user" and turn.content:
@@ -210,7 +309,7 @@ def surface_pass(
             final_text, accepted, reasons, retries, locked, raw = _rewrite_one(
                 rewrite, turn.content or "", entities, register, kind
             )
-            records.append(
+            conv_records.append(
                 RewriteRecord(
                     conv_id=conv.conv_id,
                     turn_index=index,
@@ -226,7 +325,20 @@ def surface_pass(
             if accepted:
                 turn.content = final_text
         new_conv.teacher = stamp
+        return new_conv, conv_records
+
+    taught: list[TrainingConversation] = []
+    records: list[RewriteRecord] = []
+    if max_workers <= 1:
+        results = [_teach_conv(conv) for conv in conversations]
+    else:
+        from concurrent.futures import ThreadPoolExecutor
+
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            results = list(pool.map(_teach_conv, conversations))
+    for new_conv, conv_records in results:
         taught.append(new_conv)
+        records.extend(conv_records)
 
     total = len(records)
     rejected = sum(1 for r in records if not r.accepted)

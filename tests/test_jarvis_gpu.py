@@ -301,4 +301,5 @@ def test_teacher_startup_script_quantized_no_secret() -> None:
     script = jarvis.build_teacher_startup_script("sarvamai/sarvam-m")
     assert "vllm serve sarvamai/sarvam-m" in script
     assert "--quantization fp8" in script  # W8A16 weight-only on Ampere (P4_SPEC D1)
-    assert "hf_" not in script  # ungated model — no token embedded
+    assert "HF_HOME=/home/hf_cache" in script  # persistent volume — root overlay is tiny
+    assert "hf_" not in script.replace("hf_cache", "")  # ungated model — no token embedded

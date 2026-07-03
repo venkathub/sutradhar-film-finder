@@ -174,8 +174,8 @@ def test_lock_and_unlock_round_trip() -> None:
 
 
 def test_teacher_altering_locked_span_rejected() -> None:
-    original = "Idhu ⟦T1⟧ padam! - **⟦T1⟧** (2006, Telugu)"
-    mapping = {"⟦T1⟧": "Pokiri"}
+    original = "Idhu [[T1]] padam! - **[[T1]]** (2006, Telugu)"
+    mapping = {"[[T1]]": "Pokiri"}
     rewritten = "Idhu Pokkiri padam da! - **Pokkiri** (2006, Telugu)"  # sentinel replaced
     reasons = verify_locked(original, rewritten, mapping)
     assert any("locked span altered" in r for r in reasons)
@@ -190,12 +190,12 @@ def test_teacher_adding_title_rejected() -> None:
 
 
 def test_teacher_dropping_preamble_rejected() -> None:
-    original = 'INTENT: {"intent": "refine", "slots": {"language": "te"}}\n\n⟦T1⟧ only.'
-    mapping = {"⟦T1⟧": "Okkadu"}
-    rewritten = "⟦T1⟧ matrame unnadhi!"
+    original = 'INTENT: {"intent": "refine", "slots": {"language": "te"}}\n\n[[T1]] only.'
+    mapping = {"[[T1]]": "Okkadu"}
+    rewritten = "[[T1]] matrame unnadhi!"
     reasons = verify_locked(original, rewritten, mapping, require_preamble=True)
     assert any("preamble dropped" in r for r in reasons)
-    altered = 'INTENT: {"intent": "list_versions"}\n\n⟦T1⟧ matrame!'
+    altered = 'INTENT: {"intent": "list_versions"}\n\n[[T1]] matrame!'
     reasons2 = verify_locked(original, altered, mapping, require_preamble=True)
     assert any("preamble altered" in r for r in reasons2)
 
@@ -203,11 +203,18 @@ def test_teacher_dropping_preamble_rejected() -> None:
 def test_faithful_rewrite_accepted() -> None:
     original = (
         'INTENT: {"intent": "refine", "slots": {"language": "te"}}\n\n'
-        "⟦T1⟧ version: **⟦T1⟧** (2003)."
+        "[[T1]] version: **[[T1]]** (2003)."
     )
-    mapping = {"⟦T1⟧": "Okkadu"}
+    mapping = {"[[T1]]": "Okkadu"}
     rewritten = (
         'INTENT: {"intent": "refine", "slots": {"language": "te"}}\n\n'
-        "Telugu lo ⟦T1⟧ matrame unnadhi — **⟦T1⟧** (2003) chudandi!"
+        "Telugu lo [[T1]] matrame unnadhi — **[[T1]]** (2003) chudandi!"
     )
     assert verify_locked(original, rewritten, mapping, require_preamble=True) == []
+
+
+def test_word_glue_rejected() -> None:
+    original = "- **[[T1]]** (2010, Malayalam) — Dileep — original"
+    glued = "- **[[T1]]** (2010,Malayalam)—Dileep—originalandthebestfilmofthedecadehonestly"
+    reasons = verify_locked(original, glued, {"[[T1]]": "Bodyguard"})
+    assert any("whitespace collapsed" in r for r in reasons)

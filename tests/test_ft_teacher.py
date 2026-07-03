@@ -122,12 +122,22 @@ def test_sentinel_breaker_rejected_scaffold_kept(
     assert validate_grounding(taught) == []
 
 
-def test_preamble_dropper_rejected_on_answers(conversations: list[TrainingConversation]) -> None:
-    _, records, summary = surface_pass(conversations[:5], _preamble_dropper, _stamp())
-    answer_records = [r for r in records if r.kind == "answer"]
-    assert answer_records
-    assert all(not r.accepted for r in answer_records)
-    assert all(any("preamble" in reason for reason in r.reasons) for r in answer_records)
+def test_preamble_survives_hostile_teacher_structurally(
+    conversations: list[TrainingConversation],
+) -> None:
+    """Pilot finding (2026-07-03): the teacher minified the INTENT JSON, so the preamble
+    is now split off BEFORE the teacher call and reattached verbatim — even a teacher
+    that would drop it cannot: the contract holds by construction, not by rejection."""
+    taught, records, _ = surface_pass(conversations[:5], _preamble_dropper, _stamp())
+    import json
+
+    taxonomy = json.loads(
+        (_REPO_ROOT / "evals" / "prompts" / "intent_taxonomy_v1.json").read_text()
+    )
+    assert validate_contracts(taught, set(taxonomy["intents"]), set(taxonomy["slot_keys"])) == []
+    # And the teacher genuinely never saw a preamble line.
+    for r in records:
+        assert not r.locked_input.startswith("INTENT: ")
 
 
 def test_title_inventor_rejected(conversations: list[TrainingConversation]) -> None:
@@ -155,9 +165,9 @@ def test_result_entities_cover_titles_and_years(
 
 
 def test_render_prompt_substitutes_everything() -> None:
-    rendered = render_prompt("hello ⟦T1⟧", "ta-latin", "user", _PROMPT)
+    rendered = render_prompt("hello [[T1]]", "ta-latin", "user", _PROMPT)
     assert "{{" not in rendered
-    assert "hello ⟦T1⟧" in rendered and "ta-latin" in rendered
+    assert "hello [[T1]]" in rendered and "ta-latin" in rendered
 
 
 def test_prompt_hash_is_stable() -> None:
@@ -187,3 +197,24 @@ def test_client_available_with_env(monkeypatch: pytest.MonkeyPatch) -> None:
     assert stamp.model == "sarvamai/sarvam-m"
     assert stamp.revision == "abc123"
     assert stamp.prompt_sha256 == prompt_sha256(_PROMPT)
+
+
+# --- Output hygiene (2026-07-03 live-pilot findings) ---
+
+
+def test_repair_bpe_leak_inverts_byte_encoder() -> None:
+    from sutradhar.finetune.teacher import repair_bpe_leak
+
+    leaked = 'Ġ"KaunĠsiĠlanguagesĠmeinĠ[[T1]]ĠbanaĠtha?"'
+    assert repair_bpe_leak(leaked) == ' "Kaun si languages mein [[T1]] bana tha?"'
+    clean = "already clean [[T1]] text"
+    assert repair_bpe_leak(clean) is clean  # no-op on clean text
+
+
+def test_clean_teacher_output_strips_think_and_quotes() -> None:
+    from sutradhar.finetune.teacher import clean_teacher_output
+
+    assert clean_teacher_output('"[[T1]] kis bhasha mein bana?"') == "[[T1]] kis bhasha mein bana?"
+    assert clean_teacher_output("reasoning...</think>\nfinal [[T1]] text") == "final [[T1]] text"
+    leaked = "ĠyaarĠ[[T1]]ĠkaĠversionĠbatao"
+    assert clean_teacher_output(leaked) == "yaar [[T1]] ka version batao"
