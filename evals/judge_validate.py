@@ -31,19 +31,23 @@ GENERATION_RUNS_DIR = Path("evals/generation_runs")
 
 
 def _load_transcripts(run_path: Path | None) -> list[FixtureTranscript]:
-    if run_path is None:
-        runs = sorted(GENERATION_RUNS_DIR.glob("*.json"))
-        if not runs:
-            typer.echo(
-                "no committed generation run found — run `make generation-dryrun` first "
-                f"(looked in {GENERATION_RUNS_DIR})"
-            )
-            raise typer.Exit(code=1)
-        run_path = runs[-1]
-    payload = json.loads(run_path.read_text("utf-8"))
-    transcripts = [FixtureTranscript.model_validate(f["transcript"]) for f in payload["fixtures"]]
-    typer.echo(f"loaded {len(transcripts)} transcripts from {run_path}")
-    return transcripts
+    from sutradhar.config import get_settings
+    from sutradhar.evals.generation_run import load_generation_run
+
+    if run_path is not None:
+        payload = json.loads(run_path.read_text("utf-8"))
+        transcripts = [
+            FixtureTranscript.model_validate(f["transcript"]) for f in payload["fixtures"]
+        ]
+        typer.echo(f"loaded {len(transcripts)} transcripts from {run_path}")
+        return transcripts
+    try:
+        artifact = load_generation_run(GENERATION_RUNS_DIR, get_settings().generation_run or None)
+    except FileNotFoundError as exc:
+        typer.echo(f"no committed generation run — run `make generation-dryrun` first ({exc})")
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"loaded {len(artifact.fixtures)} transcripts from run {artifact.run_id}")
+    return [f.transcript for f in artifact.fixtures]
 
 
 @app.command()
