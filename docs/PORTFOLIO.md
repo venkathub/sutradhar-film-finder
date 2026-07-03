@@ -63,3 +63,31 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   code-mixed positives below fluent-English negatives (zero-false-reject infeasible — witnessed
   per-fixture), chose no-hallucination over no-false-reject, and recorded the interleave as the
   quantified fine-tuning headroom target for P4.
+
+## P3 — Eval + observability harness: judge governance, 0-hallucination gate, all-self-hosted MLOps
+
+- Built a **CI-gated generation benchmark harness** (multi-turn conversation driver over an
+  OpenAI-compatible endpoint) where the tools array is **generated from a frozen JSON tool
+  schema** and every model-emitted call is **schema-validated before execution** — 3/3 seeded
+  fault classes (hallucinated tool, hallucinated parameter, wrong-typed argument) caught and
+  scored, proven by a committed 12-fixture dry-run whose only validity/faithfulness deductions
+  are **exactly the two deliberately seeded faults** (schema-validity 35/36, faithfulness 17/18,
+  **0 hallucinated movies on the out-of-catalog gate**); Tier-1 CI recomputes every metric from
+  the committed transcripts with the same scorer bytes on each PR and fails on any drift — or on
+  a stale artifact after any prompt/schema re-pin.
+- Froze **LLM-as-judge governance the measured way**: a self-hosted cross-family judge
+  (gpt-oss-20b via vLLM, pinned to an HF revision SHA + hashed rubric + temp 0 + guided JSON)
+  validated against a 30-item blind human-labelled sample with deterministic foils in **one
+  ephemeral A100 session (~6 min, <$1, auto-destroyed)** — **Cohen's κ = 0.738** (coherence
+  slice κ = 1.0), with the disagreement analysis motivating the design: the deterministic
+  no-hallucinated-movie detector **gates**, the judge stays supplementary; RAGAS runs through
+  the same judge + self-served BGE-M3 with **zero external eval APIs**.
+- Stood up the **all-self-hosted observability stack** and kept it honest about cost and
+  reality: MLflow (compose, DB-backed registry) + Langfuse v3 self-hosted on a ₹799/mo VPS via
+  an **idempotent from-scratch bootstrap** (find-or-create API provisioning + check-then-act
+  SSH steps, mock-tested with fake API/SSH transcripts — CI never spends) that survived real
+  infra: a provider firewall that only opens SSH (solved with an outbound cloudflared tunnel),
+  a NAT self-lockout (recovered via API reinstall — proving the from-scratch property), and
+  three compose env-derivation gaps — **five live findings, each folded back into code, tests,
+  and the decision log**; benchmark-cited traces are exported and committed so evidence
+  outlives the infrastructure.

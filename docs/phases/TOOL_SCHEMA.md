@@ -123,6 +123,14 @@ Backs: GS-08 ("the one with Ajay Devgn" → "no, the original one" → "is there
   is injected keyword-only infrastructure, invisible to the tool surface. All five v0 tools are
   now implemented; conformance is CI-enforced (signature + result round-trip + every recorded
   eval result payload). `abstain` is live per DEC-P2-5 (θ = 0.151747, calibrated).
+- **Status note (P3, 2026-07-03 — wording only, no version bump):** v0 is **consumed unchanged
+  by the P3 generation harness** in both directions: *outbound*, the OpenAI `tools` array is
+  **generated from `tool_schema.v0.json`** (never hand-written — drift impossible, P3_SPEC §2.8);
+  *inbound*, **emitted-call validation is live** — every model-emitted call is validated against
+  v0 before execution (hallucinated tool names, hallucinated parameters, wrong-typed arguments
+  all caught and scored; 3/3 seeded fault classes proven by `test_emitted_tool_calls_validate`),
+  and every executed call in the committed generation run re-validates in Tier-1 CI. The v0
+  sha256 is recorded in every generation-run reproducibility stamp.
 - Any signature/label change increments the version and is logged in `DECISIONS.md`; P4 synthetic data
   and P5 orchestration always target a single pinned version, recorded in the benchmark reproducibility
   stamp (`ROADMAP.md` §6.1).
