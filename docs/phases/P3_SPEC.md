@@ -1,8 +1,39 @@
 # P3 Spec — Eval + observability harness (capture the PRE-fine-tune baseline)
 
-> **Status: APPROVED (2026-07-02).** Grooming complete — all recommendations user-confirmed;
-> decisions logged as **DEC-P3-1..7** in `docs/DECISIONS.md`; open questions resolved (§7).
-> Execution may begin per the §5 task order. No code has been written against this spec yet.
+> **Status: EXECUTED — PHASE COMPLETE (2026-07-03).** All 14 tasks delivered on
+> `feature/p3-eval-observability` (17 commits); §6 Definition of Done checked item by item below.
+> **Every §4 gate met:** GS-02 = 0 inventions on the committed run · seeded faults 3/3 caught ·
+> **judge κ = 0.738 ≥ 0.6 (frozen: `openai/gpt-oss-20b @ 6cee5e81…`, one ephemeral A100 session,
+> ~6 min, destroyed)** · dry-run complete (12/12 fixtures, Tier-1 recomputation matches) ·
+> retrieval suite untouched and green · Langfuse live on the self-hosted instance (trace exported
+> + committed) · MLflow runs recorded (dry-run `c2fb0eab…`, Table 1 backfill `26dc0470…`).
+> Pinned artifact: `evals/generation_runs/20260703T012339Z-e7fff041.json`.
+>
+> **Rev 6 (2026-07-03, execution close-out) — deviations discovered live, all logged:**
+> - **DEC-P3-8 (new):** `search_by_plot` in the harness replays the committed P2 retrieval run
+>   per driven fixture (recorded providers key by query-hash; the model paraphrases — replay keeps
+>   both Table 2 columns byte-identical on the tool surface).
+> - **DEC-P3-4 amendments:** INTENT preamble placement pinned (final prose answer per turn);
+>   bold-title formatting contract added for the deterministic detector (prompt re-pinned,
+>   `prompt_hash 78215ccc…`).
+> - **DEC-P3-7 amendments (live infra findings):** AIC checkout is **dashboard-only** (403 via API
+>   key) → one-time manual purchase, find-or-create + phase 2 stay automated; the AIC edge
+>   firewall opens **only SSH** → Caddy/443 impossible on this tier, public HTTPS rides an
+>   **outbound cloudflared tunnel** (user-approved); ufw NAT self-lockout found + fixed (recovered
+>   via API reinstall — the from-scratch property proven for real); swap is host-managed in LXC
+>   (best-effort step); compose derives neither `DATABASE_URL` nor the S3 secret keys (written
+>   explicitly + heal-in-place); web service is `langfuse-web`. Five findings, all folded into
+>   `provision.py` + its fake-API/SSH tests.
+> - **DEC-P3-3 amendment:** ragas 0.4.3 is import-broken against langchain-community ≥ 0.4 →
+>   `[tool.uv]` constraint pin.
+> - Judge validation used a 30-item worksheet (spec said ~24); labels by the project owner with
+>   one assistant-flagged correction (`fai-GS-07e`) — methodology note in DEC-P3-1's amendment.
+>
+> *(Grooming history: Rev 1–5 approval notes preserved below.)*
+>
+> **Status at approval: APPROVED (2026-07-02).** Grooming complete — all recommendations
+> user-confirmed; decisions logged as **DEC-P3-1..7** in `docs/DECISIONS.md`; open questions
+> resolved (§7).
 > **Rev 5 (2026-07-02):** Q1–Q6 resolved per recommendations; **DEC-P3-7 upgraded to an
 > idempotent from-scratch bootstrap** (user requirement: the script must set up Langfuse from
 > scratch if not installed — find-or-create instance, check-then-act configuration, safe
@@ -615,7 +646,10 @@ the baseline). What gates P3:
 
 ---
 
-## 5. Task breakdown (ordered, independently committable)
+## 5. Task breakdown (ordered, independently committable) — **all 14 delivered (2026-07-03)**
+
+> Executed in order, one commit per task (task 10 split into 10a/10b; live-infra fixes and the
+> worksheet landed as follow-up commits). Delivery notes inline below.
 
 1. **Deps + config + compose:** add `ragas`/`langfuse`/`mlflow`; Settings fields + `.env.example`
    (`MLFLOW_TRACKING_URI`, `JUDGE_*`, `GENERATION_RUN`); MLflow compose service (DEC-P3-2);
@@ -665,30 +699,34 @@ the baseline). What gates P3:
 
 ---
 
-## 6. Definition of Done (instantiates the CLAUDE.md generic DoD)
+## 6. Definition of Done (instantiates the CLAUDE.md generic DoD) — **ALL MET 2026-07-03**
 
-- [ ] Code complete and matches this approved spec (scope §1, design §2).
-- [ ] Unit + integration tests written and passing (all of §4) in Tier-1 CI.
-- [ ] Eval thresholds met and recorded: §4 gate table (GS-02 = 0 inventions on the recorded run;
-      3/3 seeded fault classes caught; judge κ ≥ 0.6; dry-run complete; retrieval suite untouched
-      and green) — generation dry-run + Table 1 backfill logged to **MLflow**.
-- [ ] Benchmark tables: **Table 1** — numbers unchanged; reproducibility stamp completed with its
-      MLflow run link (discharging the P2 "(MLflow wiring lands in P3)" note). **Table 2** — all
-      column definitions, stamp fields, judge config, and prompt hash pinned by this phase; base
-      row explicitly remains pending capture at the top of the P4 GPU window **by this harness**,
-      with the committed dry-run artifact + Langfuse trace linked as machinery evidence. (No live
-      generation numbers are published from a mock — honesty rule.)
-- [ ] Module READMEs (`evals/`, `serving/`, new `obs` docs) + `docs/DECISIONS.md` updated
-      (DEC-P3-1..6 logged after user confirmation; TOOL_SCHEMA v0 status note added, no bump).
-- [ ] Runs cleanly from scratch: fresh clone + `.env` → `make up mlflow-up generation-dryrun`
-      works with **no GPU and no external API keys at all** (judge-dependent steps skip cleanly
-      with a clear message when `JUDGE_BASE_URL` is unset — the same first-class "off" posture as
-      the P0 smoke).
-- [ ] 30-second demo path: `make generation-dryrun` — scored multi-turn GS-08 transcript with
-      validated tool calls, a caught seeded hallucination, and (keys present) a Langfuse trace URL
-      printed.
-- [ ] Resume-ready quantified bullet drafted for `docs/PORTFOLIO.md` (e.g. CI-gated generation
-      benchmark harness; judge governance with measured human agreement; 0-hallucination gate).
+- [x] Code complete and matches this approved spec (scope §1, design §2) — all 13 in-scope
+      items delivered; deviations logged as DEC-P3-8 + DEC-P3-3/4/7 amendments (see Rev 6).
+- [x] Unit + integration tests written and passing (all of §4) in Tier-1 CI — **455 unit +
+      108 integration** (1 pre-existing skip); every §4-named test file exists and passes.
+- [x] Eval thresholds met and recorded: §4 gate table (GS-02 = **0 inventions** on the recorded
+      run; **3/3** seeded fault classes caught; **judge κ = 0.738 ≥ 0.6**; dry-run complete
+      12/12; retrieval suite untouched and green) — generation dry-run (`c2fb0eab…`) + Table 1
+      backfill (`26dc0470…`) logged to **MLflow**.
+- [x] Benchmark tables: **Table 1** — numbers unchanged; reproducibility stamp completed with its
+      MLflow run link. **Table 2** — column definitions, stamp fields, judge config
+      (`gpt-oss-20b @ 6cee5e81…`, κ = 0.738), and prompt hash (`78215ccc…`) pinned; base row
+      explicitly pending capture at the top of the P4 GPU window **by this harness**, with the
+      committed dry-run artifact + exported Langfuse trace linked as machinery evidence. (No live
+      generation numbers published from the mock.)
+- [x] Module READMEs (`evals/`, `serving/`, `infra/`, `infra/langfuse/`) + `docs/DECISIONS.md`
+      updated (DEC-P3-1..8 + dated amendments; TOOL_SCHEMA v0 status note added, no bump;
+      `docs/LICENSING.md` gains gpt-oss-20b).
+- [x] Runs cleanly from scratch: fresh clone + `.env` → `make up db-migrate seed-graph-ci
+      generation-dryrun` with **no GPU and no external API keys** (`seed-graph-ci` proven to
+      reproduce the exact graph state in a scratch DB; judge/RAGAS/tracing/MLflow all skip
+      cleanly when unset).
+- [x] 30-second demo path: `make generation-dryrun` — 12/12 scored transcripts incl. multi-turn
+      GS-08, validated tool calls, both seeded faults caught, gate line printed, and (keys
+      present) a live Langfuse trace URL printed.
+- [x] Resume-ready quantified bullets drafted in `docs/PORTFOLIO.md` (harness + 0-hallucination
+      gate; judge governance κ = 0.738; all-self-hosted MLOps with five live infra findings).
 
 ---
 
