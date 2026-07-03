@@ -237,8 +237,9 @@ MLflow evidence: generation dry-run → run `c2fb0eab52bd4691a8a70b35491d0dce`
 (`sutradhar/retrieval`, discharging the P2 stamp note). Langfuse evidence: the dry-run
 traced live to the self-hosted instance (DEC-P3-7 on AIC Cloud, public HTTPS via
 cloudflared tunnel); the GS-08c trace (14 observations: agent → generation/tool spans)
-is exported and committed as `20260703T012339Z-e7fff041.trace.json` so the evidence
-outlives the tunnel URL.
+is exported and committed as `20260703T012339Z-e7fff041.trace.json` **plus a screenshot**
+(`…e7fff041.trace.png`; MLflow run view: `docs/assets/p3-mlflow-generation-dryrun.png`)
+so the evidence outlives the tunnel URL.
 
 ## Observability (P3 task 10 — `sutradhar.obs`, DEC-P3-6/P3-2/P3-7)
 
