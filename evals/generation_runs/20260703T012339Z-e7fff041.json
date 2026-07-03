@@ -1,0 +1,4308 @@
+{
+ "run_id": "20260703T012339Z-e7fff041",
+ "mode": "dry_run",
+ "model": "mock",
+ "serving": null,
+ "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+ "tool_schema_version": "v0",
+ "judge": null,
+ "retrieval_run": "20260702T135315Z-f6583183",
+ "fixtures": [
+  {
+   "fixture_id": "GS-02d",
+   "slice": "negative",
+   "transcript": {
+    "fixture_id": "GS-02d",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "yaar Salaar ke saare versions dikha do na"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_1",
+        "function": {
+         "arguments": "{\"title\": \"Salaar\"}",
+         "name": "resolve_title"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_1",
+      "content": "{\"candidates\": [], \"ambiguous\": false}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"out_of_catalog\", \"slots\": {\"title\": \"Salaar\"}}\n\nI checked the catalog by title and story — that film has no match in it, so I can't list versions for you. NO_MATCH.",
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "call_1",
+      "tool": "resolve_title",
+      "arguments_raw": "{\"title\": \"Salaar\"}",
+      "arguments": {
+       "title": "Salaar"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "candidates": [],
+       "ambiguous": false
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     "INTENT: {\"intent\": \"out_of_catalog\", \"slots\": {\"title\": \"Salaar\"}}\n\nI checked the catalog by title and story — that film has no match in it, so I can't list versions for you. NO_MATCH."
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     }
+    ],
+    "latencies_ms": [
+     249.89,
+     3.66
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 1,
+    "call_matches": [
+     true
+    ],
+    "call_level": 1.0,
+    "sequence_match": true,
+    "invalid_emitted": 0,
+    "emitted_total": 1,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    true
+   ],
+   "slot_counts": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 0
+   },
+   "hallucination": [
+    {
+     "turn": 0,
+     "asserted": [],
+     "inventions": []
+    }
+   ],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": null
+  },
+  {
+   "fixture_id": "GS-02e",
+   "slice": "negative",
+   "transcript": {
+    "fixture_id": "GS-02e",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "ek ladki time travel karke apne dadaji se milti hai, us movie ka naam kya hai"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_3",
+        "function": {
+         "arguments": "{\"description\": \"a girl travels back in time and meets her grandfather\", \"top_k\": 10}",
+         "name": "search_by_plot"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_3",
+      "content": "{\"results\": [], \"abstain\": true}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"out_of_catalog\", \"slots\": {\"plot_description\": \"a girl travels back in time and meets her grandfather\"}}\n\nI checked the catalog by title and story — that film has no match in it, so I can't list versions for you. NO_MATCH.",
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "call_3",
+      "tool": "search_by_plot",
+      "arguments_raw": "{\"description\": \"a girl travels back in time and meets her grandfather\", \"top_k\": 10}",
+      "arguments": {
+       "description": "a girl travels back in time and meets her grandfather",
+       "top_k": 10
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "results": [],
+       "abstain": true
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     "INTENT: {\"intent\": \"out_of_catalog\", \"slots\": {\"plot_description\": \"a girl travels back in time and meets her grandfather\"}}\n\nI checked the catalog by title and story — that film has no match in it, so I can't list versions for you. NO_MATCH."
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     }
+    ],
+    "latencies_ms": [
+     3.81,
+     3.06
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 1,
+    "call_matches": [
+     true
+    ],
+    "call_level": 1.0,
+    "sequence_match": true,
+    "invalid_emitted": 0,
+    "emitted_total": 1,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    true
+   ],
+   "slot_counts": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 0
+   },
+   "hallucination": [
+    {
+     "turn": 0,
+     "asserted": [],
+     "inventions": []
+    }
+   ],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": null
+  },
+  {
+   "fixture_id": "GS-02f",
+   "slice": "negative",
+   "transcript": {
+    "fixture_id": "GS-02f",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "oru vampire kadhal padam Malayalam la irukka?"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_5",
+        "function": {
+         "arguments": "{\"description\": \"a vampire love story\", \"top_k\": 10}",
+         "name": "search_by_plot"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_5",
+      "content": "{\"results\": [], \"abstain\": true}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"out_of_catalog\", \"slots\": {\"plot_description\": \"a vampire love story\", \"language\": \"ml\"}}\n\nI checked the catalog by title and story — that film has no match in it, so I can't list versions for you. NO_MATCH.",
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "call_5",
+      "tool": "search_by_plot",
+      "arguments_raw": "{\"description\": \"a vampire love story\", \"top_k\": 10}",
+      "arguments": {
+       "description": "a vampire love story",
+       "top_k": 10
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "results": [],
+       "abstain": true
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     "INTENT: {\"intent\": \"out_of_catalog\", \"slots\": {\"plot_description\": \"a vampire love story\", \"language\": \"ml\"}}\n\nI checked the catalog by title and story — that film has no match in it, so I can't list versions for you. NO_MATCH."
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     }
+    ],
+    "latencies_ms": [
+     2.76,
+     2.83
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 1,
+    "call_matches": [
+     true
+    ],
+    "call_level": 1.0,
+    "sequence_match": true,
+    "invalid_emitted": 0,
+    "emitted_total": 1,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    true
+   ],
+   "slot_counts": {
+    "tp": 2,
+    "fp": 0,
+    "fn": 0
+   },
+   "hallucination": [
+    {
+     "turn": 0,
+     "asserted": [],
+     "inventions": []
+    }
+   ],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": null
+  },
+  {
+   "fixture_id": "GS-02g",
+   "slice": "negative",
+   "transcript": {
+    "fixture_id": "GS-02g",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "పుష్ప సినిమా అన్ని భాషల్లో ఉందా"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_7",
+        "function": {
+         "arguments": "{\"title\": \"పుష్ప\"}",
+         "name": "resolve_title"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_7",
+      "content": "{\"candidates\": [], \"ambiguous\": false}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"out_of_catalog\", \"slots\": {\"title\": \"పుష్ప\"}}\n\nI checked the catalog by title and story — that film has no match in it, so I can't list versions for you. NO_MATCH.",
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "call_7",
+      "tool": "resolve_title",
+      "arguments_raw": "{\"title\": \"పుష్ప\"}",
+      "arguments": {
+       "title": "పుష్ప"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "candidates": [],
+       "ambiguous": false
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     "INTENT: {\"intent\": \"out_of_catalog\", \"slots\": {\"title\": \"పుష్ప\"}}\n\nI checked the catalog by title and story — that film has no match in it, so I can't list versions for you. NO_MATCH."
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     }
+    ],
+    "latencies_ms": [
+     4.32,
+     2.54
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 1,
+    "call_matches": [
+     true
+    ],
+    "call_level": 1.0,
+    "sequence_match": true,
+    "invalid_emitted": 0,
+    "emitted_total": 1,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    true
+   ],
+   "slot_counts": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 0
+   },
+   "hallucination": [
+    {
+     "turn": 0,
+     "asserted": [],
+     "inventions": []
+    }
+   ],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": null
+  },
+  {
+   "fixture_id": "GS-07a",
+   "slice": "code_mixed",
+   "transcript": {
+    "fixture_id": "GS-07a",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "oru police officer-a paathi kudumbathukaaga case-a maathura padam"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_9",
+        "function": {
+         "arguments": "{\"name\": \"oru police officer-a paathi kudumbathukaaga case-a maathura padam\"}",
+         "name": "lookup_movie"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_9",
+      "content": "{\"error\": \"hallucinated tool: 'lookup_movie' is not in TOOL_SCHEMA v0\"}"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_10",
+        "function": {
+         "arguments": "{\"description\": \"family covers up a case to protect themselves from a police officer\", \"top_k\": 10}",
+         "name": "search_by_plot"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_10",
+      "content": "{\"results\": [{\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"canonical_title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"score\": 0.000836}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"canonical_title\": \"Drishyam 2\", \"language\": \"ml\", \"year\": 2021, \"score\": 0.000205}, {\"work_id\": \"a887cfc2-9f10-4fc4-8356-a2de01f3abce\", \"canonical_title\": \"Anbe Sivam\", \"language\": \"ta\", \"year\": 2003, \"score\": 0.0002}, {\"work_id\": \"31707ddb-06ff-4e2e-8d13-6617ba18ce89\", \"canonical_title\": \"Manichitrathazhu\", \"language\": \"ml\", \"year\": 1993, \"score\": 0.000199}, {\"work_id\": \"1b422d39-1e5f-425d-b8f7-bcd21b7e68fd\", \"canonical_title\": \"Vikram\", \"language\": \"ta\", \"year\": 1986, \"score\": 8.3e-05}, {\"work_id\": \"35f70ea8-f848-4532-98b6-70a3fbd0c935\", \"canonical_title\": \"Lucifer\", \"language\": \"ml\", \"year\": 2019, \"score\": 8e-05}], \"abstain\": true}"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_11",
+        "function": {
+         "arguments": "{\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"scope\": \"indian\"}",
+         "name": "get_versions"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_11",
+      "content": "{\"original\": {\"version_id\": \"cdedb609-1559-4649-b495-7a6465a07164\", \"title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"cast_lead\": [\"Mohanlal\", \"Meena\", \"Asha Sarath\", \"Kalabhavan Shajon\", \"Ansiba Hassan\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q15401703\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, \"versions\": [{\"version_id\": \"cdedb609-1559-4649-b495-7a6465a07164\", \"title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"cast_lead\": [\"Mohanlal\", \"Meena\", \"Asha Sarath\", \"Kalabhavan Shajon\", \"Ansiba Hassan\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q15401703\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"title\": \"Drushyam\", \"language\": \"te\", \"year\": 2014, \"cast_lead\": [\"Venkatesh\", \"Meena\", \"Nadhiya\", \"Naresh\", \"Kruthika Jayakumar\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q16248158\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"title\": \"Drishya\", \"language\": \"kn\", \"year\": 2014, \"cast_lead\": [\"V. Ravichandran\", \"Navya Nair\", \"Achyuth Kumar\", \"Prabhu\", \"Rohith Bhanuprakash\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q17052094\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"e827e20e-9455-4254-9a6e-ead1b76067fb\", \"title\": \"Papanasam\", \"language\": \"ta\", \"year\": 2015, \"cast_lead\": [\"Kamal Haasan\", \"Gautami Tadimalla\", \"Kalabhavan Mani\", \"Asha Sarath\", \"Nivetha Thomas\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q18129183\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"title\": \"Drishyam\", \"language\": \"hi\", \"year\": 2015, \"cast_lead\": [\"Ajay Devgn\", \"Tabu\", \"Shriya Saran\", \"Ishita Dutta\", \"Mrunal Jadhav\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q19824636\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}]}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"find_by_plot\", \"slots\": {\"plot_description\": \"family covers up a case to protect themselves from a police officer\"}}\n\nYe raha:\n- **Papanasam (2015, Tamil)** — remake\n- **Drishyam (2013, Malayalam)** — original",
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "call_9",
+      "tool": "lookup_movie",
+      "arguments_raw": "{\"name\": \"oru police officer-a paathi kudumbathukaaga case-a maathura padam\"}",
+      "arguments": {
+       "name": "oru police officer-a paathi kudumbathukaaga case-a maathura padam"
+      },
+      "schema_valid": false,
+      "validation_errors": [
+       "hallucinated tool: 'lookup_movie' is not in TOOL_SCHEMA v0"
+      ],
+      "executed": false,
+      "result": null,
+      "error": null
+     },
+     {
+      "turn": 0,
+      "call_id": "call_10",
+      "tool": "search_by_plot",
+      "arguments_raw": "{\"description\": \"family covers up a case to protect themselves from a police officer\", \"top_k\": 10}",
+      "arguments": {
+       "description": "family covers up a case to protect themselves from a police officer",
+       "top_k": 10
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "results": [
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "canonical_title": "Drishyam",
+         "language": "ml",
+         "year": 2013,
+         "score": 0.000836
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "canonical_title": "Drishyam 2",
+         "language": "ml",
+         "year": 2021,
+         "score": 0.000205
+        },
+        {
+         "work_id": "a887cfc2-9f10-4fc4-8356-a2de01f3abce",
+         "canonical_title": "Anbe Sivam",
+         "language": "ta",
+         "year": 2003,
+         "score": 0.0002
+        },
+        {
+         "work_id": "31707ddb-06ff-4e2e-8d13-6617ba18ce89",
+         "canonical_title": "Manichitrathazhu",
+         "language": "ml",
+         "year": 1993,
+         "score": 0.000199
+        },
+        {
+         "work_id": "1b422d39-1e5f-425d-b8f7-bcd21b7e68fd",
+         "canonical_title": "Vikram",
+         "language": "ta",
+         "year": 1986,
+         "score": 0.000083
+        },
+        {
+         "work_id": "35f70ea8-f848-4532-98b6-70a3fbd0c935",
+         "canonical_title": "Lucifer",
+         "language": "ml",
+         "year": 2019,
+         "score": 0.00008
+        }
+       ],
+       "abstain": true
+      },
+      "error": null
+     },
+     {
+      "turn": 0,
+      "call_id": "call_11",
+      "tool": "get_versions",
+      "arguments_raw": "{\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"scope\": \"indian\"}",
+      "arguments": {
+       "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+       "scope": "indian"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "original": {
+        "version_id": "cdedb609-1559-4649-b495-7a6465a07164",
+        "title": "Drishyam",
+        "language": "ml",
+        "year": 2013,
+        "cast_lead": [
+         "Mohanlal",
+         "Meena",
+         "Asha Sarath",
+         "Kalabhavan Shajon",
+         "Ansiba Hassan"
+        ],
+        "relationship": "is_original_of",
+        "is_original": true,
+        "sources": [
+         {
+          "ref": "seed_slice@2026-07-02",
+          "source": "human"
+         },
+         {
+          "ref": "Q15401703",
+          "source": "wikidata",
+          "retrieved_at": "2026-07-02T06:01:17.013558Z"
+         }
+        ],
+        "confidence": "HIGH"
+       },
+       "versions": [
+        {
+         "version_id": "cdedb609-1559-4649-b495-7a6465a07164",
+         "title": "Drishyam",
+         "language": "ml",
+         "year": 2013,
+         "cast_lead": [
+          "Mohanlal",
+          "Meena",
+          "Asha Sarath",
+          "Kalabhavan Shajon",
+          "Ansiba Hassan"
+         ],
+         "relationship": "is_original_of",
+         "is_original": true,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q15401703",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+         "title": "Drushyam",
+         "language": "te",
+         "year": 2014,
+         "cast_lead": [
+          "Venkatesh",
+          "Meena",
+          "Nadhiya",
+          "Naresh",
+          "Kruthika Jayakumar"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q16248158",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+         "title": "Drishya",
+         "language": "kn",
+         "year": 2014,
+         "cast_lead": [
+          "V. Ravichandran",
+          "Navya Nair",
+          "Achyuth Kumar",
+          "Prabhu",
+          "Rohith Bhanuprakash"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q17052094",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "e827e20e-9455-4254-9a6e-ead1b76067fb",
+         "title": "Papanasam",
+         "language": "ta",
+         "year": 2015,
+         "cast_lead": [
+          "Kamal Haasan",
+          "Gautami Tadimalla",
+          "Kalabhavan Mani",
+          "Asha Sarath",
+          "Nivetha Thomas"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q18129183",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "dd45646d-6ebb-4efa-bcac-206863b584f3",
+         "title": "Drishyam",
+         "language": "hi",
+         "year": 2015,
+         "cast_lead": [
+          "Ajay Devgn",
+          "Tabu",
+          "Shriya Saran",
+          "Ishita Dutta",
+          "Mrunal Jadhav"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q19824636",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        }
+       ]
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     "INTENT: {\"intent\": \"find_by_plot\", \"slots\": {\"plot_description\": \"family covers up a case to protect themselves from a police officer\"}}\n\nYe raha:\n- **Papanasam (2015, Tamil)** — remake\n- **Drishyam (2013, Malayalam)** — original"
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     }
+    ],
+    "latencies_ms": [
+     3.25,
+     2.31,
+     2.94,
+     2.99
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 2,
+    "call_matches": [
+     true,
+     true
+    ],
+    "call_level": 1.0,
+    "sequence_match": true,
+    "invalid_emitted": 1,
+    "emitted_total": 3,
+    "schema_validity": 0.6666666666666667
+   },
+   "intent_matches": [
+    true
+   ],
+   "slot_counts": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 0
+   },
+   "hallucination": [
+    {
+     "turn": 0,
+     "asserted": [
+      "Papanasam",
+      "Drishyam"
+     ],
+     "inventions": []
+    }
+   ],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": null
+  },
+  {
+   "fixture_id": "GS-07b",
+   "slice": "code_mixed",
+   "transcript": {
+    "fixture_id": "GS-07b",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "wo film jisme baap evidence chhupa ke family ko bachata hai"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_13",
+        "function": {
+         "arguments": "{\"description\": \"father hides evidence to save his family\", \"top_k\": 10}",
+         "name": "search_by_plot"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_13",
+      "content": "{\"results\": [{\"work_id\": \"d4de0193-50d8-4bad-858a-9b707ebddb33\", \"canonical_title\": \"Baahubali: The Beginning\", \"language\": \"te\", \"year\": 2015, \"score\": 0.005843}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"canonical_title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"score\": 0.001965}, {\"work_id\": \"7dfe24ec-4c7c-43c3-99e5-d3a312163689\", \"canonical_title\": \"Sholay\", \"language\": \"hi\", \"year\": 1975, \"score\": 0.00161}, {\"work_id\": \"4e092306-ebd7-410c-9b8e-12c3f6cc9a29\", \"canonical_title\": \"Vikram\", \"language\": \"ta\", \"year\": 2022, \"score\": 0.001082}, {\"work_id\": \"e83e4ff4-de6d-4339-849f-1ca45bb94263\", \"canonical_title\": \"Devdas\", \"language\": \"hi\", \"year\": 1955, \"score\": 0.000933}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"canonical_title\": \"Drishyam 2\", \"language\": \"ml\", \"year\": 2021, \"score\": 0.000667}, {\"work_id\": \"579ce866-ba03-4141-93c6-80f33cbacef6\", \"canonical_title\": \"Devdas\", \"language\": \"hi\", \"year\": 2002, \"score\": 0.000115}], \"abstain\": true}"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_14",
+        "function": {
+         "arguments": "{\"work_id\": \"d4de0193-50d8-4bad-858a-9b707ebddb33\", \"scope\": \"indian\"}",
+         "name": "get_versions"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_14",
+      "content": "{\"original\": {\"version_id\": \"80a52904-18bb-46f0-bda6-129772248737\", \"title\": \"Baahubali: The Beginning\", \"language\": \"te\", \"year\": 2015, \"cast_lead\": [\"Prabhas\", \"Rana Daggubati\", \"Tamannaah Bhatia\", \"Anushka Shetty\", \"Ramya Krishnan\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q13897247\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, \"versions\": [{\"version_id\": \"5e1c465e-4a75-4a57-917e-83a602a7acb8\", \"title\": \"Baahubali\", \"language\": \"ta\", \"year\": 2015, \"cast_lead\": [], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"venkatesh\", \"source\": \"human\", \"retrieved_at\": \"2026-07-02T10:17:37.979818Z\"}], \"confidence\": \"MEDIUM\"}, {\"version_id\": \"7b5d38f8-e429-40ec-8576-58658d5026d1\", \"title\": \"Baahubali\", \"language\": \"ml\", \"year\": 2015, \"cast_lead\": [], \"relationship\": \"is_official_dub_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"venkatesh\", \"source\": \"human\", \"retrieved_at\": \"2026-07-02T10:17:37.979818Z\"}], \"confidence\": \"MEDIUM\"}, {\"version_id\": \"aa6a425f-6f1a-488e-b4c2-27840ba9de91\", \"title\": \"Baahubali - The Beginning\", \"language\": \"hi\", \"year\": 2015, \"cast_lead\": [], \"relationship\": \"is_official_dub_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"venkatesh\", \"source\": \"human\", \"retrieved_at\": \"2026-07-02T10:17:37.979818Z\"}], \"confidence\": \"MEDIUM\"}, {\"version_id\": \"80a52904-18bb-46f0-bda6-129772248737\", \"title\": \"Baahubali: The Beginning\", \"language\": \"te\", \"year\": 2015, \"cast_lead\": [\"Prabhas\", \"Rana Daggubati\", \"Tamannaah Bhatia\", \"Anushka Shetty\", \"Ramya Krishnan\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q13897247\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}]}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"find_by_plot\", \"slots\": {\"plot_description\": \"father hides evidence to save his family\"}}\n\nYe raha:\n- **Drishyam (2015, Hindi)** — remake\n- **Drishyam (2013, Malayalam)** — original",
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "call_13",
+      "tool": "search_by_plot",
+      "arguments_raw": "{\"description\": \"father hides evidence to save his family\", \"top_k\": 10}",
+      "arguments": {
+       "description": "father hides evidence to save his family",
+       "top_k": 10
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "results": [
+        {
+         "work_id": "d4de0193-50d8-4bad-858a-9b707ebddb33",
+         "canonical_title": "Baahubali: The Beginning",
+         "language": "te",
+         "year": 2015,
+         "score": 0.005843
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "canonical_title": "Drishyam",
+         "language": "ml",
+         "year": 2013,
+         "score": 0.001965
+        },
+        {
+         "work_id": "7dfe24ec-4c7c-43c3-99e5-d3a312163689",
+         "canonical_title": "Sholay",
+         "language": "hi",
+         "year": 1975,
+         "score": 0.00161
+        },
+        {
+         "work_id": "4e092306-ebd7-410c-9b8e-12c3f6cc9a29",
+         "canonical_title": "Vikram",
+         "language": "ta",
+         "year": 2022,
+         "score": 0.001082
+        },
+        {
+         "work_id": "e83e4ff4-de6d-4339-849f-1ca45bb94263",
+         "canonical_title": "Devdas",
+         "language": "hi",
+         "year": 1955,
+         "score": 0.000933
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "canonical_title": "Drishyam 2",
+         "language": "ml",
+         "year": 2021,
+         "score": 0.000667
+        },
+        {
+         "work_id": "579ce866-ba03-4141-93c6-80f33cbacef6",
+         "canonical_title": "Devdas",
+         "language": "hi",
+         "year": 2002,
+         "score": 0.000115
+        }
+       ],
+       "abstain": true
+      },
+      "error": null
+     },
+     {
+      "turn": 0,
+      "call_id": "call_14",
+      "tool": "get_versions",
+      "arguments_raw": "{\"work_id\": \"d4de0193-50d8-4bad-858a-9b707ebddb33\", \"scope\": \"indian\"}",
+      "arguments": {
+       "work_id": "d4de0193-50d8-4bad-858a-9b707ebddb33",
+       "scope": "indian"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "original": {
+        "version_id": "80a52904-18bb-46f0-bda6-129772248737",
+        "title": "Baahubali: The Beginning",
+        "language": "te",
+        "year": 2015,
+        "cast_lead": [
+         "Prabhas",
+         "Rana Daggubati",
+         "Tamannaah Bhatia",
+         "Anushka Shetty",
+         "Ramya Krishnan"
+        ],
+        "relationship": "is_original_of",
+        "is_original": true,
+        "sources": [
+         {
+          "ref": "seed_slice@2026-07-02",
+          "source": "human"
+         },
+         {
+          "ref": "Q13897247",
+          "source": "wikidata",
+          "retrieved_at": "2026-07-02T06:01:17.013558Z"
+         }
+        ],
+        "confidence": "HIGH"
+       },
+       "versions": [
+        {
+         "version_id": "5e1c465e-4a75-4a57-917e-83a602a7acb8",
+         "title": "Baahubali",
+         "language": "ta",
+         "year": 2015,
+         "cast_lead": [],
+         "relationship": "is_original_of",
+         "is_original": true,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "venkatesh",
+           "source": "human",
+           "retrieved_at": "2026-07-02T10:17:37.979818Z"
+          }
+         ],
+         "confidence": "MEDIUM"
+        },
+        {
+         "version_id": "7b5d38f8-e429-40ec-8576-58658d5026d1",
+         "title": "Baahubali",
+         "language": "ml",
+         "year": 2015,
+         "cast_lead": [],
+         "relationship": "is_official_dub_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "venkatesh",
+           "source": "human",
+           "retrieved_at": "2026-07-02T10:17:37.979818Z"
+          }
+         ],
+         "confidence": "MEDIUM"
+        },
+        {
+         "version_id": "aa6a425f-6f1a-488e-b4c2-27840ba9de91",
+         "title": "Baahubali - The Beginning",
+         "language": "hi",
+         "year": 2015,
+         "cast_lead": [],
+         "relationship": "is_official_dub_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "venkatesh",
+           "source": "human",
+           "retrieved_at": "2026-07-02T10:17:37.979818Z"
+          }
+         ],
+         "confidence": "MEDIUM"
+        },
+        {
+         "version_id": "80a52904-18bb-46f0-bda6-129772248737",
+         "title": "Baahubali: The Beginning",
+         "language": "te",
+         "year": 2015,
+         "cast_lead": [
+          "Prabhas",
+          "Rana Daggubati",
+          "Tamannaah Bhatia",
+          "Anushka Shetty",
+          "Ramya Krishnan"
+         ],
+         "relationship": "is_original_of",
+         "is_original": true,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q13897247",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        }
+       ]
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     "INTENT: {\"intent\": \"find_by_plot\", \"slots\": {\"plot_description\": \"father hides evidence to save his family\"}}\n\nYe raha:\n- **Drishyam (2015, Hindi)** — remake\n- **Drishyam (2013, Malayalam)** — original"
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     }
+    ],
+    "latencies_ms": [
+     3.68,
+     2.05,
+     2.73
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 2,
+    "call_matches": [
+     true,
+     true
+    ],
+    "call_level": 1.0,
+    "sequence_match": true,
+    "invalid_emitted": 0,
+    "emitted_total": 2,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    true
+   ],
+   "slot_counts": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 0
+   },
+   "hallucination": [
+    {
+     "turn": 0,
+     "asserted": [
+      "Drishyam"
+     ],
+     "inventions": []
+    }
+   ],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": null
+  },
+  {
+   "fixture_id": "GS-07c",
+   "slice": "code_mixed",
+   "transcript": {
+    "fixture_id": "GS-07c",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Drishya kannada film yavudara remake gottidya? full list kodi"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_16",
+        "function": {
+         "arguments": "{\"title\": \"Drishya\"}",
+         "name": "resolve_title"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_16",
+      "content": "{\"candidates\": [{\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"matched_title\": \"Drishya\", \"language\": \"kn\", \"year\": 2014, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q17052094\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"matched_title\": \"Drishyam\", \"language\": \"hi\", \"year\": 2015, \"score\": 0.9333, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q19824636\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"cdedb609-1559-4649-b495-7a6465a07164\", \"matched_title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"score\": 0.9333, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q15401703\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"matched_title\": \"దృశ్యం\", \"language\": \"te\", \"year\": 2014, \"score\": 0.9333, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q16248158\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"matched_title\": \"ದೃಶ್ಯ 2\", \"language\": \"kn\", \"year\": 2021, \"score\": 0.875, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q110555107\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\", \"matched_title\": \"Drishyam 2\", \"language\": \"hi\", \"year\": 2022, \"score\": 0.8235, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q112665700\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"matched_title\": \"దృశ్యం 2\", \"language\": \"te\", \"year\": 2021, \"score\": 0.8235, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q105984608\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"matched_title\": \"ദൃശ്യം 2\", \"language\": \"ml\", \"year\": 2021, \"score\": 0.8235, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q102036246\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}], \"ambiguous\": true}"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_17",
+        "function": {
+         "arguments": "{\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"scope\": \"indian\"}",
+         "name": "get_versions"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_17",
+      "content": "{\"original\": {\"version_id\": \"cdedb609-1559-4649-b495-7a6465a07164\", \"title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"cast_lead\": [\"Mohanlal\", \"Meena\", \"Asha Sarath\", \"Kalabhavan Shajon\", \"Ansiba Hassan\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q15401703\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, \"versions\": [{\"version_id\": \"cdedb609-1559-4649-b495-7a6465a07164\", \"title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"cast_lead\": [\"Mohanlal\", \"Meena\", \"Asha Sarath\", \"Kalabhavan Shajon\", \"Ansiba Hassan\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q15401703\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"title\": \"Drushyam\", \"language\": \"te\", \"year\": 2014, \"cast_lead\": [\"Venkatesh\", \"Meena\", \"Nadhiya\", \"Naresh\", \"Kruthika Jayakumar\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q16248158\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"title\": \"Drishya\", \"language\": \"kn\", \"year\": 2014, \"cast_lead\": [\"V. Ravichandran\", \"Navya Nair\", \"Achyuth Kumar\", \"Prabhu\", \"Rohith Bhanuprakash\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q17052094\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"e827e20e-9455-4254-9a6e-ead1b76067fb\", \"title\": \"Papanasam\", \"language\": \"ta\", \"year\": 2015, \"cast_lead\": [\"Kamal Haasan\", \"Gautami Tadimalla\", \"Kalabhavan Mani\", \"Asha Sarath\", \"Nivetha Thomas\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q18129183\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"title\": \"Drishyam\", \"language\": \"hi\", \"year\": 2015, \"cast_lead\": [\"Ajay Devgn\", \"Tabu\", \"Shriya Saran\", \"Ishita Dutta\", \"Mrunal Jadhav\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q19824636\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}]}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"list_versions\", \"slots\": {\"title\": \"Drishya\", \"language\": \"kn\"}}\n\nYe raha:\n- **Drishya (2014, Kannada)** — remake\n- **Drishyam (2013, Malayalam)** — original",
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "call_16",
+      "tool": "resolve_title",
+      "arguments_raw": "{\"title\": \"Drishya\"}",
+      "arguments": {
+       "title": "Drishya"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "candidates": [
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+         "matched_title": "Drishya",
+         "language": "kn",
+         "year": 2014,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q17052094",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "dd45646d-6ebb-4efa-bcac-206863b584f3",
+         "matched_title": "Drishyam",
+         "language": "hi",
+         "year": 2015,
+         "score": 0.9333,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q19824636",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "cdedb609-1559-4649-b495-7a6465a07164",
+         "matched_title": "Drishyam",
+         "language": "ml",
+         "year": 2013,
+         "score": 0.9333,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q15401703",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+         "matched_title": "దృశ్యం",
+         "language": "te",
+         "year": 2014,
+         "score": 0.9333,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q16248158",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3",
+         "matched_title": "ದೃಶ್ಯ 2",
+         "language": "kn",
+         "year": 2021,
+         "score": 0.875,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q110555107",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "f73debb9-012c-42d0-b2a0-ccdda33d8ccc",
+         "matched_title": "Drishyam 2",
+         "language": "hi",
+         "year": 2022,
+         "score": 0.8235,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q112665700",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "81cc42b1-8ea7-41c1-8cd2-8a0e735de300",
+         "matched_title": "దృశ్యం 2",
+         "language": "te",
+         "year": 2021,
+         "score": 0.8235,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q105984608",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+         "matched_title": "ദൃശ്യം 2",
+         "language": "ml",
+         "year": 2021,
+         "score": 0.8235,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q102036246",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        }
+       ],
+       "ambiguous": true
+      },
+      "error": null
+     },
+     {
+      "turn": 0,
+      "call_id": "call_17",
+      "tool": "get_versions",
+      "arguments_raw": "{\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"scope\": \"indian\"}",
+      "arguments": {
+       "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+       "scope": "indian"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "original": {
+        "version_id": "cdedb609-1559-4649-b495-7a6465a07164",
+        "title": "Drishyam",
+        "language": "ml",
+        "year": 2013,
+        "cast_lead": [
+         "Mohanlal",
+         "Meena",
+         "Asha Sarath",
+         "Kalabhavan Shajon",
+         "Ansiba Hassan"
+        ],
+        "relationship": "is_original_of",
+        "is_original": true,
+        "sources": [
+         {
+          "ref": "seed_slice@2026-07-02",
+          "source": "human"
+         },
+         {
+          "ref": "Q15401703",
+          "source": "wikidata",
+          "retrieved_at": "2026-07-02T06:01:17.013558Z"
+         }
+        ],
+        "confidence": "HIGH"
+       },
+       "versions": [
+        {
+         "version_id": "cdedb609-1559-4649-b495-7a6465a07164",
+         "title": "Drishyam",
+         "language": "ml",
+         "year": 2013,
+         "cast_lead": [
+          "Mohanlal",
+          "Meena",
+          "Asha Sarath",
+          "Kalabhavan Shajon",
+          "Ansiba Hassan"
+         ],
+         "relationship": "is_original_of",
+         "is_original": true,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q15401703",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+         "title": "Drushyam",
+         "language": "te",
+         "year": 2014,
+         "cast_lead": [
+          "Venkatesh",
+          "Meena",
+          "Nadhiya",
+          "Naresh",
+          "Kruthika Jayakumar"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q16248158",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+         "title": "Drishya",
+         "language": "kn",
+         "year": 2014,
+         "cast_lead": [
+          "V. Ravichandran",
+          "Navya Nair",
+          "Achyuth Kumar",
+          "Prabhu",
+          "Rohith Bhanuprakash"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q17052094",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "e827e20e-9455-4254-9a6e-ead1b76067fb",
+         "title": "Papanasam",
+         "language": "ta",
+         "year": 2015,
+         "cast_lead": [
+          "Kamal Haasan",
+          "Gautami Tadimalla",
+          "Kalabhavan Mani",
+          "Asha Sarath",
+          "Nivetha Thomas"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q18129183",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "dd45646d-6ebb-4efa-bcac-206863b584f3",
+         "title": "Drishyam",
+         "language": "hi",
+         "year": 2015,
+         "cast_lead": [
+          "Ajay Devgn",
+          "Tabu",
+          "Shriya Saran",
+          "Ishita Dutta",
+          "Mrunal Jadhav"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q19824636",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        }
+       ]
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     "INTENT: {\"intent\": \"list_versions\", \"slots\": {\"title\": \"Drishya\", \"language\": \"kn\"}}\n\nYe raha:\n- **Drishya (2014, Kannada)** — remake\n- **Drishyam (2013, Malayalam)** — original"
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     }
+    ],
+    "latencies_ms": [
+     3.34,
+     2.13,
+     2.6
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 2,
+    "call_matches": [
+     true,
+     true
+    ],
+    "call_level": 1.0,
+    "sequence_match": true,
+    "invalid_emitted": 0,
+    "emitted_total": 2,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    true
+   ],
+   "slot_counts": {
+    "tp": 2,
+    "fp": 0,
+    "fn": 0
+   },
+   "hallucination": [
+    {
+     "turn": 0,
+     "asserted": [
+      "Drishya",
+      "Drishyam"
+     ],
+     "inventions": []
+    }
+   ],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": null
+  },
+  {
+   "fixture_id": "GS-07d",
+   "slice": "code_mixed",
+   "transcript": {
+    "fixture_id": "GS-07d",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Venkatesh natinchina Drushyam cinema original edi? anni languages lo cheppu"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_19",
+        "function": {
+         "arguments": "{\"title\": \"Drushyam\"}",
+         "name": "resolve_title"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_19",
+      "content": "{\"candidates\": [{\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"matched_title\": \"Drushyam\", \"language\": \"te\", \"year\": 2014, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q16248158\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"matched_title\": \"Drushyam 2\", \"language\": \"te\", \"year\": 2021, \"score\": 0.8889, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q105984608\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"matched_title\": \"Drishyam\", \"language\": \"hi\", \"year\": 2015, \"score\": 0.875, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q19824636\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"cdedb609-1559-4649-b495-7a6465a07164\", \"matched_title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"score\": 0.875, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q15401703\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"matched_title\": \"Drishya\", \"language\": \"kn\", \"year\": 2014, \"score\": 0.8, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q17052094\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}], \"ambiguous\": true}"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_20",
+        "function": {
+         "arguments": "{\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"scope\": \"indian\"}",
+         "name": "get_versions"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_20",
+      "content": "{\"original\": {\"version_id\": \"cdedb609-1559-4649-b495-7a6465a07164\", \"title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"cast_lead\": [\"Mohanlal\", \"Meena\", \"Asha Sarath\", \"Kalabhavan Shajon\", \"Ansiba Hassan\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q15401703\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, \"versions\": [{\"version_id\": \"cdedb609-1559-4649-b495-7a6465a07164\", \"title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"cast_lead\": [\"Mohanlal\", \"Meena\", \"Asha Sarath\", \"Kalabhavan Shajon\", \"Ansiba Hassan\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q15401703\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"title\": \"Drushyam\", \"language\": \"te\", \"year\": 2014, \"cast_lead\": [\"Venkatesh\", \"Meena\", \"Nadhiya\", \"Naresh\", \"Kruthika Jayakumar\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q16248158\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"title\": \"Drishya\", \"language\": \"kn\", \"year\": 2014, \"cast_lead\": [\"V. Ravichandran\", \"Navya Nair\", \"Achyuth Kumar\", \"Prabhu\", \"Rohith Bhanuprakash\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q17052094\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"e827e20e-9455-4254-9a6e-ead1b76067fb\", \"title\": \"Papanasam\", \"language\": \"ta\", \"year\": 2015, \"cast_lead\": [\"Kamal Haasan\", \"Gautami Tadimalla\", \"Kalabhavan Mani\", \"Asha Sarath\", \"Nivetha Thomas\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q18129183\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"title\": \"Drishyam\", \"language\": \"hi\", \"year\": 2015, \"cast_lead\": [\"Ajay Devgn\", \"Tabu\", \"Shriya Saran\", \"Ishita Dutta\", \"Mrunal Jadhav\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q19824636\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}]}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"list_versions\", \"slots\": {\"title\": \"Drushyam\", \"actor\": \"Venkatesh\"}}\n\nYe raha:\n- **Drushyam (2014, Telugu)** — remake\n- **Drishyam (2013, Malayalam)** — original",
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "call_19",
+      "tool": "resolve_title",
+      "arguments_raw": "{\"title\": \"Drushyam\"}",
+      "arguments": {
+       "title": "Drushyam"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "candidates": [
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+         "matched_title": "Drushyam",
+         "language": "te",
+         "year": 2014,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q16248158",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "81cc42b1-8ea7-41c1-8cd2-8a0e735de300",
+         "matched_title": "Drushyam 2",
+         "language": "te",
+         "year": 2021,
+         "score": 0.8889,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q105984608",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "dd45646d-6ebb-4efa-bcac-206863b584f3",
+         "matched_title": "Drishyam",
+         "language": "hi",
+         "year": 2015,
+         "score": 0.875,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q19824636",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "cdedb609-1559-4649-b495-7a6465a07164",
+         "matched_title": "Drishyam",
+         "language": "ml",
+         "year": 2013,
+         "score": 0.875,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q15401703",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+         "matched_title": "Drishya",
+         "language": "kn",
+         "year": 2014,
+         "score": 0.8,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q17052094",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        }
+       ],
+       "ambiguous": true
+      },
+      "error": null
+     },
+     {
+      "turn": 0,
+      "call_id": "call_20",
+      "tool": "get_versions",
+      "arguments_raw": "{\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"scope\": \"indian\"}",
+      "arguments": {
+       "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+       "scope": "indian"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "original": {
+        "version_id": "cdedb609-1559-4649-b495-7a6465a07164",
+        "title": "Drishyam",
+        "language": "ml",
+        "year": 2013,
+        "cast_lead": [
+         "Mohanlal",
+         "Meena",
+         "Asha Sarath",
+         "Kalabhavan Shajon",
+         "Ansiba Hassan"
+        ],
+        "relationship": "is_original_of",
+        "is_original": true,
+        "sources": [
+         {
+          "ref": "seed_slice@2026-07-02",
+          "source": "human"
+         },
+         {
+          "ref": "Q15401703",
+          "source": "wikidata",
+          "retrieved_at": "2026-07-02T06:01:17.013558Z"
+         }
+        ],
+        "confidence": "HIGH"
+       },
+       "versions": [
+        {
+         "version_id": "cdedb609-1559-4649-b495-7a6465a07164",
+         "title": "Drishyam",
+         "language": "ml",
+         "year": 2013,
+         "cast_lead": [
+          "Mohanlal",
+          "Meena",
+          "Asha Sarath",
+          "Kalabhavan Shajon",
+          "Ansiba Hassan"
+         ],
+         "relationship": "is_original_of",
+         "is_original": true,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q15401703",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+         "title": "Drushyam",
+         "language": "te",
+         "year": 2014,
+         "cast_lead": [
+          "Venkatesh",
+          "Meena",
+          "Nadhiya",
+          "Naresh",
+          "Kruthika Jayakumar"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q16248158",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+         "title": "Drishya",
+         "language": "kn",
+         "year": 2014,
+         "cast_lead": [
+          "V. Ravichandran",
+          "Navya Nair",
+          "Achyuth Kumar",
+          "Prabhu",
+          "Rohith Bhanuprakash"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q17052094",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "e827e20e-9455-4254-9a6e-ead1b76067fb",
+         "title": "Papanasam",
+         "language": "ta",
+         "year": 2015,
+         "cast_lead": [
+          "Kamal Haasan",
+          "Gautami Tadimalla",
+          "Kalabhavan Mani",
+          "Asha Sarath",
+          "Nivetha Thomas"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q18129183",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "dd45646d-6ebb-4efa-bcac-206863b584f3",
+         "title": "Drishyam",
+         "language": "hi",
+         "year": 2015,
+         "cast_lead": [
+          "Ajay Devgn",
+          "Tabu",
+          "Shriya Saran",
+          "Ishita Dutta",
+          "Mrunal Jadhav"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q19824636",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        }
+       ]
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     "INTENT: {\"intent\": \"list_versions\", \"slots\": {\"title\": \"Drushyam\", \"actor\": \"Venkatesh\"}}\n\nYe raha:\n- **Drushyam (2014, Telugu)** — remake\n- **Drishyam (2013, Malayalam)** — original"
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     }
+    ],
+    "latencies_ms": [
+     1.73,
+     2.36,
+     2.66
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 2,
+    "call_matches": [
+     true,
+     true
+    ],
+    "call_level": 1.0,
+    "sequence_match": true,
+    "invalid_emitted": 0,
+    "emitted_total": 2,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    true
+   ],
+   "slot_counts": {
+    "tp": 2,
+    "fp": 0,
+    "fn": 0
+   },
+   "hallucination": [
+    {
+     "turn": 0,
+     "asserted": [
+      "Drushyam",
+      "Drishyam"
+     ],
+     "inventions": []
+    }
+   ],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": null
+  },
+  {
+   "fixture_id": "GS-07e",
+   "slice": "code_mixed",
+   "transcript": {
+    "fixture_id": "GS-07e",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "ಅಪ್ತಮಿತ್ರ ಯಾವ ಚಿತ್ರದ ರಿಮೇಕ್?"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_22",
+        "function": {
+         "arguments": "{\"title\": \"ಅಪ್ತಮಿತ್ರ\"}",
+         "name": "resolve_title"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_22",
+      "content": "{\"candidates\": [{\"work_id\": \"31707ddb-06ff-4e2e-8d13-6617ba18ce89\", \"version_id\": \"8a3ce222-bcf3-4597-b2fc-6b21567e7292\", \"matched_title\": \"ಆಪ್ತಮಿತ್ರ\", \"language\": \"kn\", \"year\": 2004, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q4782241\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}], \"ambiguous\": false}"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_23",
+        "function": {
+         "arguments": "{\"work_id\": \"31707ddb-06ff-4e2e-8d13-6617ba18ce89\", \"scope\": \"indian\"}",
+         "name": "get_versions"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_23",
+      "content": "{\"original\": {\"version_id\": \"60c34bf9-4e56-4d28-942c-4617394df959\", \"title\": \"Manichitrathazhu\", \"language\": \"ml\", \"year\": 1993, \"cast_lead\": [\"Shobana\", \"Mohanlal\", \"Suresh Gopi\", \"Nedumudi Venu\", \"Vinaya Prasad\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q3530081\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, \"versions\": [{\"version_id\": \"60c34bf9-4e56-4d28-942c-4617394df959\", \"title\": \"Manichitrathazhu\", \"language\": \"ml\", \"year\": 1993, \"cast_lead\": [\"Shobana\", \"Mohanlal\", \"Suresh Gopi\", \"Nedumudi Venu\", \"Vinaya Prasad\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q3530081\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"8a3ce222-bcf3-4597-b2fc-6b21567e7292\", \"title\": \"Apthamitra\", \"language\": \"kn\", \"year\": 2004, \"cast_lead\": [\"Soundarya\", \"Vishnuvardhan\", \"Ramesh Aravind\", \"Dwarakish\", \"Prema\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q4782241\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"f490ce73-6ad0-40bc-9127-3699855528f7\", \"title\": \"Chandramukhi\", \"language\": \"ta\", \"year\": 2005, \"cast_lead\": [\"Jyothika\", \"Rajinikanth\", \"Prabhu\", \"Nassar\", \"Vadivelu\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q1193810\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"dee38237-6110-43f5-91e2-25bc49245dde\", \"title\": \"Rajmohol\", \"language\": \"bn\", \"year\": 2005, \"cast_lead\": [\"Prosenjit Chatterjee\", \"Abhishek Chatterjee\", \"Rachana Banerjee\", \"Biplab Chatterjee\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q7286314\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"98687a4e-3ef8-44dc-a45b-c3b07dc6ede5\", \"title\": \"Bhool Bhulaiyaa\", \"language\": \"hi\", \"year\": 2007, \"cast_lead\": [\"Akshay Kumar\", \"Shiney Ahuja\", \"Vidya Balan\", \"Paresh Rawal\", \"Ameesha Patel\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q3764588\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}]}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"find_by_title\", \"slots\": {\"title\": \"ಅಪ್ತಮಿತ್ರ\"}}\n\nYe raha:\n- **Apthamitra (2004, Kannada)** — remake\n- **Manichitrathazhu (1993, Malayalam)** — original Idara Bengali remake **Chokher Aloy (2016)** kuda chudandi.",
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "call_22",
+      "tool": "resolve_title",
+      "arguments_raw": "{\"title\": \"ಅಪ್ತಮಿತ್ರ\"}",
+      "arguments": {
+       "title": "ಅಪ್ತಮಿತ್ರ"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "candidates": [
+        {
+         "work_id": "31707ddb-06ff-4e2e-8d13-6617ba18ce89",
+         "version_id": "8a3ce222-bcf3-4597-b2fc-6b21567e7292",
+         "matched_title": "ಆಪ್ತಮಿತ್ರ",
+         "language": "kn",
+         "year": 2004,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q4782241",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        }
+       ],
+       "ambiguous": false
+      },
+      "error": null
+     },
+     {
+      "turn": 0,
+      "call_id": "call_23",
+      "tool": "get_versions",
+      "arguments_raw": "{\"work_id\": \"31707ddb-06ff-4e2e-8d13-6617ba18ce89\", \"scope\": \"indian\"}",
+      "arguments": {
+       "work_id": "31707ddb-06ff-4e2e-8d13-6617ba18ce89",
+       "scope": "indian"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "original": {
+        "version_id": "60c34bf9-4e56-4d28-942c-4617394df959",
+        "title": "Manichitrathazhu",
+        "language": "ml",
+        "year": 1993,
+        "cast_lead": [
+         "Shobana",
+         "Mohanlal",
+         "Suresh Gopi",
+         "Nedumudi Venu",
+         "Vinaya Prasad"
+        ],
+        "relationship": "is_original_of",
+        "is_original": true,
+        "sources": [
+         {
+          "ref": "seed_slice@2026-07-02",
+          "source": "human"
+         },
+         {
+          "ref": "Q3530081",
+          "source": "wikidata",
+          "retrieved_at": "2026-07-02T06:01:17.013558Z"
+         }
+        ],
+        "confidence": "HIGH"
+       },
+       "versions": [
+        {
+         "version_id": "60c34bf9-4e56-4d28-942c-4617394df959",
+         "title": "Manichitrathazhu",
+         "language": "ml",
+         "year": 1993,
+         "cast_lead": [
+          "Shobana",
+          "Mohanlal",
+          "Suresh Gopi",
+          "Nedumudi Venu",
+          "Vinaya Prasad"
+         ],
+         "relationship": "is_original_of",
+         "is_original": true,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q3530081",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "8a3ce222-bcf3-4597-b2fc-6b21567e7292",
+         "title": "Apthamitra",
+         "language": "kn",
+         "year": 2004,
+         "cast_lead": [
+          "Soundarya",
+          "Vishnuvardhan",
+          "Ramesh Aravind",
+          "Dwarakish",
+          "Prema"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q4782241",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "f490ce73-6ad0-40bc-9127-3699855528f7",
+         "title": "Chandramukhi",
+         "language": "ta",
+         "year": 2005,
+         "cast_lead": [
+          "Jyothika",
+          "Rajinikanth",
+          "Prabhu",
+          "Nassar",
+          "Vadivelu"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q1193810",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "dee38237-6110-43f5-91e2-25bc49245dde",
+         "title": "Rajmohol",
+         "language": "bn",
+         "year": 2005,
+         "cast_lead": [
+          "Prosenjit Chatterjee",
+          "Abhishek Chatterjee",
+          "Rachana Banerjee",
+          "Biplab Chatterjee"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q7286314",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "98687a4e-3ef8-44dc-a45b-c3b07dc6ede5",
+         "title": "Bhool Bhulaiyaa",
+         "language": "hi",
+         "year": 2007,
+         "cast_lead": [
+          "Akshay Kumar",
+          "Shiney Ahuja",
+          "Vidya Balan",
+          "Paresh Rawal",
+          "Ameesha Patel"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q3764588",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        }
+       ]
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     "INTENT: {\"intent\": \"find_by_title\", \"slots\": {\"title\": \"ಅಪ್ತಮಿತ್ರ\"}}\n\nYe raha:\n- **Apthamitra (2004, Kannada)** — remake\n- **Manichitrathazhu (1993, Malayalam)** — original Idara Bengali remake **Chokher Aloy (2016)** kuda chudandi."
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     }
+    ],
+    "latencies_ms": [
+     1.72,
+     2.21,
+     2.39
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 2,
+    "call_matches": [
+     true,
+     true
+    ],
+    "call_level": 1.0,
+    "sequence_match": true,
+    "invalid_emitted": 0,
+    "emitted_total": 2,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    true
+   ],
+   "slot_counts": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 0
+   },
+   "hallucination": [
+    {
+     "turn": 0,
+     "asserted": [
+      "Apthamitra",
+      "Manichitrathazhu",
+      "Chokher Aloy"
+     ],
+     "inventions": [
+      "Chokher Aloy"
+     ]
+    }
+   ],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": null
+  },
+  {
+   "fixture_id": "GS-08a",
+   "slice": "backtracking",
+   "transcript": {
+    "fixture_id": "GS-08a",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "the Drishyam with Ajay Devgn"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_25",
+        "function": {
+         "arguments": "{\"title\": \"Drishyam\"}",
+         "name": "resolve_title"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_25",
+      "content": "{\"candidates\": [{\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"matched_title\": \"Drishyam\", \"language\": \"hi\", \"year\": 2015, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q19824636\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"cdedb609-1559-4649-b495-7a6465a07164\", \"matched_title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q15401703\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"matched_title\": \"దృశ్యం\", \"language\": \"te\", \"year\": 2014, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q16248158\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"matched_title\": \"Drishya\", \"language\": \"kn\", \"year\": 2014, \"score\": 0.9333, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q17052094\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\", \"matched_title\": \"Drishyam 2\", \"language\": \"hi\", \"year\": 2022, \"score\": 0.8889, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q112665700\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"matched_title\": \"దృశ్యం 2\", \"language\": \"te\", \"year\": 2021, \"score\": 0.8889, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q105984608\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"matched_title\": \"ദൃശ്യം 2\", \"language\": \"ml\", \"year\": 2021, \"score\": 0.8889, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q102036246\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"matched_title\": \"ದೃಶ್ಯ 2\", \"language\": \"kn\", \"year\": 2021, \"score\": 0.8235, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q110555107\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}], \"ambiguous\": true}"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_26",
+        "function": {
+         "arguments": "{\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"scope\": \"indian\"}",
+         "name": "get_versions"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_26",
+      "content": "{\"original\": {\"version_id\": \"cdedb609-1559-4649-b495-7a6465a07164\", \"title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"cast_lead\": [\"Mohanlal\", \"Meena\", \"Asha Sarath\", \"Kalabhavan Shajon\", \"Ansiba Hassan\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q15401703\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, \"versions\": [{\"version_id\": \"cdedb609-1559-4649-b495-7a6465a07164\", \"title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"cast_lead\": [\"Mohanlal\", \"Meena\", \"Asha Sarath\", \"Kalabhavan Shajon\", \"Ansiba Hassan\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q15401703\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"title\": \"Drushyam\", \"language\": \"te\", \"year\": 2014, \"cast_lead\": [\"Venkatesh\", \"Meena\", \"Nadhiya\", \"Naresh\", \"Kruthika Jayakumar\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q16248158\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"title\": \"Drishya\", \"language\": \"kn\", \"year\": 2014, \"cast_lead\": [\"V. Ravichandran\", \"Navya Nair\", \"Achyuth Kumar\", \"Prabhu\", \"Rohith Bhanuprakash\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q17052094\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"e827e20e-9455-4254-9a6e-ead1b76067fb\", \"title\": \"Papanasam\", \"language\": \"ta\", \"year\": 2015, \"cast_lead\": [\"Kamal Haasan\", \"Gautami Tadimalla\", \"Kalabhavan Mani\", \"Asha Sarath\", \"Nivetha Thomas\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q18129183\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"title\": \"Drishyam\", \"language\": \"hi\", \"year\": 2015, \"cast_lead\": [\"Ajay Devgn\", \"Tabu\", \"Shriya Saran\", \"Ishita Dutta\", \"Mrunal Jadhav\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q19824636\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}]}"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_27",
+        "function": {
+         "arguments": "{\"version_set\": [\"cdedb609-1559-4649-b495-7a6465a07164\", \"cdedb609-1559-4649-b495-7a6465a07164\", \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"e827e20e-9455-4254-9a6e-ead1b76067fb\", \"dd45646d-6ebb-4efa-bcac-206863b584f3\"], \"by\": {\"actor\": \"Ajay Devgn\"}}",
+         "name": "refine_filter"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_27",
+      "content": "{\"versions\": [{\"version_id\": \"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"title\": \"Drishyam\", \"language\": \"hi\", \"year\": 2015, \"relationship\": \"is_remake_of\", \"is_original\": false}]}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"find_by_title\", \"slots\": {\"title\": \"Drishyam\", \"actor\": \"Ajay Devgn\"}}\n\nYe raha:\n- **Drishyam (2015, Hindi)** — remake",
+      "role": "assistant"
+     },
+     {
+      "role": "user",
+      "content": "no, the original one"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_29",
+        "function": {
+         "arguments": "{\"version_set\": [\"cdedb609-1559-4649-b495-7a6465a07164\", \"cdedb609-1559-4649-b495-7a6465a07164\", \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"e827e20e-9455-4254-9a6e-ead1b76067fb\", \"dd45646d-6ebb-4efa-bcac-206863b584f3\"], \"by\": {\"era\": \"original\"}}",
+         "name": "refine_filter"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_29",
+      "content": "{\"versions\": [{\"version_id\": \"cdedb609-1559-4649-b495-7a6465a07164\", \"title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"relationship\": \"is_original_of\", \"is_original\": true}]}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"refine\", \"slots\": {\"era\": \"original\"}}\n\nYe raha:\n- **Drishyam (2013, Malayalam)** — original",
+      "role": "assistant"
+     },
+     {
+      "role": "user",
+      "content": "is there a Telugu one?"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_31",
+        "function": {
+         "arguments": "{\"version_set\": [\"cdedb609-1559-4649-b495-7a6465a07164\", \"cdedb609-1559-4649-b495-7a6465a07164\", \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"e827e20e-9455-4254-9a6e-ead1b76067fb\", \"dd45646d-6ebb-4efa-bcac-206863b584f3\"], \"by\": {\"language\": \"te\"}}",
+         "name": "refine_filter"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_31",
+      "content": "{\"versions\": [{\"version_id\": \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"title\": \"Drushyam\", \"language\": \"te\", \"year\": 2014, \"relationship\": \"is_remake_of\", \"is_original\": false}]}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"refine\", \"slots\": {\"language\": \"te\"}}\n\nYe raha:\n- **Drushyam (2014, Telugu)** — remake",
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "call_25",
+      "tool": "resolve_title",
+      "arguments_raw": "{\"title\": \"Drishyam\"}",
+      "arguments": {
+       "title": "Drishyam"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "candidates": [
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "dd45646d-6ebb-4efa-bcac-206863b584f3",
+         "matched_title": "Drishyam",
+         "language": "hi",
+         "year": 2015,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q19824636",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "cdedb609-1559-4649-b495-7a6465a07164",
+         "matched_title": "Drishyam",
+         "language": "ml",
+         "year": 2013,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q15401703",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+         "matched_title": "దృశ్యం",
+         "language": "te",
+         "year": 2014,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q16248158",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+         "matched_title": "Drishya",
+         "language": "kn",
+         "year": 2014,
+         "score": 0.9333,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q17052094",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "f73debb9-012c-42d0-b2a0-ccdda33d8ccc",
+         "matched_title": "Drishyam 2",
+         "language": "hi",
+         "year": 2022,
+         "score": 0.8889,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q112665700",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "81cc42b1-8ea7-41c1-8cd2-8a0e735de300",
+         "matched_title": "దృశ్యం 2",
+         "language": "te",
+         "year": 2021,
+         "score": 0.8889,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q105984608",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+         "matched_title": "ദൃശ്യം 2",
+         "language": "ml",
+         "year": 2021,
+         "score": 0.8889,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q102036246",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3",
+         "matched_title": "ದೃಶ್ಯ 2",
+         "language": "kn",
+         "year": 2021,
+         "score": 0.8235,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q110555107",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        }
+       ],
+       "ambiguous": true
+      },
+      "error": null
+     },
+     {
+      "turn": 0,
+      "call_id": "call_26",
+      "tool": "get_versions",
+      "arguments_raw": "{\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"scope\": \"indian\"}",
+      "arguments": {
+       "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+       "scope": "indian"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "original": {
+        "version_id": "cdedb609-1559-4649-b495-7a6465a07164",
+        "title": "Drishyam",
+        "language": "ml",
+        "year": 2013,
+        "cast_lead": [
+         "Mohanlal",
+         "Meena",
+         "Asha Sarath",
+         "Kalabhavan Shajon",
+         "Ansiba Hassan"
+        ],
+        "relationship": "is_original_of",
+        "is_original": true,
+        "sources": [
+         {
+          "ref": "seed_slice@2026-07-02",
+          "source": "human"
+         },
+         {
+          "ref": "Q15401703",
+          "source": "wikidata",
+          "retrieved_at": "2026-07-02T06:01:17.013558Z"
+         }
+        ],
+        "confidence": "HIGH"
+       },
+       "versions": [
+        {
+         "version_id": "cdedb609-1559-4649-b495-7a6465a07164",
+         "title": "Drishyam",
+         "language": "ml",
+         "year": 2013,
+         "cast_lead": [
+          "Mohanlal",
+          "Meena",
+          "Asha Sarath",
+          "Kalabhavan Shajon",
+          "Ansiba Hassan"
+         ],
+         "relationship": "is_original_of",
+         "is_original": true,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q15401703",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+         "title": "Drushyam",
+         "language": "te",
+         "year": 2014,
+         "cast_lead": [
+          "Venkatesh",
+          "Meena",
+          "Nadhiya",
+          "Naresh",
+          "Kruthika Jayakumar"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q16248158",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+         "title": "Drishya",
+         "language": "kn",
+         "year": 2014,
+         "cast_lead": [
+          "V. Ravichandran",
+          "Navya Nair",
+          "Achyuth Kumar",
+          "Prabhu",
+          "Rohith Bhanuprakash"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q17052094",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "e827e20e-9455-4254-9a6e-ead1b76067fb",
+         "title": "Papanasam",
+         "language": "ta",
+         "year": 2015,
+         "cast_lead": [
+          "Kamal Haasan",
+          "Gautami Tadimalla",
+          "Kalabhavan Mani",
+          "Asha Sarath",
+          "Nivetha Thomas"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q18129183",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "dd45646d-6ebb-4efa-bcac-206863b584f3",
+         "title": "Drishyam",
+         "language": "hi",
+         "year": 2015,
+         "cast_lead": [
+          "Ajay Devgn",
+          "Tabu",
+          "Shriya Saran",
+          "Ishita Dutta",
+          "Mrunal Jadhav"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q19824636",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        }
+       ]
+      },
+      "error": null
+     },
+     {
+      "turn": 0,
+      "call_id": "call_27",
+      "tool": "refine_filter",
+      "arguments_raw": "{\"version_set\": [\"cdedb609-1559-4649-b495-7a6465a07164\", \"cdedb609-1559-4649-b495-7a6465a07164\", \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"e827e20e-9455-4254-9a6e-ead1b76067fb\", \"dd45646d-6ebb-4efa-bcac-206863b584f3\"], \"by\": {\"actor\": \"Ajay Devgn\"}}",
+      "arguments": {
+       "version_set": [
+        "cdedb609-1559-4649-b495-7a6465a07164",
+        "cdedb609-1559-4649-b495-7a6465a07164",
+        "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+        "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+        "e827e20e-9455-4254-9a6e-ead1b76067fb",
+        "dd45646d-6ebb-4efa-bcac-206863b584f3"
+       ],
+       "by": {
+        "actor": "Ajay Devgn"
+       }
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "versions": [
+        {
+         "version_id": "dd45646d-6ebb-4efa-bcac-206863b584f3",
+         "title": "Drishyam",
+         "language": "hi",
+         "year": 2015,
+         "relationship": "is_remake_of",
+         "is_original": false
+        }
+       ]
+      },
+      "error": null
+     },
+     {
+      "turn": 1,
+      "call_id": "call_29",
+      "tool": "refine_filter",
+      "arguments_raw": "{\"version_set\": [\"cdedb609-1559-4649-b495-7a6465a07164\", \"cdedb609-1559-4649-b495-7a6465a07164\", \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"e827e20e-9455-4254-9a6e-ead1b76067fb\", \"dd45646d-6ebb-4efa-bcac-206863b584f3\"], \"by\": {\"era\": \"original\"}}",
+      "arguments": {
+       "version_set": [
+        "cdedb609-1559-4649-b495-7a6465a07164",
+        "cdedb609-1559-4649-b495-7a6465a07164",
+        "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+        "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+        "e827e20e-9455-4254-9a6e-ead1b76067fb",
+        "dd45646d-6ebb-4efa-bcac-206863b584f3"
+       ],
+       "by": {
+        "era": "original"
+       }
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "versions": [
+        {
+         "version_id": "cdedb609-1559-4649-b495-7a6465a07164",
+         "title": "Drishyam",
+         "language": "ml",
+         "year": 2013,
+         "relationship": "is_original_of",
+         "is_original": true
+        }
+       ]
+      },
+      "error": null
+     },
+     {
+      "turn": 2,
+      "call_id": "call_31",
+      "tool": "refine_filter",
+      "arguments_raw": "{\"version_set\": [\"cdedb609-1559-4649-b495-7a6465a07164\", \"cdedb609-1559-4649-b495-7a6465a07164\", \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"e827e20e-9455-4254-9a6e-ead1b76067fb\", \"dd45646d-6ebb-4efa-bcac-206863b584f3\"], \"by\": {\"language\": \"te\"}}",
+      "arguments": {
+       "version_set": [
+        "cdedb609-1559-4649-b495-7a6465a07164",
+        "cdedb609-1559-4649-b495-7a6465a07164",
+        "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+        "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+        "e827e20e-9455-4254-9a6e-ead1b76067fb",
+        "dd45646d-6ebb-4efa-bcac-206863b584f3"
+       ],
+       "by": {
+        "language": "te"
+       }
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "versions": [
+        {
+         "version_id": "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+         "title": "Drushyam",
+         "language": "te",
+         "year": 2014,
+         "relationship": "is_remake_of",
+         "is_original": false
+        }
+       ]
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     "INTENT: {\"intent\": \"find_by_title\", \"slots\": {\"title\": \"Drishyam\", \"actor\": \"Ajay Devgn\"}}\n\nYe raha:\n- **Drishyam (2015, Hindi)** — remake",
+     "INTENT: {\"intent\": \"refine\", \"slots\": {\"era\": \"original\"}}\n\nYe raha:\n- **Drishyam (2013, Malayalam)** — original",
+     "INTENT: {\"intent\": \"refine\", \"slots\": {\"language\": \"te\"}}\n\nYe raha:\n- **Drushyam (2014, Telugu)** — remake"
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     }
+    ],
+    "latencies_ms": [
+     2.23,
+     2.3,
+     2.85,
+     3.11,
+     2.48,
+     4.36,
+     3.06,
+     3.66
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 5,
+    "call_matches": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "call_level": 1.0,
+    "sequence_match": true,
+    "invalid_emitted": 0,
+    "emitted_total": 5,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    true,
+    true,
+    true
+   ],
+   "slot_counts": {
+    "tp": 4,
+    "fp": 0,
+    "fn": 0
+   },
+   "hallucination": [
+    {
+     "turn": 0,
+     "asserted": [
+      "Drishyam"
+     ],
+     "inventions": []
+    },
+    {
+     "turn": 1,
+     "asserted": [
+      "Drishyam"
+     ],
+     "inventions": []
+    },
+    {
+     "turn": 2,
+     "asserted": [
+      "Drushyam"
+     ],
+     "inventions": []
+    }
+   ],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": null
+  },
+  {
+   "fixture_id": "GS-08b",
+   "slice": "backtracking",
+   "transcript": {
+    "fixture_id": "GS-08b",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "which Manichitrathazhu remake has Rajinikanth in it?"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_33",
+        "function": {
+         "arguments": "{\"title\": \"Manichitrathazhu\"}",
+         "name": "resolve_title"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_33",
+      "content": "{\"candidates\": [{\"work_id\": \"31707ddb-06ff-4e2e-8d13-6617ba18ce89\", \"version_id\": \"60c34bf9-4e56-4d28-942c-4617394df959\", \"matched_title\": \"Manichitrathazhu\", \"language\": \"ml\", \"year\": 1993, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q3530081\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}], \"ambiguous\": false}"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_34",
+        "function": {
+         "arguments": "{\"work_id\": \"31707ddb-06ff-4e2e-8d13-6617ba18ce89\", \"scope\": \"indian\"}",
+         "name": "get_versions"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_34",
+      "content": "{\"original\": {\"version_id\": \"60c34bf9-4e56-4d28-942c-4617394df959\", \"title\": \"Manichitrathazhu\", \"language\": \"ml\", \"year\": 1993, \"cast_lead\": [\"Shobana\", \"Mohanlal\", \"Suresh Gopi\", \"Nedumudi Venu\", \"Vinaya Prasad\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q3530081\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, \"versions\": [{\"version_id\": \"60c34bf9-4e56-4d28-942c-4617394df959\", \"title\": \"Manichitrathazhu\", \"language\": \"ml\", \"year\": 1993, \"cast_lead\": [\"Shobana\", \"Mohanlal\", \"Suresh Gopi\", \"Nedumudi Venu\", \"Vinaya Prasad\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q3530081\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"8a3ce222-bcf3-4597-b2fc-6b21567e7292\", \"title\": \"Apthamitra\", \"language\": \"kn\", \"year\": 2004, \"cast_lead\": [\"Soundarya\", \"Vishnuvardhan\", \"Ramesh Aravind\", \"Dwarakish\", \"Prema\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q4782241\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"f490ce73-6ad0-40bc-9127-3699855528f7\", \"title\": \"Chandramukhi\", \"language\": \"ta\", \"year\": 2005, \"cast_lead\": [\"Jyothika\", \"Rajinikanth\", \"Prabhu\", \"Nassar\", \"Vadivelu\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q1193810\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"dee38237-6110-43f5-91e2-25bc49245dde\", \"title\": \"Rajmohol\", \"language\": \"bn\", \"year\": 2005, \"cast_lead\": [\"Prosenjit Chatterjee\", \"Abhishek Chatterjee\", \"Rachana Banerjee\", \"Biplab Chatterjee\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q7286314\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"98687a4e-3ef8-44dc-a45b-c3b07dc6ede5\", \"title\": \"Bhool Bhulaiyaa\", \"language\": \"hi\", \"year\": 2007, \"cast_lead\": [\"Akshay Kumar\", \"Shiney Ahuja\", \"Vidya Balan\", \"Paresh Rawal\", \"Ameesha Patel\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q3764588\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}]}"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_35",
+        "function": {
+         "arguments": "{\"version_set\": [\"60c34bf9-4e56-4d28-942c-4617394df959\", \"60c34bf9-4e56-4d28-942c-4617394df959\", \"8a3ce222-bcf3-4597-b2fc-6b21567e7292\", \"f490ce73-6ad0-40bc-9127-3699855528f7\", \"dee38237-6110-43f5-91e2-25bc49245dde\", \"98687a4e-3ef8-44dc-a45b-c3b07dc6ede5\"], \"by\": {\"actor\": \"Rajinikanth\"}}",
+         "name": "refine_filter"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_35",
+      "content": "{\"versions\": [{\"version_id\": \"f490ce73-6ad0-40bc-9127-3699855528f7\", \"title\": \"Chandramukhi\", \"language\": \"ta\", \"year\": 2005, \"relationship\": \"is_remake_of\", \"is_original\": false}]}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"find_by_title\", \"slots\": {\"title\": \"Manichitrathazhu\", \"actor\": \"Rajinikanth\"}}\n\nYe raha:\n- **Chandramukhi (2005, Tamil)** — remake",
+      "role": "assistant"
+     },
+     {
+      "role": "user",
+      "content": "no wait, the Hindi remake"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_37",
+        "function": {
+         "arguments": "{\"version_set\": [\"60c34bf9-4e56-4d28-942c-4617394df959\", \"60c34bf9-4e56-4d28-942c-4617394df959\", \"8a3ce222-bcf3-4597-b2fc-6b21567e7292\", \"f490ce73-6ad0-40bc-9127-3699855528f7\", \"dee38237-6110-43f5-91e2-25bc49245dde\", \"98687a4e-3ef8-44dc-a45b-c3b07dc6ede5\"], \"by\": {\"language\": \"hi\"}}",
+         "name": "refine_filter"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_37",
+      "content": "{\"versions\": [{\"version_id\": \"98687a4e-3ef8-44dc-a45b-c3b07dc6ede5\", \"title\": \"Bhool Bhulaiyaa\", \"language\": \"hi\", \"year\": 2007, \"relationship\": \"is_remake_of\", \"is_original\": false}]}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"refine\", \"slots\": {\"language\": \"hi\"}}\n\nYe raha:\n- **Bhool Bhulaiyaa (2007, Hindi)** — remake",
+      "role": "assistant"
+     },
+     {
+      "role": "user",
+      "content": "and the original?"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_39",
+        "function": {
+         "arguments": "{\"version_set\": [\"60c34bf9-4e56-4d28-942c-4617394df959\", \"60c34bf9-4e56-4d28-942c-4617394df959\", \"8a3ce222-bcf3-4597-b2fc-6b21567e7292\", \"f490ce73-6ad0-40bc-9127-3699855528f7\", \"dee38237-6110-43f5-91e2-25bc49245dde\", \"98687a4e-3ef8-44dc-a45b-c3b07dc6ede5\"], \"by\": {\"era\": \"original\"}}",
+         "name": "refine_filter"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_39",
+      "content": "{\"versions\": [{\"version_id\": \"60c34bf9-4e56-4d28-942c-4617394df959\", \"title\": \"Manichitrathazhu\", \"language\": \"ml\", \"year\": 1993, \"relationship\": \"is_original_of\", \"is_original\": true}]}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"refine\", \"slots\": {\"era\": \"original\"}}\n\nYe raha:\n- **Manichitrathazhu (1993, Malayalam)** — original",
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "call_33",
+      "tool": "resolve_title",
+      "arguments_raw": "{\"title\": \"Manichitrathazhu\"}",
+      "arguments": {
+       "title": "Manichitrathazhu"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "candidates": [
+        {
+         "work_id": "31707ddb-06ff-4e2e-8d13-6617ba18ce89",
+         "version_id": "60c34bf9-4e56-4d28-942c-4617394df959",
+         "matched_title": "Manichitrathazhu",
+         "language": "ml",
+         "year": 1993,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q3530081",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        }
+       ],
+       "ambiguous": false
+      },
+      "error": null
+     },
+     {
+      "turn": 0,
+      "call_id": "call_34",
+      "tool": "get_versions",
+      "arguments_raw": "{\"work_id\": \"31707ddb-06ff-4e2e-8d13-6617ba18ce89\", \"scope\": \"indian\"}",
+      "arguments": {
+       "work_id": "31707ddb-06ff-4e2e-8d13-6617ba18ce89",
+       "scope": "indian"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "original": {
+        "version_id": "60c34bf9-4e56-4d28-942c-4617394df959",
+        "title": "Manichitrathazhu",
+        "language": "ml",
+        "year": 1993,
+        "cast_lead": [
+         "Shobana",
+         "Mohanlal",
+         "Suresh Gopi",
+         "Nedumudi Venu",
+         "Vinaya Prasad"
+        ],
+        "relationship": "is_original_of",
+        "is_original": true,
+        "sources": [
+         {
+          "ref": "seed_slice@2026-07-02",
+          "source": "human"
+         },
+         {
+          "ref": "Q3530081",
+          "source": "wikidata",
+          "retrieved_at": "2026-07-02T06:01:17.013558Z"
+         }
+        ],
+        "confidence": "HIGH"
+       },
+       "versions": [
+        {
+         "version_id": "60c34bf9-4e56-4d28-942c-4617394df959",
+         "title": "Manichitrathazhu",
+         "language": "ml",
+         "year": 1993,
+         "cast_lead": [
+          "Shobana",
+          "Mohanlal",
+          "Suresh Gopi",
+          "Nedumudi Venu",
+          "Vinaya Prasad"
+         ],
+         "relationship": "is_original_of",
+         "is_original": true,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q3530081",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "8a3ce222-bcf3-4597-b2fc-6b21567e7292",
+         "title": "Apthamitra",
+         "language": "kn",
+         "year": 2004,
+         "cast_lead": [
+          "Soundarya",
+          "Vishnuvardhan",
+          "Ramesh Aravind",
+          "Dwarakish",
+          "Prema"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q4782241",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "f490ce73-6ad0-40bc-9127-3699855528f7",
+         "title": "Chandramukhi",
+         "language": "ta",
+         "year": 2005,
+         "cast_lead": [
+          "Jyothika",
+          "Rajinikanth",
+          "Prabhu",
+          "Nassar",
+          "Vadivelu"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q1193810",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "dee38237-6110-43f5-91e2-25bc49245dde",
+         "title": "Rajmohol",
+         "language": "bn",
+         "year": 2005,
+         "cast_lead": [
+          "Prosenjit Chatterjee",
+          "Abhishek Chatterjee",
+          "Rachana Banerjee",
+          "Biplab Chatterjee"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q7286314",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "98687a4e-3ef8-44dc-a45b-c3b07dc6ede5",
+         "title": "Bhool Bhulaiyaa",
+         "language": "hi",
+         "year": 2007,
+         "cast_lead": [
+          "Akshay Kumar",
+          "Shiney Ahuja",
+          "Vidya Balan",
+          "Paresh Rawal",
+          "Ameesha Patel"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q3764588",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        }
+       ]
+      },
+      "error": null
+     },
+     {
+      "turn": 0,
+      "call_id": "call_35",
+      "tool": "refine_filter",
+      "arguments_raw": "{\"version_set\": [\"60c34bf9-4e56-4d28-942c-4617394df959\", \"60c34bf9-4e56-4d28-942c-4617394df959\", \"8a3ce222-bcf3-4597-b2fc-6b21567e7292\", \"f490ce73-6ad0-40bc-9127-3699855528f7\", \"dee38237-6110-43f5-91e2-25bc49245dde\", \"98687a4e-3ef8-44dc-a45b-c3b07dc6ede5\"], \"by\": {\"actor\": \"Rajinikanth\"}}",
+      "arguments": {
+       "version_set": [
+        "60c34bf9-4e56-4d28-942c-4617394df959",
+        "60c34bf9-4e56-4d28-942c-4617394df959",
+        "8a3ce222-bcf3-4597-b2fc-6b21567e7292",
+        "f490ce73-6ad0-40bc-9127-3699855528f7",
+        "dee38237-6110-43f5-91e2-25bc49245dde",
+        "98687a4e-3ef8-44dc-a45b-c3b07dc6ede5"
+       ],
+       "by": {
+        "actor": "Rajinikanth"
+       }
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "versions": [
+        {
+         "version_id": "f490ce73-6ad0-40bc-9127-3699855528f7",
+         "title": "Chandramukhi",
+         "language": "ta",
+         "year": 2005,
+         "relationship": "is_remake_of",
+         "is_original": false
+        }
+       ]
+      },
+      "error": null
+     },
+     {
+      "turn": 1,
+      "call_id": "call_37",
+      "tool": "refine_filter",
+      "arguments_raw": "{\"version_set\": [\"60c34bf9-4e56-4d28-942c-4617394df959\", \"60c34bf9-4e56-4d28-942c-4617394df959\", \"8a3ce222-bcf3-4597-b2fc-6b21567e7292\", \"f490ce73-6ad0-40bc-9127-3699855528f7\", \"dee38237-6110-43f5-91e2-25bc49245dde\", \"98687a4e-3ef8-44dc-a45b-c3b07dc6ede5\"], \"by\": {\"language\": \"hi\"}}",
+      "arguments": {
+       "version_set": [
+        "60c34bf9-4e56-4d28-942c-4617394df959",
+        "60c34bf9-4e56-4d28-942c-4617394df959",
+        "8a3ce222-bcf3-4597-b2fc-6b21567e7292",
+        "f490ce73-6ad0-40bc-9127-3699855528f7",
+        "dee38237-6110-43f5-91e2-25bc49245dde",
+        "98687a4e-3ef8-44dc-a45b-c3b07dc6ede5"
+       ],
+       "by": {
+        "language": "hi"
+       }
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "versions": [
+        {
+         "version_id": "98687a4e-3ef8-44dc-a45b-c3b07dc6ede5",
+         "title": "Bhool Bhulaiyaa",
+         "language": "hi",
+         "year": 2007,
+         "relationship": "is_remake_of",
+         "is_original": false
+        }
+       ]
+      },
+      "error": null
+     },
+     {
+      "turn": 2,
+      "call_id": "call_39",
+      "tool": "refine_filter",
+      "arguments_raw": "{\"version_set\": [\"60c34bf9-4e56-4d28-942c-4617394df959\", \"60c34bf9-4e56-4d28-942c-4617394df959\", \"8a3ce222-bcf3-4597-b2fc-6b21567e7292\", \"f490ce73-6ad0-40bc-9127-3699855528f7\", \"dee38237-6110-43f5-91e2-25bc49245dde\", \"98687a4e-3ef8-44dc-a45b-c3b07dc6ede5\"], \"by\": {\"era\": \"original\"}}",
+      "arguments": {
+       "version_set": [
+        "60c34bf9-4e56-4d28-942c-4617394df959",
+        "60c34bf9-4e56-4d28-942c-4617394df959",
+        "8a3ce222-bcf3-4597-b2fc-6b21567e7292",
+        "f490ce73-6ad0-40bc-9127-3699855528f7",
+        "dee38237-6110-43f5-91e2-25bc49245dde",
+        "98687a4e-3ef8-44dc-a45b-c3b07dc6ede5"
+       ],
+       "by": {
+        "era": "original"
+       }
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "versions": [
+        {
+         "version_id": "60c34bf9-4e56-4d28-942c-4617394df959",
+         "title": "Manichitrathazhu",
+         "language": "ml",
+         "year": 1993,
+         "relationship": "is_original_of",
+         "is_original": true
+        }
+       ]
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     "INTENT: {\"intent\": \"find_by_title\", \"slots\": {\"title\": \"Manichitrathazhu\", \"actor\": \"Rajinikanth\"}}\n\nYe raha:\n- **Chandramukhi (2005, Tamil)** — remake",
+     "INTENT: {\"intent\": \"refine\", \"slots\": {\"language\": \"hi\"}}\n\nYe raha:\n- **Bhool Bhulaiyaa (2007, Hindi)** — remake",
+     "INTENT: {\"intent\": \"refine\", \"slots\": {\"era\": \"original\"}}\n\nYe raha:\n- **Manichitrathazhu (1993, Malayalam)** — original"
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     }
+    ],
+    "latencies_ms": [
+     2.3,
+     2.02,
+     2.92,
+     2.62,
+     3.6,
+     3.24,
+     4.33,
+     3.65
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 5,
+    "call_matches": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "call_level": 1.0,
+    "sequence_match": true,
+    "invalid_emitted": 0,
+    "emitted_total": 5,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    true,
+    true,
+    true
+   ],
+   "slot_counts": {
+    "tp": 4,
+    "fp": 0,
+    "fn": 0
+   },
+   "hallucination": [
+    {
+     "turn": 0,
+     "asserted": [
+      "Chandramukhi"
+     ],
+     "inventions": []
+    },
+    {
+     "turn": 1,
+     "asserted": [
+      "Bhool Bhulaiyaa"
+     ],
+     "inventions": []
+    },
+    {
+     "turn": 2,
+     "asserted": [
+      "Manichitrathazhu"
+     ],
+     "inventions": []
+    }
+   ],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": null
+  },
+  {
+   "fixture_id": "GS-08c",
+   "slice": "backtracking",
+   "transcript": {
+    "fixture_id": "GS-08c",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "show me the Telugu version of Drishyam 2"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_41",
+        "function": {
+         "arguments": "{\"title\": \"Drishyam 2\"}",
+         "name": "resolve_title"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_41",
+      "content": "{\"candidates\": [{\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\", \"matched_title\": \"Drishyam 2\", \"language\": \"hi\", \"year\": 2022, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q112665700\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"matched_title\": \"దృశ్యం 2\", \"language\": \"te\", \"year\": 2021, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q105984608\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"matched_title\": \"ദൃശ്യം 2\", \"language\": \"ml\", \"year\": 2021, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q102036246\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"matched_title\": \"ದೃಶ್ಯ 2\", \"language\": \"kn\", \"year\": 2021, \"score\": 0.9474, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q110555107\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"matched_title\": \"Drishyam\", \"language\": \"hi\", \"year\": 2015, \"score\": 0.8889, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q19824636\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"cdedb609-1559-4649-b495-7a6465a07164\", \"matched_title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"score\": 0.8889, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q15401703\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"matched_title\": \"దృశ్యం\", \"language\": \"te\", \"year\": 2014, \"score\": 0.8889, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q16248158\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"matched_title\": \"Drishya\", \"language\": \"kn\", \"year\": 2014, \"score\": 0.8235, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q17052094\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}], \"ambiguous\": true}"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_42",
+        "function": {
+         "arguments": "{\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"scope\": \"indian\"}",
+         "name": "get_versions"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_42",
+      "content": "{\"original\": {\"version_id\": \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"title\": \"Drishyam 2\", \"language\": \"ml\", \"year\": 2021, \"cast_lead\": [\"Mohanlal\", \"Meena\", \"Murali Gopy\", \"Asha Sarath\", \"Siddique\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q102036246\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, \"versions\": [{\"version_id\": \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"title\": \"Drishya 2\", \"language\": \"kn\", \"year\": 2021, \"cast_lead\": [\"V. Ravichandran\", \"Anant Nag\", \"Asha Sarath\", \"Prabhu\", \"Navya Nair\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q110555107\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"title\": \"Drishyam 2\", \"language\": \"ml\", \"year\": 2021, \"cast_lead\": [\"Mohanlal\", \"Meena\", \"Murali Gopy\", \"Asha Sarath\", \"Siddique\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q102036246\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"title\": \"Drushyam 2\", \"language\": \"te\", \"year\": 2021, \"cast_lead\": [\"Venkatesh\", \"Meena\", \"Nadhiya\", \"Sampath Raj\", \"Kruthika Jayakumar\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q105984608\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\", \"title\": \"Drishyam 2\", \"language\": \"hi\", \"year\": 2022, \"cast_lead\": [\"Ajay Devgn\", \"Akshaye Khanna\", \"Tabu\", \"Shriya Saran\", \"Ishita Dutta\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q112665700\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}]}"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_43",
+        "function": {
+         "arguments": "{\"version_set\": [\"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\"], \"by\": {\"language\": \"te\"}}",
+         "name": "refine_filter"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_43",
+      "content": "{\"versions\": [{\"version_id\": \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"title\": \"Drushyam 2\", \"language\": \"te\", \"year\": 2021, \"relationship\": \"is_remake_of\", \"is_original\": false}]}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"find_by_title\", \"slots\": {\"title\": \"Drishyam 2\", \"language\": \"te\"}}\n\nYe raha:\n- **Drushyam 2 (2021, Telugu)** — remake",
+      "role": "assistant"
+     },
+     {
+      "role": "user",
+      "content": "is there a Tamil version too?"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_45",
+        "function": {
+         "arguments": "{\"version_set\": [\"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\"], \"by\": {\"language\": \"ta\"}}",
+         "name": "refine_filter"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_45",
+      "content": "{\"versions\": []}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"out_of_catalog\", \"slots\": {\"language\": \"ta\"}}\n\nI checked the catalog by title and story — that film has no match in it, so I can't list versions for you. NO_MATCH.",
+      "role": "assistant"
+     },
+     {
+      "role": "user",
+      "content": "ok then the Kannada one"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "call_47",
+        "function": {
+         "arguments": "{\"version_set\": [\"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\"], \"by\": {\"language\": \"kn\"}}",
+         "name": "refine_filter"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_47",
+      "content": "{\"versions\": [{\"version_id\": \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"title\": \"Drishya 2\", \"language\": \"kn\", \"year\": 2021, \"relationship\": \"is_remake_of\", \"is_original\": false}]}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"refine\", \"slots\": {\"language\": \"kn\"}}\n\nYe raha:\n- **Drishya 2 (2021, Kannada)** — remake",
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "call_41",
+      "tool": "resolve_title",
+      "arguments_raw": "{\"title\": \"Drishyam 2\"}",
+      "arguments": {
+       "title": "Drishyam 2"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "candidates": [
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "f73debb9-012c-42d0-b2a0-ccdda33d8ccc",
+         "matched_title": "Drishyam 2",
+         "language": "hi",
+         "year": 2022,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q112665700",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "81cc42b1-8ea7-41c1-8cd2-8a0e735de300",
+         "matched_title": "దృశ్యం 2",
+         "language": "te",
+         "year": 2021,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q105984608",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+         "matched_title": "ദൃശ്യം 2",
+         "language": "ml",
+         "year": 2021,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q102036246",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3",
+         "matched_title": "ದೃಶ್ಯ 2",
+         "language": "kn",
+         "year": 2021,
+         "score": 0.9474,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q110555107",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "dd45646d-6ebb-4efa-bcac-206863b584f3",
+         "matched_title": "Drishyam",
+         "language": "hi",
+         "year": 2015,
+         "score": 0.8889,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q19824636",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "cdedb609-1559-4649-b495-7a6465a07164",
+         "matched_title": "Drishyam",
+         "language": "ml",
+         "year": 2013,
+         "score": 0.8889,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q15401703",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+         "matched_title": "దృశ్యం",
+         "language": "te",
+         "year": 2014,
+         "score": 0.8889,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q16248158",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+         "matched_title": "Drishya",
+         "language": "kn",
+         "year": 2014,
+         "score": 0.8235,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q17052094",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        }
+       ],
+       "ambiguous": true
+      },
+      "error": null
+     },
+     {
+      "turn": 0,
+      "call_id": "call_42",
+      "tool": "get_versions",
+      "arguments_raw": "{\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"scope\": \"indian\"}",
+      "arguments": {
+       "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+       "scope": "indian"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "original": {
+        "version_id": "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+        "title": "Drishyam 2",
+        "language": "ml",
+        "year": 2021,
+        "cast_lead": [
+         "Mohanlal",
+         "Meena",
+         "Murali Gopy",
+         "Asha Sarath",
+         "Siddique"
+        ],
+        "relationship": "is_original_of",
+        "is_original": true,
+        "sources": [
+         {
+          "ref": "seed_slice@2026-07-02",
+          "source": "human"
+         },
+         {
+          "ref": "Q102036246",
+          "source": "wikidata",
+          "retrieved_at": "2026-07-02T06:01:17.013558Z"
+         }
+        ],
+        "confidence": "HIGH"
+       },
+       "versions": [
+        {
+         "version_id": "3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3",
+         "title": "Drishya 2",
+         "language": "kn",
+         "year": 2021,
+         "cast_lead": [
+          "V. Ravichandran",
+          "Anant Nag",
+          "Asha Sarath",
+          "Prabhu",
+          "Navya Nair"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q110555107",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+         "title": "Drishyam 2",
+         "language": "ml",
+         "year": 2021,
+         "cast_lead": [
+          "Mohanlal",
+          "Meena",
+          "Murali Gopy",
+          "Asha Sarath",
+          "Siddique"
+         ],
+         "relationship": "is_original_of",
+         "is_original": true,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q102036246",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "81cc42b1-8ea7-41c1-8cd2-8a0e735de300",
+         "title": "Drushyam 2",
+         "language": "te",
+         "year": 2021,
+         "cast_lead": [
+          "Venkatesh",
+          "Meena",
+          "Nadhiya",
+          "Sampath Raj",
+          "Kruthika Jayakumar"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q105984608",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "f73debb9-012c-42d0-b2a0-ccdda33d8ccc",
+         "title": "Drishyam 2",
+         "language": "hi",
+         "year": 2022,
+         "cast_lead": [
+          "Ajay Devgn",
+          "Akshaye Khanna",
+          "Tabu",
+          "Shriya Saran",
+          "Ishita Dutta"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q112665700",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        }
+       ]
+      },
+      "error": null
+     },
+     {
+      "turn": 0,
+      "call_id": "call_43",
+      "tool": "refine_filter",
+      "arguments_raw": "{\"version_set\": [\"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\"], \"by\": {\"language\": \"te\"}}",
+      "arguments": {
+       "version_set": [
+        "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+        "3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3",
+        "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+        "81cc42b1-8ea7-41c1-8cd2-8a0e735de300",
+        "f73debb9-012c-42d0-b2a0-ccdda33d8ccc"
+       ],
+       "by": {
+        "language": "te"
+       }
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "versions": [
+        {
+         "version_id": "81cc42b1-8ea7-41c1-8cd2-8a0e735de300",
+         "title": "Drushyam 2",
+         "language": "te",
+         "year": 2021,
+         "relationship": "is_remake_of",
+         "is_original": false
+        }
+       ]
+      },
+      "error": null
+     },
+     {
+      "turn": 1,
+      "call_id": "call_45",
+      "tool": "refine_filter",
+      "arguments_raw": "{\"version_set\": [\"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\"], \"by\": {\"language\": \"ta\"}}",
+      "arguments": {
+       "version_set": [
+        "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+        "3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3",
+        "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+        "81cc42b1-8ea7-41c1-8cd2-8a0e735de300",
+        "f73debb9-012c-42d0-b2a0-ccdda33d8ccc"
+       ],
+       "by": {
+        "language": "ta"
+       }
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "versions": []
+      },
+      "error": null
+     },
+     {
+      "turn": 2,
+      "call_id": "call_47",
+      "tool": "refine_filter",
+      "arguments_raw": "{\"version_set\": [\"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\"], \"by\": {\"language\": \"kn\"}}",
+      "arguments": {
+       "version_set": [
+        "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+        "3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3",
+        "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+        "81cc42b1-8ea7-41c1-8cd2-8a0e735de300",
+        "f73debb9-012c-42d0-b2a0-ccdda33d8ccc"
+       ],
+       "by": {
+        "language": "kn"
+       }
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "versions": [
+        {
+         "version_id": "3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3",
+         "title": "Drishya 2",
+         "language": "kn",
+         "year": 2021,
+         "relationship": "is_remake_of",
+         "is_original": false
+        }
+       ]
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     "INTENT: {\"intent\": \"find_by_title\", \"slots\": {\"title\": \"Drishyam 2\", \"language\": \"te\"}}\n\nYe raha:\n- **Drushyam 2 (2021, Telugu)** — remake",
+     "INTENT: {\"intent\": \"out_of_catalog\", \"slots\": {\"language\": \"ta\"}}\n\nI checked the catalog by title and story — that film has no match in it, so I can't list versions for you. NO_MATCH.",
+     "INTENT: {\"intent\": \"refine\", \"slots\": {\"language\": \"kn\"}}\n\nYe raha:\n- **Drishya 2 (2021, Kannada)** — remake"
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     },
+     {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140
+     }
+    ],
+    "latencies_ms": [
+     2.04,
+     1.97,
+     3.37,
+     2.64,
+     3.3,
+     3.12,
+     3.72,
+     3.79
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 5,
+    "call_matches": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "call_level": 1.0,
+    "sequence_match": true,
+    "invalid_emitted": 0,
+    "emitted_total": 5,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    true,
+    true,
+    true
+   ],
+   "slot_counts": {
+    "tp": 4,
+    "fp": 0,
+    "fn": 0
+   },
+   "hallucination": [
+    {
+     "turn": 0,
+     "asserted": [
+      "Drushyam 2"
+     ],
+     "inventions": []
+    },
+    {
+     "turn": 1,
+     "asserted": [],
+     "inventions": []
+    },
+    {
+     "turn": 2,
+     "asserted": [
+      "Drishya 2"
+     ],
+     "inventions": []
+    }
+   ],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": null
+  }
+ ],
+ "metrics": {
+  "fixtures_total": 12,
+  "fixtures_completed": 12,
+  "tool_call_sequence_accuracy": 1.0,
+  "tool_call_call_level": 1.0,
+  "schema_validity": 0.9722222222222222,
+  "intent_accuracy": 1.0,
+  "code_mixed_intent_accuracy": 1.0,
+  "slot_micro_f1": 1.0,
+  "titles_asserted": 18,
+  "inventions": 1,
+  "hallucinated_movie_rate": 0.05555555555555555,
+  "faithfulness": 0.9444444444444444,
+  "gs02_inventions": 0,
+  "backtracking_coherence": null,
+  "ragas_faithfulness": null,
+  "answer_relevancy": null,
+  "latency_p50_ms": null,
+  "latency_p95_ms": null,
+  "tokens_per_sec": null,
+  "slices": {
+   "backtracking": {
+    "n": 3,
+    "tool_call_sequence_accuracy": 1.0,
+    "intent_accuracy": 1.0,
+    "inventions": 0
+   },
+   "code_mixed": {
+    "n": 5,
+    "tool_call_sequence_accuracy": 1.0,
+    "intent_accuracy": 1.0,
+    "inventions": 1
+   },
+   "negative": {
+    "n": 4,
+    "tool_call_sequence_accuracy": 1.0,
+    "intent_accuracy": 1.0,
+    "inventions": 0
+   }
+  }
+ },
+ "stamp": {
+  "created_at": "2026-07-03T01:23:39+00:00",
+  "code_sha": "8dccbb3f1a2e5ac0fcd417dcd1f241e752e6fe21",
+  "golden_set_hash": "f8fd77a0a60354d949a5baca8ebcc600028bba1ff692e36b169e4c7a11017469",
+  "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+  "tool_schema_version": "v0",
+  "tool_schema_sha256": "4c10ea97f1283d3687103594f0deb0d50f7a383cb5df269d25a5042312f3aec5",
+  "retrieval_run": "20260702T135315Z-f6583183",
+  "ragas_version": "0.4.3"
+ }
+}

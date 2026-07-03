@@ -1,5 +1,7 @@
 # GS-08 — Backtracking refinement (multi-turn). Ordered queries; expected_tool_calls
-# mirror the turn sequence (refine_filter over the standing version set).
+# mirror the turn sequence (refine_filter over the standing version set); since P3 task 4
+# expected_intent/expected_slots carry one entry PER TURN (ordered, same length as query).
+# Expanded P3 task 4 (Q1 confirmed: GS-08 -> 3): b non-Drishyam franchise, c NO_MATCH mid-turn.
 fixtures:
   - id: GS-08a
     name: Refine by actor, backtrack to original, then Telugu
@@ -22,6 +24,11 @@ fixtures:
       - lose context between turns
       - re-answer turn 1 after the correction
     verify_source: [Q19824636, Q15401703, Q16248158]
+    expected_intent: [find_by_title, refine, refine]
+    expected_slots:
+      - {title: Drishyam, actor: Ajay Devgn}
+      - {era: original}
+      - {language: te}
     expected_tool_calls:
       - tool: resolve_title
         arguments: {title: Drishyam}
@@ -39,3 +46,91 @@ fixtures:
         arguments:
           version_set: [$version_set]
           by: {language: te}
+  - id: GS-08b
+    name: Manichitrathazhu franchise — actor, language switch, then original
+    category: backtracking
+    subsystem: generation/backtrack
+    query:
+      - which Manichitrathazhu remake has Rajinikanth in it?
+      - no wait, the Hindi remake
+      - and the original?
+    query_lang: en
+    expected:
+      canonical_work: Manichitrathazhu
+      canonical_year: 1993
+      versions:  # expected answer per turn, in order
+        - {title: Chandramukhi, language: ta, year: 2005, relationship: is_remake_of}
+        - {title: Bhool Bhulaiyaa, language: hi, year: 2007, relationship: is_remake_of}
+        - {title: Manichitrathazhu, language: ml, year: 1993, is_original: true, relationship: is_original_of}
+    gating_metric: backtracking coherence
+    must_not:
+      - lose context between turns
+      - re-answer turn 1 after the correction
+      - conflate the Chandramukhi remake chain with a dub
+    verify_source: [Q3530081, Q1193810, Q3764588]
+    expected_intent: [find_by_title, refine, refine]
+    expected_slots:
+      - {title: Manichitrathazhu, actor: Rajinikanth}
+      - {language: hi}
+      - {era: original}
+    expected_tool_calls:
+      - tool: resolve_title
+        arguments: {title: Manichitrathazhu}
+      - tool: get_versions
+        arguments: {work_id: $work_id, scope: indian}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {actor: Rajinikanth}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {language: hi}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {era: original}
+  - id: GS-08c
+    name: Drishyam 2 — mid-conversation NO_MATCH (no Tamil version), then recover
+    category: backtracking
+    subsystem: generation/backtrack
+    query:
+      - show me the Telugu version of Drishyam 2
+      - is there a Tamil version too?
+      - ok then the Kannada one
+    query_lang: en
+    expected:
+      canonical_work: Drishyam 2
+      canonical_year: 2021
+      # Expected answers for turns 1 and 3; turn 2 expects NO version — the catalog has no
+      # Tamil Drishyam 2, the answer must say so (mid-turn NO_MATCH) without losing the set.
+      versions:
+        - {title: Drushyam 2, language: te, year: 2021, relationship: is_remake_of}
+        - {title: Drishya 2, language: kn, year: 2021, relationship: is_remake_of}
+    gating_metric: backtracking coherence + no-hallucinated-movie rate (=0)
+    must_not:
+      - invent a Tamil Drishyam 2
+      - lose the version set after the failed turn-2 refinement
+    verify_source: [Q102036246, Q105984608, Q110555107]
+    expected_intent: [find_by_title, out_of_catalog, refine]
+    expected_slots:
+      - {title: Drishyam 2, language: te}
+      - {language: ta}
+      - {language: kn}
+    expected_tool_calls:
+      - tool: resolve_title
+        arguments: {title: Drishyam 2}
+      - tool: get_versions
+        arguments: {work_id: $work_id, scope: indian}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {language: te}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {language: ta}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {language: kn}

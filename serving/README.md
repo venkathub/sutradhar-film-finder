@@ -17,6 +17,29 @@ Config subsystem, LLM connectivity client, and (later) the FastAPI orchestration
 
 ## Status
 **P0 builds the config + LLM client + smoke CLI shell only.** API orchestration is **P5**.
+**P3 extends `LLMClient` with the tool-calling `chat()` path** used by the generation eval
+harness (see below).
+
+## Chat with tool-calling (P3)
+
+`LLMClient.chat(messages, tools=…, tool_choice=…)` is the OpenAI tool-calling round-trip the
+P3 generation harness drives (P3_SPEC §1.3). It returns a `ChatResult`:
+
+- `status` — the same DEC-P0-4 contract as `health()`: `up` / `off` (paused GPU — first-class,
+  never an exception) / `error` (endpoint answered badly). The eval driver and the P5 API path
+  can always rely on `chat()` **never raising for a down endpoint**.
+- `message` — the raw OpenAI-wire assistant message dict, appended verbatim to the next turn's
+  `messages` and recorded in the eval transcript.
+- `tool_calls` — parsed `ToolCall`s (`id`, `name`, `arguments_raw`, `arguments`). Malformed
+  argument JSON gives `arguments=None` (raw string preserved): a **scored** schema-validity
+  failure for the driver, never a crash. Validation against `tool_schema.v0.json` happens in
+  the driver (P3_SPEC §2.3), not here — the client stays schema-agnostic.
+- `usage` (prompt/completion/total tokens — the Table 2 tokens/sec source), `latency_ms`,
+  `finish_reason`, `detail`.
+
+The `tools` array is generated from `docs/phases/tool_schema.v0.json` by the caller, never
+hand-written (P3_SPEC §2.8). One injected `httpx.Client` backs both the raw `/health` GET and
+the SDK, so a single `MockTransport` mocks the whole surface in tests (`tests/test_llm_chat.py`).
 
 ## LLM connectivity smoke (P0)
 

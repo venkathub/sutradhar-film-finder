@@ -26,6 +26,14 @@ dependencies = [
     "rapidfuzz>=3.14.5",
     "pgvector>=0.4.2",
     "pyarrow>=24.0.0",
+    # P3 eval + observability harness (SDKs only — no local model ops on the laptop).
+    # Exact resolved versions live in uv.lock; the generation-run stamp records the
+    # ragas version per DEC-P3-3 (RAGAS internal prompts evolve between releases).
+    "ragas>=0.4.3",
+    "langfuse>=4.13",
+    "mlflow>=3.14",
+    # DEC-P1-8 validator, now applied to model-emitted calls at runtime (P3 driver).
+    "jsonschema>=4.26.0",
 ]
 
 [dependency-groups]
@@ -40,7 +48,8 @@ dev = [
     "jarvislabs>=0.2",
     # Type stubs for mypy-strict (yaml used by sutradhar.pipeline.seed + CI meta-tests).
     "types-pyyaml>=6.0",
-    "jsonschema>=4.26.0",
+    # Type stubs for the DEC-P1-8 validator now that jsonschema is used in src (P3 driver).
+    "types-jsonschema>=4.26",
 ]
 # NOTE (P2 execution): P2_SPEC §2.7 planned a `gpu` dependency group here
 # (FlagEmbedding+torch for `uv sync --group gpu` on the instance). Dropped during task 6:
@@ -53,6 +62,12 @@ dev = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.uv]
+# ragas 0.4.3 imports langchain_community.chat_models.vertexai at import time; that module
+# was removed in langchain-community 0.4.x (no upper bound in ragas metadata). Constrain the
+# transitive stack until a ragas release absorbs it (P3 task 8; revisit on ragas bump).
+constraint-dependencies = ["langchain-community>=0.3,<0.4"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/sutradhar"]

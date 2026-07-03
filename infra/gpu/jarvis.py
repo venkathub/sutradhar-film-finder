@@ -574,6 +574,119 @@ def embed_session(
         deps.close_client(client)
 
 
+# --- P3 judge session (DEC-P3-1: self-hosted OSS judge + BGE-M3, ephemeral) ----------
+#
+# Serves the pinned judge (JUDGE_MODEL, e.g. openai/gpt-oss-20b) via vLLM on SERVE_PORT
+# and BGE-M3 as an OpenAI-compatible embedding server on EMBED_SERVE_PORT in the same
+# session (DEC-P3-3: RAGAS answer-relevancy embeddings, zero external eval APIs). The
+# judging work is a BATCH PASS over recorded transcripts (judge-validate report and, in
+# Tier-2, the RAGAS pass), so the session is create -> judge -> destroy; between windows
+# CI gates on the recorded artifact (DEC-P2-6 posture). Both models fit the A100 40 GB
+# workhorse together (gpt-oss-20b MoE ~14-16 GB + BGE-M3) — no SKU upgrade.
+
+EMBED_SERVE_PORT = 8001
+DEFAULT_JUDGE_TIMEOUT_S = 3600  # the batch pass is minutes; 1 h hard cap (< $1, DEC-0003)
+
+
+def build_judge_startup_script(judge_model: str, embed_model: str) -> str:
+    """Serve the judge (port 8000, foreground) + BGE-M3 embeddings (port 8001, background).
+    Both models are ungated — no HF token is embedded (same posture as validate)."""
+    return (
+        "#!/bin/bash\n"
+        "set -euxo pipefail\n"
+        "pip install -U vllm\n"
+        f"nohup vllm serve {embed_model} --task embed --host 0.0.0.0 "
+        f"--port {EMBED_SERVE_PORT} > /root/embed.log 2>&1 &\n"
+        f"vllm serve {judge_model} --host 0.0.0.0 --port {SERVE_PORT}\n"
+    )
+
+
+def _run_judge_report(base_url: str, judge_model: str) -> tuple[int, str, str]:
+    """Default in-session runner: the κ report against the fresh judge endpoint."""
+    import os
+    import subprocess
+
+    env = {**os.environ, "JUDGE_BASE_URL": base_url, "JUDGE_MODEL": judge_model}
+    proc = subprocess.run(  # noqa: S603 — our own entrypoint, controlled args
+        [sys.executable, "evals/judge_validate.py", "report"],
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=DEFAULT_JUDGE_TIMEOUT_S,
+    )
+    return proc.returncode, proc.stdout, proc.stderr
+
+
+def judge_session(
+    settings: Settings | None = None,
+    deps: Deps | None = None,
+    *,
+    run_report: Callable[[str, str], tuple[int, str, str]] = _run_judge_report,
+    health_timeout_s: float = DEFAULT_HEALTH_TIMEOUT_S,
+    poll_interval_s: float = DEFAULT_POLL_INTERVAL_S,
+) -> Evidence:
+    """P3 task 7/13: create -> serve judge+embedder -> run the κ report -> destroy.
+
+    Reuses the validated P0 lifecycle; teardown guaranteed in ``finally``. The report and
+    worksheet persist under evals/judge_validation/ before the instance dies.
+    """
+    settings = settings or get_settings()
+    deps = deps or _default_deps()
+    judge_model = settings.require("judge_model")  # clear var-named error when unset
+    ev = Evidence(requested_model=judge_model, gpu_type=settings.gpu_type)
+
+    client = deps.create_client(settings)
+    instance: Any = None
+    try:
+        deps.log(f"[gpu-judge] creating {settings.gpu_type} to serve {judge_model} …")
+        t0 = deps.monotonic()
+        script = build_judge_startup_script(judge_model, settings.embed_model)
+        instance = deps.create_instance(client, settings, script)
+        ev.machine_id = getattr(instance, "machine_id", None)
+        deps.log(f"  instance {ev.machine_id} running; waiting for vLLM /health …")
+
+        base_url = _wait_for_endpoint(
+            instance, deps, timeout_s=health_timeout_s, poll_interval_s=poll_interval_s
+        )
+        if base_url is None:
+            ev.status = "off"
+            ev.detail = f"vLLM did not become healthy within {health_timeout_s}s"
+            return ev
+        ev.create_to_up_s = round(deps.monotonic() - t0, 1)
+        ev.booted = True
+
+        deps.log(f"  running judge κ report against {base_url} …")
+        returncode, stdout, stderr = run_report(base_url, judge_model)
+        deps.log(stdout)
+        if stderr:
+            deps.log(stderr)
+        ev.status = "up" if returncode == 0 else "error"
+        ev.detail = (
+            "judge report complete (evals/judge_validation/report.json persisted)"
+            if returncode == 0
+            else f"judge report exited {returncode}"
+            + (" — κ gate FAILED (DEC-P3-1 escalation path)" if returncode == 3 else "")
+        )
+        return ev
+    except Exception as exc:  # noqa: BLE001 — record, then guarantee teardown in finally
+        ev.status = "error"
+        ev.detail = f"{type(exc).__name__}: {exc}"
+        return ev
+    finally:
+        if instance is not None and ev.machine_id is not None:
+            try:
+                ev.destroyed = deps.destroy_instance(client, ev.machine_id)
+                deps.log(f"  destroyed instance {ev.machine_id}: {ev.destroyed}")
+            except Exception as exc:  # noqa: BLE001
+                ev.detail += f" | TEARDOWN FAILED: {exc} — run `make gpu-nuke`"
+                deps.log(f"  TEARDOWN FAILED for {ev.machine_id}: {exc}")
+        try:  # script-quota hygiene: a leaked startup script blocks future runs
+            deps.remove_scripts(client)
+        except Exception as exc:  # noqa: BLE001
+            deps.log(f"  script cleanup failed (non-fatal): {exc}")
+        deps.close_client(client)
+
+
 def nuke(settings: Settings | None = None, deps: Deps | None = None) -> list[int]:
     """Destroy any stray instance carrying our tag — a leaked billing GPU is a defect."""
     settings = settings or get_settings()
@@ -616,10 +729,14 @@ def main(argv: list[str] | None = None) -> int:
         ev = embed_session()
         _write_evidence(ev)
         return 0 if ev.status == "up" and ev.destroyed else 1
+    if cmd == "judge":
+        ev = judge_session()
+        _write_evidence(ev)
+        return 0 if ev.status == "up" and ev.destroyed else 1
     if cmd == "nuke":
         nuke()
         return 0
-    print(f"usage: jarvis.py [validate|extract|embed|nuke]  (got {cmd!r})")
+    print(f"usage: jarvis.py [validate|extract|embed|judge|nuke]  (got {cmd!r})")
     return 2
 
 

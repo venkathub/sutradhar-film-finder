@@ -150,3 +150,71 @@ def test_startup_script_has_no_secret_and_serves_model() -> None:
     assert "--port 8000" in script
     assert "--chat-template" in script  # base gemma needs one (verified on live run)
     assert "hf_" not in script.lower()  # ungated model => no token embedded
+
+
+# --- P3 judge session (DEC-P3-1: serve judge + BGE-M3, run kappa report, destroy) ---
+
+
+def _judge_settings() -> Settings:
+    return Settings(
+        _env_file=None,
+        LLM_MODEL="google/gemma-4-E4B",
+        GPU_TYPE="A100",
+        JUDGE_MODEL="openai/gpt-oss-20b",
+    )
+
+
+def test_judge_session_runs_report_and_destroys() -> None:
+    client = _FakeClient()
+    seen: dict[str, str] = {}
+
+    def fake_report(base_url: str, judge_model: str) -> tuple[int, str, str]:
+        seen["base_url"] = base_url
+        seen["model"] = judge_model
+        return 0, "kappa=0.8 PASS", ""
+
+    ev = jarvis.judge_session(
+        _judge_settings(),
+        _base_deps(client),
+        run_report=fake_report,
+        health_timeout_s=100,
+        poll_interval_s=1,
+    )
+    assert ev.status == "up" and ev.booted is True
+    assert seen["model"] == "openai/gpt-oss-20b"
+    assert seen["base_url"].endswith("/v1")
+    assert client.destroyed == [4242] and ev.destroyed is True
+
+
+def test_judge_session_kappa_gate_failure_still_destroys() -> None:
+    client = _FakeClient()
+    ev = jarvis.judge_session(
+        _judge_settings(),
+        _base_deps(client),
+        run_report=lambda url, model: (3, "kappa=0.4 FAIL", ""),
+        health_timeout_s=100,
+        poll_interval_s=1,
+    )
+    assert ev.status == "error"
+    assert "κ gate FAILED" in ev.detail
+    assert client.destroyed == [4242]  # never leak a GPU on a failed gate
+
+
+def test_judge_session_requires_judge_model() -> None:
+    from sutradhar.config import ConfigError
+
+    client = _FakeClient()
+    try:
+        jarvis.judge_session(_settings(), _base_deps(client))
+    except ConfigError as exc:
+        assert "JUDGE_MODEL" in str(exc)
+    else:  # pragma: no cover
+        raise AssertionError("expected ConfigError for unset JUDGE_MODEL")
+
+
+def test_judge_startup_script_serves_both_models_no_secret() -> None:
+    script = jarvis.build_judge_startup_script("openai/gpt-oss-20b", "BAAI/bge-m3")
+    assert f"--port {jarvis.SERVE_PORT}" in script
+    assert f"--task embed --host 0.0.0.0 --port {jarvis.EMBED_SERVE_PORT}" in script
+    assert "openai/gpt-oss-20b" in script and "BAAI/bge-m3" in script
+    assert "hf_" not in script and "HF_TOKEN" not in script  # ungated models, no token

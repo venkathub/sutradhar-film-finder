@@ -106,6 +106,25 @@ class Settings(BaseSettings):
     langfuse_public_key: str | None = Field(default=None, validation_alias="LANGFUSE_PUBLIC_KEY")
     langfuse_secret_key: str | None = Field(default=None, validation_alias="LANGFUSE_SECRET_KEY")
     langfuse_host: str | None = Field(default=None, validation_alias="LANGFUSE_HOST")
+    # DEC-P3-7: AIC Cloud VPS provisioning for the self-hosted Langfuse (make langfuse-up).
+    aiccloud_api_key: str | None = Field(default=None, validation_alias="AICCLOUD_API_KEY")
+
+    # --- MLflow tracking + registry (P3, DEC-P3-2: self-hosted compose service) ---
+    mlflow_tracking_uri: str = Field(
+        default="http://localhost:5000",
+        validation_alias="MLFLOW_TRACKING_URI",
+    )
+
+    # --- LLM-as-judge endpoint (P3, DEC-P3-1: self-hosted OSS judge on the ephemeral
+    # GPU; frontier API escalation is the same client with different env values).
+    # Unset by default — judge-dependent steps skip cleanly, never crash. ---
+    judge_base_url: str | None = Field(default=None, validation_alias="JUDGE_BASE_URL")
+    judge_model: str | None = Field(default=None, validation_alias="JUDGE_MODEL")
+    judge_api_key: str | None = Field(default=None, validation_alias="JUDGE_API_KEY")
+
+    # Pinned generation-run artifact id (evals/generation_runs/<run_id>.json) that
+    # Tier-1 gates on between GPU windows (DEC-P2-6 posture, generation surface).
+    generation_run: str | None = Field(default=None, validation_alias="GENERATION_RUN")
 
     # --- On-demand GPU ---
     gpu_type: str = Field(default="A100", validation_alias="GPU_TYPE")

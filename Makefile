@@ -8,7 +8,7 @@
 COMPOSE ?= docker compose -f infra/docker-compose.yml
 
 .DEFAULT_GOAL := help
-.PHONY: help setup fmt lint typecheck test test-int check up down down-v db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
+.PHONY: help setup fmt lint typecheck test test-int check up down down-v mlflow-up mlflow-down db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
         smoke hf-check gpu-validate gpu-nuke
 
 help: ## List available targets
@@ -45,8 +45,25 @@ down: ## Stop the local stack (keeps the pgdata volume)
 down-v: ## Stop the local stack and DROP the pgdata volume
 	$(COMPOSE) down -v
 
+mlflow-up: ## Start self-hosted MLflow (idempotent: creates the `mlflow` DB if missing; DEC-P3-2)
+	$(COMPOSE) up -d --wait postgres
+	$(COMPOSE) exec -T postgres sh -c 'psql -U "$${POSTGRES_USER:-sutradhar}" -d "$${POSTGRES_DB:-sutradhar}" -tAc "SELECT 1 FROM pg_database WHERE datname='\''mlflow'\''" | grep -q 1 || createdb -U "$${POSTGRES_USER:-sutradhar}" mlflow'
+	$(COMPOSE) --profile mlflow up -d --build --wait mlflow
+
+mlflow-down: ## Stop the MLflow service (runs persist in Postgres + data/mlflow-artifacts/)
+	$(COMPOSE) --profile mlflow stop mlflow
+
+mlflow-backfill: ## P3: log the committed P2 retrieval run (Table 1) to MLflow (needs mlflow-up)
+	uv run python -m sutradhar.obs.mlflow_log backfill-retrieval
+
+langfuse-up: ## P3: idempotent from-scratch Langfuse bootstrap on AIC Cloud (DEC-P3-7; needs AICCLOUD_API_KEY)
+	uv run python infra/langfuse/provision.py
+
 db-migrate: ## Apply graph-schema migrations (alembic upgrade head; needs `make up`)
 	uv run alembic upgrade head
+
+seed-graph-ci: ## Seed the graph from RECORDED fixtures (offline; fresh-clone + Tier-2 path)
+	uv run python data-pipeline/seed_graph_ci.py
 
 ingest-spine: ## Ingest the Wikidata spine for the seed slice (snapshot-first; needs db-migrate)
 	uv run python data-pipeline/ingest_spine.py
@@ -88,6 +105,21 @@ gpu-validate: ## One-time ephemeral JarvisLabs create->serve->smoke->destroy val
 
 gpu-nuke: ## Safety: destroy any stray tagged JarvisLabs instance (no leaked GPU)
 	uv run python infra/gpu/jarvis.py nuke
+
+judge-worksheet: ## P3: build the ~24-item judge human-labelling worksheet from the committed gen run
+	uv run python evals/judge_validate.py generate
+
+judge-validate: ## P3: judge pass over the labelled worksheet -> kappa agreement report (needs JUDGE_BASE_URL)
+	uv run python evals/judge_validate.py report
+
+gpu-judge: ## P3: ephemeral judge session (serve JUDGE_MODEL + BGE-M3 -> kappa report -> destroy)
+	uv run python infra/gpu/jarvis.py judge
+
+generation-dryrun: ## P3: 30-second demo — scripted mock endpoint -> scored transcripts -> committed artifact
+	uv run python evals/run_generation_eval.py --mode dry_run
+
+benchmark-generation: ## P4 window: authoritative generation benchmark against LLM_BASE_URL (Table 2)
+	uv run python evals/run_generation_eval.py --mode live --with-judge --with-ragas
 
 build-corpus: ## P2: gate-visible plot chunks + metadata cards -> chunks table (all ablation configs)
 	uv run python rag-engine/build_corpus.py

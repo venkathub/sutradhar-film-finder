@@ -1,6 +1,9 @@
-# GS-07 — Code-mixed (Tanglish/Hinglish) intent + slots. Carries expected_tool_calls
-# validated against TOOL_SCHEMA v0 (frozen task 15). Placeholders ($work_id) are bound
-# at runtime; P4 synthetic data and the tool-call-accuracy metric use these sequences.
+# GS-07 — Code-mixed (Tanglish/Hinglish/Kanglish/Tenglish/native-script) intent + slots.
+# Carries expected_tool_calls validated against TOOL_SCHEMA v0 (frozen task 15) and, since
+# P3 task 4, expected_intent/expected_slots labels from the frozen taxonomy
+# (evals/prompts/intent_taxonomy_v1.json). Placeholders ($work_id) are bound at runtime;
+# P4 synthetic data and the tool-call/intent/slot-accuracy metrics use these sequences.
+# Expanded P3 task 4 (Q1 confirmed: GS-07 -> 5): c Kanglish, d Tenglish, e native script.
 fixtures:
   - id: GS-07a
     name: Tanglish plot query
@@ -18,6 +21,9 @@ fixtures:
     must_not:
       - fail to parse because the query is romanized
     verify_source: [Q18129183, Q15401703]
+    expected_intent: find_by_plot
+    expected_slots:
+      plot_description: family covers up a case to protect themselves from a police officer
     expected_tool_calls:
       - tool: search_by_plot
         arguments:
@@ -43,11 +49,97 @@ fixtures:
     must_not:
       - answer in the wrong register/language
     verify_source: [Q19824636, Q15401703]
+    expected_intent: find_by_plot
+    expected_slots:
+      plot_description: father hides evidence to save his family
     expected_tool_calls:
       - tool: search_by_plot
         arguments:
           description: father hides evidence to save his family
           top_k: 10
+      - tool: get_versions
+        arguments:
+          work_id: $work_id
+          scope: indian
+  - id: GS-07c
+    name: Kanglish title + versions query
+    category: code-mixed
+    subsystem: intent/translit
+    query: Drishya kannada film yavudara remake gottidya? full list kodi
+    query_lang: kn-latin
+    expected:
+      canonical_work: Drishyam
+      canonical_year: 2013
+      versions:
+        - {title: Drishya, language: kn, year: 2014, relationship: is_remake_of}
+        - {title: Drishyam, language: ml, year: 2013, is_original: true, relationship: is_original_of}
+    gating_metric: intent/slot accuracy (QLoRA must beat base)
+    must_not:
+      - fail to parse because the query is romanized Kannada
+      - present Drishya as the original
+    verify_source: [Q17052094, Q15401703]
+    expected_intent: list_versions
+    expected_slots:
+      title: Drishya
+      language: kn
+    expected_tool_calls:
+      - tool: resolve_title
+        arguments: {title: Drishya}
+      - tool: get_versions
+        arguments:
+          work_id: $work_id
+          scope: indian
+  - id: GS-07d
+    name: Tenglish title query with actor slot
+    category: code-mixed
+    subsystem: intent/translit
+    query: Venkatesh natinchina Drushyam cinema original edi? anni languages lo cheppu
+    query_lang: te-latin
+    expected:
+      canonical_work: Drishyam
+      canonical_year: 2013
+      versions:
+        - {title: Drushyam, language: te, year: 2014, relationship: is_remake_of}
+        - {title: Drishyam, language: ml, year: 2013, is_original: true, relationship: is_original_of}
+    gating_metric: intent/slot accuracy (QLoRA must beat base)
+    must_not:
+      - fail to parse because the query is romanized Telugu
+      - present Drushyam as the original
+    verify_source: [Q16248158, Q15401703]
+    expected_intent: list_versions
+    expected_slots:
+      title: Drushyam
+      actor: Venkatesh
+    expected_tool_calls:
+      - tool: resolve_title
+        arguments: {title: Drushyam}
+      - tool: get_versions
+        arguments:
+          work_id: $work_id
+          scope: indian
+  - id: GS-07e
+    name: Native-script (Kannada) remake-source query
+    category: code-mixed
+    subsystem: intent/translit
+    query: ಅಪ್ತಮಿತ್ರ ಯಾವ ಚಿತ್ರದ ರಿಮೇಕ್?
+    query_lang: kn
+    expected:
+      canonical_work: Manichitrathazhu
+      canonical_year: 1993
+      versions:
+        - {title: Apthamitra, language: kn, year: 2004, relationship: is_remake_of}
+        - {title: Manichitrathazhu, language: ml, year: 1993, is_original: true, relationship: is_original_of}
+    gating_metric: intent/slot accuracy (QLoRA must beat base)
+    must_not:
+      - fail to parse because the query is native-script Kannada
+      - present Apthamitra as the original
+    verify_source: [Q4782241, Q3530081]
+    expected_intent: find_by_title
+    expected_slots:
+      title: ಅಪ್ತಮಿತ್ರ
+    expected_tool_calls:
+      - tool: resolve_title
+        arguments: {title: ಅಪ್ತಮಿತ್ರ}
       - tool: get_versions
         arguments:
           work_id: $work_id

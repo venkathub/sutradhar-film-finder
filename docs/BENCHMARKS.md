@@ -53,24 +53,53 @@ run `20260702T135315Z-f6583183` (sealed, MANIFEST-verified; GPU job code SHA `f2
 `chunk_embeddings@(BAAI/bge-m3, 20260702T135315Z-f6583183)` · golden set frozen 2026-07-02
 (25 fixtures) + 24 held-out negatives · committed run artifact
 `evals/retrieval_runs/20260702T135315Z-f6583183.json` (+ `.calibration.json`) — Tier-1 CI
-recomputes every gating metric from it on each PR. (MLflow wiring lands in P3 per the roadmap;
-P2 records here + in the committed artifact, same pattern as P1's graph report.)
+recomputes every gating metric from it on each PR. **MLflow (self-hosted, DEC-P3-2):** run
+`26dc04707c7d4efda4c07dff64a7b8ba` in experiment `sutradhar/retrieval` (Table 1 backfill,
+logged 2026-07-03 by `make mlflow-backfill` — a log of the committed artifact, not a re-run;
+discharges the P2 "(MLflow wiring lands in P3)" note).
 
 ---
 
 ## Table 2 — Generation / agent quality (base vs QLoRA)
 
-Populated in **P3** (base) and **P4** (QLoRA), captured during the on-demand GPU run with evidence
-(MLflow run links, Langfuse traces, screenshots). If QLoRA does not measurably beat a well-prompted
-base model here, it is cut and the reason documented (DEC-0001).
+Populated at the **top of the P4 GPU window** (base) and **P4** (QLoRA), captured by the P3
+harness (`make benchmark-generation`) so both columns share identical serving conditions, with
+evidence (MLflow run links, Langfuse traces, screenshots). If QLoRA does not measurably beat a
+well-prompted base model here, it is cut and the reason documented (DEC-0001).
+
+**Column definitions are FROZEN by P3** (P3_SPEC §2.4, byte-identical scorer code for both rows):
+
+| Column | Definition (source of truth) |
+|---|---|
+| Tool-call accuracy | DEC-P3-5 **sequence-level headline** (expected sequence in order, benign schema-valid extras tolerated); call-level AST + schema-validity in the artifact |
+| Code-mixed intent acc | per-turn exact match of the `INTENT:` preamble label, **GS-07 slice** |
+| Slot-extraction acc | micro-F1 over expected (key,value) pairs, `match_key`-normalized titles |
+| Backtracking coherence | frozen judge rubric over GS-08 conversations (mean [0,1]) |
+| Faithfulness | **1 − hallucinated-movie rate** (deterministic detector; **gate: 0 inventions on GS-02**); RAGAS faithfulness reported as supplementary |
+| Answer relevancy | RAGAS answer_relevancy via the frozen judge + BGE-M3 (DEC-P3-3) |
+| Latency / throughput | p50/p95 wall-clock per assistant turn; completion tokens/sec — live runs only (null in dry-run, validator-enforced) |
 
 | Model | Tool-call accuracy | Code-mixed intent acc | Slot-extraction acc | Backtracking coherence | Faithfulness (1 − hallucinated-movie rate) | Answer relevancy | GPU latency p50/p95 | Throughput (tok/s) |
 |-------|-------------------:|----------------------:|--------------------:|-----------------------:|-------------------------------------------:|-----------------:|--------------------:|-------------------:|
-| Base (Gemma-4-E4B, prompted) | _—_ | _—_ | _—_ | _—_ | _—_ | _—_ | _—_ | _—_ | _populated in P3_ |
+| Base (Gemma-4-E4B, prompted) | _—_ | _—_ | _—_ | _—_ | _—_ | _—_ | _—_ | _—_ | _captured at the top of the P4 GPU window by this harness_ |
 | QLoRA (Gemma-4-E4B + adapter) | _—_ | _—_ | _—_ | _—_ | _—_ | _—_ | _—_ | _—_ | _populated in P4_ |
 
-_Reproducibility stamp: base model + revision, adapter commit, TOOL_SCHEMA version, serving config
-(vLLM), GPU type, decode params, eval-set version, date, MLflow run URL, Langfuse trace links._
+**Frozen stamp fields (P3):** prompt bundle `prompt_hash 78215ccc…` (system + exemplars +
+intent taxonomy, `evals/prompts/prompts.lock.json`) · TOOL_SCHEMA **v0** (sha256 recorded per
+run) · retrieval replay pinned to run `20260702T135315Z-f6583183` (DEC-P3-8) · **judge frozen
+(DEC-P3-1, κ = 0.738 measured):** `openai/gpt-oss-20b @ 6cee5e81ee83…`, coherence rubric
+`judge_coherence_v1.md`, temp 0, low reasoning effort, guided JSON · ragas `0.4.3` · plus per
+live run: base model revision, adapter commit, vLLM serving config, GPU type, decode params,
+date, MLflow run URL, Langfuse trace links.
+
+**Machinery evidence (P3 dry-run — mock model, NEVER published as Table 2 numbers):** committed
+run `evals/generation_runs/20260703T012339Z-e7fff041.json` — 12/12 generation fixtures
+end-to-end against the live graph; sequence accuracy 1.0; schema-validity 35/36 = **exactly the
+seeded hallucinated tool caught**; faithfulness 17/18 = **exactly the seeded invented movie
+caught**; **GS-02 inventions = 0 (the hard gate)**; latency/throughput null by the dry-run
+honesty invariant. MLflow run `c2fb0eab52bd4691a8a70b35491d0dce` (`sutradhar/generation`);
+Langfuse trace exported + committed (`…e7fff041.trace.json`, self-hosted instance per
+DEC-P3-7). Tier-1 CI recomputes every deterministic metric from this artifact on each PR.
 
 > **Retrieval metrics never appear in Table 2, and generation metrics never appear in Table 1.**
 

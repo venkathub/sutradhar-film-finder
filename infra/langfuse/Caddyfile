@@ -1,0 +1,7 @@
+# Reference Caddyfile (P3, DEC-P3-7) — the bootstrap writes this (domain substituted)
+# to /etc/caddy/Caddyfile. TLS on 443 only (automatic Let's Encrypt; use <ip>.sslip.io
+# until a custom domain exists); everything else stays internal — MinIO :9090 is never
+# exposed (no multimodal uploads in this deployment).
+{$LANGFUSE_DOMAIN} {
+    reverse_proxy localhost:3000
+}

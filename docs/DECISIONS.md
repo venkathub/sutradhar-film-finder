@@ -723,3 +723,264 @@ instance pins live in `build_embed_startup_script`** (`pip install pyarrow huggi
 transformers-v5 reranker API break, then success), ~10 GPU-minutes total ≈ $0.22, sealed run
 `20260702T135315Z-f6583183` (833 unique texts, 44,217 rerank pairs) pulled, verified, pinned as
 `RETRIEVAL_RUN`; committed record in `evals/retrieval_runs/`.
+
+---
+
+## DEC-P3-1 — Generation judge: self-hosted OSS via vLLM, gpt-oss-20b primary (2026-07-02)
+
+**Status:** Accepted (P3 grooming; user-approved; spec `docs/phases/P3_SPEC.md` §3). Frontier API
+is the **documented escalation only**.
+
+**Context.** Table 2 needs an LLM judge (GS-08 backtracking coherence; RAGAS) under ROADMAP §6.4
+governance: pinned, cross-family, human-validated. Independence map: **Gemma** (under test),
+**Qwen** (fallback base), **Mistral line** (Sarvam-M teacher base — excludes Prometheus-2).
+
+**Options.** (A) **Self-hosted OSS judge on the ephemeral GPU** — candidates in measured order:
+**gpt-oss-20b** (OpenAI family; Apache 2.0; MoE ~14–16 GB → co-serves with BGE-M3 on the
+A100 40 GB workhorse; official vLLM cookbook; documented judge usage (TruLens); arXiv 2508.12461
+shows it matching/beating gpt-oss-120b on several benchmarks), then **Phi-4-14B** (MIT).
+(B) Frontier API (pinned dated version) — quality ceiling, but external key + model-deprecation
+risk under the reproducibility stamp + dilutes the self-hosted story. (C) Rejected: Llama-3.3-70B
+(AWQ-INT4 ≈ 47 GB weights — breaks the 48 GB Ada with KV; an 80 GB card for a judge violates
+DEC-0003); Prometheus-2 (Mistral/teacher-adjacent); Sarvam-M (is the teacher); Qwen family.
+
+**Decision.** **A, selected empirically:** serve candidates in one short ephemeral session; freeze
+the first to reach **κ ≥ 0.6** against the ~24-item human-labelled sample (Judge's Verdict
+methodology, arXiv 2510.09738 — agreement over correlation; 27/54 judges Tier-1; explicitly
+size-independent). One rubric revision allowed, then escalate to B and record it here. Judge runs
+as a **batch pass over recorded transcripts** (no always-on requirement; CI gates on the
+committed artifact per DEC-P2-6). Pinned as `{HF repo, revision SHA, vLLM config, prompt hash,
+temperature 0}`; rubric output schema-forced via guided decoding (per the DEC-P1-4 amendment
+finding). gpt-oss-20b reasoning effort pinned in the judge prompt.
+
+**Consequences.** `JUDGE_BASE_URL`/`JUDGE_MODEL`/`JUDGE_API_KEY` env (OpenAI-compatible → OSS↔
+frontier is config, not code — DEC-P0-4 contract); `judge` session added to `infra/gpu/jarvis.py`
+(DEC-P0-5 ephemeral pattern); judge licence rows added to `LICENSING.md`.
+
+## DEC-P3-2 — MLflow topology: compose service on the existing Postgres (2026-07-02)
+
+**Status:** Accepted (P3 grooming; user-approved).
+
+**Options.** (A) **Compose service; backend = existing Postgres (separate `mlflow` database);
+artifacts under `./data/mlflow-artifacts/`.** (B) SQLite file store + `mlflow ui`. (C) Managed.
+
+**Decision.** **A.** Genuine "self-hosted" (CLAUDE.md), DB-backed **model registry** ready for the
+P4 adapter, one light container, survives `make down`. `MLFLOW_TRACKING_URI` env-driven.
+
+**Consequences.** Experiments `sutradhar/retrieval` + `sutradhar/generation`; every run logs the
+§6.1 reproducibility stamp; a one-time backfill run logs the P2 Table 1 metrics, discharging its
+"(MLflow wiring lands in P3)" stamp note.
+
+## DEC-P3-3 — RAGAS: pinned lib; LLM = self-hosted judge; embeddings = BGE-M3 in-session (2026-07-02)
+
+**Status:** Accepted (P3 grooming; user-approved).
+
+**Decision.** RAGAS (version-pinned) computes faithfulness + answer_relevancy through the
+DEC-P3-1 judge endpoint with **BGE-M3 embeddings served in the same GPU session** (custom
+OpenAI-compatible LLMs/embeddings are first-class in ragas via its model factories /
+`BaseRagasLLM`/`BaseRagasEmbeddings`). **Zero external eval APIs** — the whole eval stack is
+OSS + self-hosted. Rejected: hand-rolled metrics (loses the recognized-tool signal); frontier-API
+RAGAS (only if DEC-P3-1 escalates). The **deterministic no-hallucinated-movie detector remains
+the gating faithfulness signal**; RAGAS numbers are reported, the detector gates.
+
+**Consequences.** ragas version recorded in every artifact stamp; RAGAS/judge scores are computed
+only inside GPU sessions over recorded transcripts; Tier-1 CI never calls a model.
+
+**Amendment (2026-07-03, P3 task 8 — implementation notes).** (1) Pinned **ragas 0.4.3** (the
+modern `metrics.collections` API: `Faithfulness(llm=…)`, `AnswerRelevancy(llm=…, embeddings=…)`
+over `llm_factory` + `OpenAIEmbeddings` on OpenAI-compatible clients — exactly the wiring option A
+promised). (2) **Dependency pin:** ragas 0.4.3 imports `langchain_community.chat_models.vertexai`
+at import time; that module was removed in langchain-community 0.4.x and ragas carries no upper
+bound → `[tool.uv] constraint-dependencies = ["langchain-community>=0.3,<0.4"]` holds the
+transitive stack; revisit on the next ragas bump. (3) Batch-safety contract: per-sample metric
+failures are recorded as `ragas_error` fields, never raised; judge/embeddings unset →
+`build_scorer` returns `(None, reason)` and callers skip cleanly.
+
+## DEC-P3-4 — Base-model prompting freeze: system prompt + intent taxonomy + 3 disjoint exemplars (2026-07-02)
+
+**Status:** Accepted (P3 grooming; user-approved). This is the "well-prompted base" honesty bar.
+
+**Decision.** System prompt + 6-label intent taxonomy (`find_by_plot | find_by_title |
+list_versions | refine | disambiguate | out_of_catalog`) + **3 handcrafted few-shot exemplars**
+(one code-mixed, one multi-turn refine, one NO_MATCH), native Gemma function-calling format.
+Rejected: zero-shot (under-prompted base inflates QLoRA lift — dishonest headroom); ReAct
+scratchpad (fights native FC tokens; noisier tool-call parsing). Artifacts live under
+`evals/prompts/`, hash-pinned (§6.3); **exemplar↔golden-set disjointness is test-enforced**;
+P4 evaluates the QLoRA column under the same system prompt.
+
+**Consequences.** Prompt hash appears in every generation artifact + the Table 2 stamp. Confirmed
+generation-fixture expansion (grooming Q1): **GS-07 → 5, GS-08 → 3, GS-02-conversational → 4**
+(~12–15 generation fixtures), all ground-truth-verified per the P1 gate before freezing.
+
+**Amendment (2026-07-03, P3 task 3 — preamble placement pinned at implementation).** §2.4 required
+a "structured preamble the frozen prompt requires" for per-turn intent/slot prediction but left its
+placement open. Pinned: the preamble (`INTENT: {"intent": …, "slots": …}`, one JSON line) sits on
+the **final prose answer of each user turn** (the assistant message without tool calls), NOT on the
+first response — `out_of_catalog` is only knowable *after* tool results, so a first-response
+preamble would force the model to predict abstention before searching. Tool-calling messages carry
+no preamble. Contract frozen in `evals/prompts/intent_taxonomy_v1.json` (`preamble` block) and
+`system_v1.md`; artifacts hash-pinned in `evals/prompts/prompts.lock.json`
+(regenerate only via `python -m sutradhar.evals.prompts --write-lock`).
+Exemplars use deliberately out-of-golden-set franchises (Ghajini, Okkadu/Ghilli, Interstellar);
+disjointness + taxonomy conformance are test-enforced (`tests/test_prompt_artifacts.py`).
+
+**Amendment (2026-07-03, P3 task 5 — bold-title formatting contract, deliberate re-pin).** The
+deterministic no-hallucinated-movie detector needs a machine-readable title surface. Added to
+`system_v1.md`: every asserted film title is wrapped in `**bold**` and nothing else is bold
+(exemplars revised to match — "original" un-bolded). Detector extraction = bold spans (contract)
++ an unbolded `Title (year)` fallback pattern with a language/meta-word guard; a prose invention
+carrying neither marker is out of deterministic reach — RAGAS faithfulness is the documented
+supplementary net (P3_SPEC §2.4). Lock regenerated: **`prompt_hash 78215ccc…`** (the P4
+before/after runs under this hash).
+
+## DEC-P3-5 — Tool-call accuracy scoring: BFCL-style two-level (2026-07-02)
+
+**Status:** Accepted (P3 grooming; user-approved).
+
+**Decision.** (1) **Call-level AST match** — tool name + placeholder-bound, normalized arguments;
+(2) **sequence-level headline** — expected sequence appears in order, benign schema-valid extras
+tolerated; (3) **schema-validity rate** (hallucinated tool/param rate against
+`tool_schema.v0.json`) always reported as an independent number. Rejected: strict-only (one
+benign `get_work` zeroes a fixture; noisy at small n); unordered set (order *is* the behaviour
+in GS-08). Table 2 carries the sequence-level headline; the artifact carries all three. The same
+scorer bytes score base (P4-window top) and QLoRA columns.
+
+## DEC-P3-6 — Langfuse instrumentation boundary: thin explicit wrapper (2026-07-02)
+
+**Status:** Accepted (P3 grooming; user-approved).
+
+**Decision.** `sutradhar.obs.tracing` — explicit `trace()`/`span()` context managers wrapped
+around exactly four chokepoints (LLMClient.chat, tool executor, judge client, driver). **No-ops
+when `LANGFUSE_*` is unset** (Tier-1 CI, forks) — proven by a fake-sink unit test; no SDK
+import-time coupling. Rejected: `@observe` decorators (third-party contract spread through the
+codebase; harder to fake); OpenTelemetry+OTLP (heavier than a portfolio harness needs).
+P5's FastAPI middleware reuses this exact seam.
+
+## DEC-P3-7 — Langfuse deployment: self-hosted v3 on AIC Cloud `essential-8gb`, API-provisioned, idempotent from-scratch bootstrap (2026-07-02)
+
+**Status:** Accepted (P3 grooming; **user-directed**). Replaces the CLAUDE.md "Langfuse Cloud
+free tier" default — CLAUDE.md §Tech stack reconciled (2026-07-02); Cloud free tier remains the
+documented fallback.
+
+**Context (verified live against the AIC Cloud API, 2026-07-02).** Public catalogue
+`GET https://api.aiccloud.in/api/v1/public/essential-vps-plans` (no auth): the implemented
+product is **Essential VPS (Proxmox LXC)** — the docs-page "Cloud VPS API" paths 404.
+**`essential-8gb` = 4 vCPU / 8 GB / 80 GB NVMe / 200 Mbps at ₹799/mo** and is the **cheapest tier
+with `dedicated_ipv4: true`** (below 8 GB there is no public IPv4 → cannot serve `LANGFUSE_HOST`
+— smaller tiers are structurally out, not merely tight). Langfuse v3 = 6-container FOSS compose
+stack (web, worker, Postgres, ClickHouse, Redis, MinIO); official guidance ≥ 4 cores/16 GiB is
+right-sized to 8 GB + 4 GB swap for our trickle volume (documented low-RAM failure = worker/
+ClickHouse OOM); compose ships **no backups** — we add them.
+
+**Decision.** One `essential-8gb` VPS (Ubuntu 24.04), provisioned and configured by an
+**idempotent from-scratch bootstrap** (user requirement): `make langfuse-up` →
+`infra/langfuse/provision.py`, safe to re-run, converges from any state, sets up Langfuse from
+scratch **if not installed** —
+- **API phase (find-or-create):** locate instance by name (`GET /api/v1/vps`); if absent →
+  wallet pre-check (`GET /api/v1/billing/wallet`, top-up min ₹100) → `POST /api/v1/vps/checkout`
+  `{planSlug: essential-8gb, name: sutradhar-obs-01, os: ubuntu-24.04}` →
+  `POST /api/v1/vps/checkout/verify` with `sshKeys[]` (Razorpay payment legs are browser-only by
+  design: the script prepares the order and waits); if present but stopped → `start`.
+- **SSH phase (check-then-act per step):** swap configured → Docker installed → **Docker-in-LXC
+  nesting validated day-0** (if blocked: AIC support / KVM-class product, recorded here) →
+  langfuse repo at pinned release tag → secrets generated once (all `# CHANGEME`) and persisted →
+  **headless init** with pinned project keys → compose up → Caddy TLS (**443 only**; MinIO/CH/PG/
+  Redis never exposed; `AUTH_DISABLE_SIGNUP=true`) → backup cron (nightly pg_dump + ClickHouse
+  BACKUP + MinIO sync, off-box) → health check → prints `LANGFUSE_HOST` + keys for `.env`.
+- **No destructive operation without an explicit flag**; mock-tested (fake API + fake SSH
+  transcript) like `extract_session` — CI never spends money.
+
+**Consequences.** `AICCLOUD_API_KEY` added to `.env.example`; `LANGFUSE_HOST` → the VPS (custom
+domain supplied at execution; `<ip>.sslip.io` interim for Let's Encrypt); benchmark-cited traces
+are **exported (JSON + screenshot) and committed** with each run artifact so evidence outlives
+the VPS; standing-evidence budget +**₹799/mo** (12-mo −10% term if dashboard-purchasable — the
+checkout API exposes no term field); escalation = API `upgrade` to `essential-16gb` (₹1,599/mo)
+on OOM/disk pressure; the same VPS is the intended P6 consolidation host (static surface +
+optional read-only MLflow mirror — decided in P6). Rejected: Langfuse Cloud free tier as default
+($0 but vendor-hosted, weaker self-hosted story — kept as fallback); on-demand VM (dead trace
+links gut the standing evidence).
+
+## DEC-P3-8 — `search_by_plot` in the generation harness: per-fixture replay of the committed retrieval run (2026-07-03)
+
+**Status:** Accepted (P3 task 6, implementation decision under the P3_SPEC §2.1 "artifact-backed
+retriever" requirement).
+
+**Context.** The P2 artifact providers are keyed by `sha256(query_text)` and raise
+`MissingArtifactError` for unseen text — but the model under test *paraphrases* plot
+descriptions, so its emitted `search_by_plot(description=…)` will never hash-match a recorded
+query. Running the fusion pipeline on model text would require live embeddings (a neural op the
+laptop/CI path forbids, ROADMAP §2).
+
+**Decision.** The driver's tool executor replays the **recorded per-fixture result** from the
+committed P2 retrieval-run artifact (`RecordedPlotSearch`: pinned run, winner config, keyed by
+the driven fixture id). Fixtures absent from the recorded run (the P3 conversational negatives —
+out-of-catalog by construction, golden-validated) replay as honest abstention
+(`results: [], abstain: true`).
+
+**Consequences.** (1) No neural op on the laptop; Tier-1 CI and the dry-run are fully
+deterministic. (2) Base (top of the P4 window) and QLoRA columns see **byte-identical tool
+behaviour** — retrieval quality cannot leak into the generation before/after (the two-table
+honesty rule). (3) The model's description *quality* is still measured — by the DEC-P3-5
+call-level argument match against `expected_tool_calls`, not by retrieval. (4) Limitation,
+stated: replay answers "what would the pinned retriever have returned for this fixture's query",
+not "for the model's paraphrase" — acceptable because the golden queries ARE the benchmark's
+ground truth; the live P5 query path uses the real retriever with live embeddings.
+
+**Rejected.** (a) Live embeddings in the harness (breaks laptop/CI compute placement and makes
+Table 2 depend on GPU retrieval state); (b) abstain-on-unseen for ALL queries (would falsely
+abstain GS-07a/b whose recorded queries exist); (c) nearest-recorded-query fuzzy fallback
+(non-deterministic tool surface under paraphrase drift — noisier than pinning by fixture).
+
+**Amendment (2026-07-03, P3 task 10 — live API test findings, DEC-P3-7).** First run against the
+real AIC API (wallet funded ₹1000, key valid) surfaced two corrections: (1) **the checkout leg is
+dashboard-only** — `POST /api/v1/vps/checkout` returns `403 "This endpoint is not available via
+API key"` (the grooming-time plan assumed API checkout with browser-only Razorpay legs; in
+reality the *entire purchase* happens in the dashboard). `provision.py` now detects the 403 and
+stops with exact instructions (plan slug, instance name `sutradhar-obs-01`, OS, SSH key), and the
+re-run finds the instance and proceeds — find-or-create and the whole phase-2 bootstrap remain
+fully automated. (2) The live plans payload prices as `price_monthly_paise` (not `price_paise`);
+a zero-price guard now hard-stops before any spend on catalogue shape drift. Both paths are
+mock-tested with the corrected real shapes. Caveat list gains: (c) instance creation is a
+one-time dashboard step by design.
+
+**Amendment 2 (2026-07-03, P3 task 10 — phase-2 live bootstrap findings, DEC-P3-7).** Executed the
+full from-scratch bootstrap on the real `essential-8gb` box (LXC, Proxmox, NATed). Five findings,
+all folded back into `provision.py` + its fake-transcript tests:
+(1) **AIC's managed edge firewall opens ONLY the SSH NAT (external 20036 → container 22),
+read-only, "cannot be modified"** — inbound 443/80 are permanently blocked, so the planned
+Caddy + Let's Encrypt public HTTPS is impossible on this tier. **Public HTTPS now rides an
+outbound `cloudflared` tunnel** (systemd-managed quick tunnel; user-confirmed choice; a named
+tunnel on a real domain is the drop-in upgrade, planned alongside the P6 static surface). The
+health gate checks end-to-end THROUGH the tunnel edge.
+(2) The NAT also made `ufw allow <external-port>` a **self-lockout** (internal sshd is 22) —
+recovered via API `reinstall` (clean-slate proof of the from-scratch property); ufw now allows
+both 22 and the external port.
+(3) `swapon` is not permitted inside the LXC container (host-managed swap) → swap step is
+best-effort (`optional=True`), warn-and-continue.
+(4) The pinned compose does NOT derive `DATABASE_URL` or the three `LANGFUSE_S3_*_SECRET_ACCESS_KEY`
+values from `POSTGRES_PASSWORD`/`MINIO_ROOT_PASSWORD` (defaults are literals) → the secrets step
+writes them explicitly, and a **heal-in-place** path fixes an existing `.env` without ever
+rotating secrets against an initialized volume, then re-ups compose.
+(5) Web service name is `langfuse-web`, not `web`.
+**Outcome:** instance healthy (`v3.203.3` answering over the tunnel), signup disabled, key-only
+sshd, ufw active, backups cron'd; laptop traced the full generation dry-run to it
+(run `20260703T012339Z-e7fff041`, GS-08c trace exported + committed, MLflow run `c2fb0eab…`).
+Standing cost unchanged (₹799/mo); tunnel adds ₹0.
+
+**Amendment (2026-07-03, P3 task 13 — judge FROZEN, DEC-P3-1).** Human-agreement validation
+executed: 30-item blind worksheet (6 coherence + 24 faithfulness, 15 deterministic foils) from
+the committed dry-run transcripts, labelled by the user (one label corrected on review —
+`fai-GS-07e`, whose non-foil answer carries the seeded invention), judged by **gpt-oss-20b served
+by vLLM in one ephemeral A100 session** (create→judge→destroy: machine 438566, up in 297 s,
+destroyed, ≈6 min ≪ the ≤1 h envelope). **Result: percent agreement 0.867, Cohen's κ = 0.738 —
+PASS (≥ 0.6)**; coherence slice perfect (κ = 1.0, n=6), faithfulness κ = 0.673 (n=24); 0
+judge_errors (guided decoding + pinned low reasoning effort worked as governed). All 4
+disagreements share one mode: the judge forgave trailing invented-film recommendations on
+otherwise-grounded foils — reinforcing that the deterministic detector GATES and the judge is
+supplementary (DEC-P3-3). **Frozen judge config:** `openai/gpt-oss-20b @ revision
+6cee5e81ee83917806bbde320786a8fb61efebee`, coherence rubric `judge_coherence_v1.md`
+(hash b08612f1…), faithfulness rubric `judge_faithfulness_v1.md`, temperature 0,
+reasoning_effort low, guided JSON (plus a tested plain-retry fallback). Phi-4-14B alternate and
+the frontier escalation were NOT needed. Methodology note: labels were produced by the project
+owner with an assistant-flagged single-item review correction; report + verdicts committed at
+`evals/judge_validation/report.json`.

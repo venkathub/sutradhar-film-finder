@@ -1,0 +1,9 @@
+{
+  "$comment": "Pinned hashes of the frozen prompt artifacts (DEC-P3-4). Regenerate ONLY on a deliberate prompt change: python -m sutradhar.evals.prompts --write-lock. Table 2 columns are comparable only under an identical prompt_hash.",
+  "files": {
+    "system_v1.md": "5e8a64c6c54a71d549fb348a413b3f88982974e85d83ff5c700a5fb35e494b20",
+    "exemplars_v1.md": "7be4d9273db5ce53bbb222643942810007fa28cd3b5f4216d93f9cdfa0b77f9e",
+    "intent_taxonomy_v1.json": "16b6de0ac229ef06e174490e0a0f9e0a12e591cd514e3cd7766f7b5d094126a2"
+  },
+  "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b"
+}

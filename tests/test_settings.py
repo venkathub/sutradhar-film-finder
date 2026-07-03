@@ -108,10 +108,58 @@ def test_env_override(monkeypatch: pytest.MonkeyPatch) -> None:
     assert s.llm_base_url == "http://gpu.example:8000/v1"
 
 
+def test_p3_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
+    """P3 eval/observability fields: MLflow default is the compose service; judge is off."""
+    _clear_env(monkeypatch)
+    s = Settings(_env_file=None)
+    assert s.mlflow_tracking_uri == "http://localhost:5000"
+    # Judge unset by default => judge-dependent steps must skip cleanly (DEC-P3-1).
+    assert s.judge_base_url is None
+    assert s.judge_model is None
+    assert s.judge_api_key is None
+    assert s.generation_run is None
+
+
+def test_p3_env_override(monkeypatch: pytest.MonkeyPatch) -> None:
+    _clear_env(monkeypatch)
+    monkeypatch.setenv("MLFLOW_TRACKING_URI", "http://mlflow.example:5000")
+    monkeypatch.setenv("JUDGE_BASE_URL", "http://judge.example:8001/v1")
+    monkeypatch.setenv("JUDGE_MODEL", "openai/gpt-oss-20b")
+    monkeypatch.setenv("GENERATION_RUN", "20260703T000000Z-abcd1234")
+    s = Settings(_env_file=None)
+    assert s.mlflow_tracking_uri == "http://mlflow.example:5000"
+    assert s.judge_base_url == "http://judge.example:8001/v1"
+    assert s.judge_model == "openai/gpt-oss-20b"
+    assert s.generation_run == "20260703T000000Z-abcd1234"
+
+
+def test_judge_api_key_redacted(monkeypatch: pytest.MonkeyPatch) -> None:
+    _clear_env(monkeypatch)
+    monkeypatch.setenv("JUDGE_API_KEY", "judge_topsecret_456")
+    s = Settings(_env_file=None)
+    for rendered in (repr(s), str(s)):
+        assert "judge_topsecret_456" not in rendered
+
+
+def test_missing_judge_base_url_names_env_var(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Judge-dependent operations get a clear, var-named error, not a stack trace."""
+    _clear_env(monkeypatch)
+    s = Settings(_env_file=None)
+    with pytest.raises(ConfigError) as exc:
+        s.require("judge_base_url")
+    assert "JUDGE_BASE_URL" in str(exc.value)
+
+
 def test_no_real_secret_literals_in_env_example() -> None:
     """.env.example must not carry a filled-in token/key (blank secrets only)."""
     example = _parse_env_example()
-    for key in ("HF_TOKEN", "JARVISLABS_API_KEY", "TMDB_API_KEY", "LANGFUSE_SECRET_KEY"):
+    for key in (
+        "HF_TOKEN",
+        "JARVISLABS_API_KEY",
+        "TMDB_API_KEY",
+        "LANGFUSE_SECRET_KEY",
+        "JUDGE_API_KEY",
+    ):
         assert example.get(key, "") == "", f"{key} must be blank in .env.example"
     # No obvious HF token literal anywhere in the file.
     assert not re.search(r"hf_[A-Za-z0-9]{20,}", _ENV_EXAMPLE.read_text(encoding="utf-8"))

@@ -42,6 +42,8 @@ data/processed/
 # Retrieval artifacts (GPU-session outputs; MANIFEST-hashed, optionally pushed to HF Hub).
 # The compact committed run summary lives in evals/retrieval_runs/ instead (DEC-P2-6).
 data/artifacts/
+# MLflow artifact store (self-hosted compose service, DEC-P3-2; runs referenced by id).
+data/mlflow-artifacts/
 *.duckdb
 *.sqlite
 

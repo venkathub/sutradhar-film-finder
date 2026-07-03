@@ -1,0 +1,593 @@
+instructions: 'Label EVERY item independently: human_label = 1 when the conversation
+  is coherent / the answer is faithful to its allowed_titles, else 0. Do not consult
+  the key file before labelling (it records foil provenance).'
+items:
+- item_id: fai-GS-02d
+  kind: faithfulness
+  fixture_id: GS-02d
+  answer: 'INTENT: {"intent": "out_of_catalog", "slots": {"title": "Salaar"}}
+
+
+    I checked the catalog by title and story — that film has no match in it, so I
+    can''t list versions for you. NO_MATCH.'
+  allowed_titles: []
+  human_label: 1
+- item_id: fai-GS-02d-foil
+  kind: faithfulness
+  fixture_id: GS-02d
+  answer: 'INTENT: {"intent": "out_of_catalog", "slots": {"title": "Salaar"}}
+
+
+    I checked the catalog by title and story — that film has no match in it, so I
+    can''t list versions for you. NO_MATCH. Its acclaimed Bengali remake **Chokher
+    Aloy (2016)** is also worth watching.'
+  allowed_titles: []
+  human_label: 0
+- item_id: fai-GS-02e
+  kind: faithfulness
+  fixture_id: GS-02e
+  answer: 'INTENT: {"intent": "out_of_catalog", "slots": {"plot_description": "a girl
+    travels back in time and meets her grandfather"}}
+
+
+    I checked the catalog by title and story — that film has no match in it, so I
+    can''t list versions for you. NO_MATCH.'
+  allowed_titles: []
+  human_label: 1
+- item_id: fai-GS-02e-foil
+  kind: faithfulness
+  fixture_id: GS-02e
+  answer: 'INTENT: {"intent": "out_of_catalog", "slots": {"plot_description": "a girl
+    travels back in time and meets her grandfather"}}
+
+
+    I checked the catalog by title and story — that film has no match in it, so I
+    can''t list versions for you. NO_MATCH. Its acclaimed Bengali remake **Chokher
+    Aloy (2016)** is also worth watching.'
+  allowed_titles: []
+  human_label: 0
+- item_id: fai-GS-02f
+  kind: faithfulness
+  fixture_id: GS-02f
+  answer: 'INTENT: {"intent": "out_of_catalog", "slots": {"plot_description": "a vampire
+    love story", "language": "ml"}}
+
+
+    I checked the catalog by title and story — that film has no match in it, so I
+    can''t list versions for you. NO_MATCH.'
+  allowed_titles: []
+  human_label: 1
+- item_id: fai-GS-02f-foil
+  kind: faithfulness
+  fixture_id: GS-02f
+  answer: 'INTENT: {"intent": "out_of_catalog", "slots": {"plot_description": "a vampire
+    love story", "language": "ml"}}
+
+
+    I checked the catalog by title and story — that film has no match in it, so I
+    can''t list versions for you. NO_MATCH. Its acclaimed Bengali remake **Chokher
+    Aloy (2016)** is also worth watching.'
+  allowed_titles: []
+  human_label: 0
+- item_id: fai-GS-02g
+  kind: faithfulness
+  fixture_id: GS-02g
+  answer: 'INTENT: {"intent": "out_of_catalog", "slots": {"title": "పుష్ప"}}
+
+
+    I checked the catalog by title and story — that film has no match in it, so I
+    can''t list versions for you. NO_MATCH.'
+  allowed_titles: []
+  human_label: 1
+- item_id: fai-GS-02g-foil
+  kind: faithfulness
+  fixture_id: GS-02g
+  answer: 'INTENT: {"intent": "out_of_catalog", "slots": {"title": "పుష్ప"}}
+
+
+    I checked the catalog by title and story — that film has no match in it, so I
+    can''t list versions for you. NO_MATCH. Its acclaimed Bengali remake **Chokher
+    Aloy (2016)** is also worth watching.'
+  allowed_titles: []
+  human_label: 0
+- item_id: fai-GS-07a
+  kind: faithfulness
+  fixture_id: GS-07a
+  answer: 'INTENT: {"intent": "find_by_plot", "slots": {"plot_description": "family
+    covers up a case to protect themselves from a police officer"}}
+
+
+    Ye raha:
+
+    - **Papanasam (2015, Tamil)** — remake
+
+    - **Drishyam (2013, Malayalam)** — original'
+  allowed_titles:
+  - Anbe Sivam
+  - Drishya
+  - Drishyam
+  - Drishyam 2
+  - Drushyam
+  - Lucifer
+  - Manichitrathazhu
+  - Papanasam
+  - Vikram
+  human_label: 1
+- item_id: fai-GS-07a-foil
+  kind: faithfulness
+  fixture_id: GS-07a
+  answer: 'INTENT: {"intent": "find_by_plot", "slots": {"plot_description": "family
+    covers up a case to protect themselves from a police officer"}}
+
+
+    Ye raha:
+
+    - **Papanasam (2015, Tamil)** — remake
+
+    - **Drishyam (2013, Malayalam)** — original Its acclaimed Bengali remake **Chokher
+    Aloy (2016)** is also worth watching.'
+  allowed_titles:
+  - Anbe Sivam
+  - Drishya
+  - Drishyam
+  - Drishyam 2
+  - Drushyam
+  - Lucifer
+  - Manichitrathazhu
+  - Papanasam
+  - Vikram
+  human_label: 0
+- item_id: fai-GS-07b
+  kind: faithfulness
+  fixture_id: GS-07b
+  answer: 'INTENT: {"intent": "find_by_plot", "slots": {"plot_description": "father
+    hides evidence to save his family"}}
+
+
+    Ye raha:
+
+    - **Drishyam (2015, Hindi)** — remake
+
+    - **Drishyam (2013, Malayalam)** — original'
+  allowed_titles:
+  - Baahubali
+  - Baahubali - The Beginning
+  - 'Baahubali: The Beginning'
+  - Devdas
+  - Drishyam
+  - Drishyam 2
+  - Sholay
+  - Vikram
+  human_label: 1
+- item_id: fai-GS-07b-foil
+  kind: faithfulness
+  fixture_id: GS-07b
+  answer: 'INTENT: {"intent": "find_by_plot", "slots": {"plot_description": "father
+    hides evidence to save his family"}}
+
+
+    Ye raha:
+
+    - **Drishyam (2015, Hindi)** — remake
+
+    - **Drishyam (2013, Malayalam)** — original Its acclaimed Bengali remake **Chokher
+    Aloy (2016)** is also worth watching.'
+  allowed_titles:
+  - Baahubali
+  - Baahubali - The Beginning
+  - 'Baahubali: The Beginning'
+  - Devdas
+  - Drishyam
+  - Drishyam 2
+  - Sholay
+  - Vikram
+  human_label: 0
+- item_id: fai-GS-07c
+  kind: faithfulness
+  fixture_id: GS-07c
+  answer: 'INTENT: {"intent": "list_versions", "slots": {"title": "Drishya", "language":
+    "kn"}}
+
+
+    Ye raha:
+
+    - **Drishya (2014, Kannada)** — remake
+
+    - **Drishyam (2013, Malayalam)** — original'
+  allowed_titles:
+  - Drishya
+  - Drishyam
+  - Drishyam 2
+  - Drushyam
+  - Papanasam
+  - దృశ్యం
+  - దృశ్యం 2
+  - ದೃಶ್ಯ 2
+  - ദൃശ്യം 2
+  human_label: 1
+- item_id: fai-GS-07c-foil
+  kind: faithfulness
+  fixture_id: GS-07c
+  answer: 'INTENT: {"intent": "list_versions", "slots": {"title": "Drishya", "language":
+    "kn"}}
+
+
+    Ye raha:
+
+    - **Drishya (2014, Kannada)** — remake
+
+    - **Drishyam (2013, Malayalam)** — original Its acclaimed Bengali remake **Chokher
+    Aloy (2016)** is also worth watching.'
+  allowed_titles:
+  - Drishya
+  - Drishyam
+  - Drishyam 2
+  - Drushyam
+  - Papanasam
+  - దృశ్యం
+  - దృశ్యం 2
+  - ದೃಶ್ಯ 2
+  - ദൃശ്യം 2
+  human_label: 0
+- item_id: fai-GS-07d
+  kind: faithfulness
+  fixture_id: GS-07d
+  answer: 'INTENT: {"intent": "list_versions", "slots": {"title": "Drushyam", "actor":
+    "Venkatesh"}}
+
+
+    Ye raha:
+
+    - **Drushyam (2014, Telugu)** — remake
+
+    - **Drishyam (2013, Malayalam)** — original'
+  allowed_titles:
+  - Drishya
+  - Drishyam
+  - Drushyam
+  - Drushyam 2
+  - Papanasam
+  human_label: 1
+- item_id: fai-GS-07d-foil
+  kind: faithfulness
+  fixture_id: GS-07d
+  answer: 'INTENT: {"intent": "list_versions", "slots": {"title": "Drushyam", "actor":
+    "Venkatesh"}}
+
+
+    Ye raha:
+
+    - **Drushyam (2014, Telugu)** — remake
+
+    - **Drishyam (2013, Malayalam)** — original Its acclaimed Bengali remake **Chokher
+    Aloy (2016)** is also worth watching.'
+  allowed_titles:
+  - Drishya
+  - Drishyam
+  - Drushyam
+  - Drushyam 2
+  - Papanasam
+  human_label: 0
+- item_id: fai-GS-07e
+  kind: faithfulness
+  fixture_id: GS-07e
+  answer: 'INTENT: {"intent": "find_by_title", "slots": {"title": "ಅಪ್ತಮಿತ್ರ"}}
+
+
+    Ye raha:
+
+    - **Apthamitra (2004, Kannada)** — remake
+
+    - **Manichitrathazhu (1993, Malayalam)** — original Idara Bengali remake **Chokher
+    Aloy (2016)** kuda chudandi.'
+  allowed_titles:
+  - Apthamitra
+  - Bhool Bhulaiyaa
+  - Chandramukhi
+  - Manichitrathazhu
+  - Rajmohol
+  - ಆಪ್ತಮಿತ್ರ
+  human_label: 0
+- item_id: fai-GS-07e-foil
+  kind: faithfulness
+  fixture_id: GS-07e
+  answer: 'INTENT: {"intent": "find_by_title", "slots": {"title": "ಅಪ್ತಮಿತ್ರ"}}
+
+
+    Ye raha:
+
+    - **Apthamitra (2004, Kannada)** — remake
+
+    - **Manichitrathazhu (1993, Malayalam)** — original Idara Bengali remake **Chokher
+    Aloy (2016)** kuda chudandi. Its acclaimed Bengali remake **Chokher Aloy (2016)**
+    is also worth watching.'
+  allowed_titles:
+  - Apthamitra
+  - Bhool Bhulaiyaa
+  - Chandramukhi
+  - Manichitrathazhu
+  - Rajmohol
+  - ಆಪ್ತಮಿತ್ರ
+  human_label: 0
+- item_id: coh-GS-08a
+  kind: coherence
+  fixture_id: GS-08a
+  conversation:
+  - user: the Drishyam with Ajay Devgn
+    assistant: 'INTENT: {"intent": "find_by_title", "slots": {"title": "Drishyam",
+      "actor": "Ajay Devgn"}}
+
+
+      Ye raha:
+
+      - **Drishyam (2015, Hindi)** — remake'
+  - user: no, the original one
+    assistant: 'INTENT: {"intent": "refine", "slots": {"era": "original"}}
+
+
+      Ye raha:
+
+      - **Drishyam (2013, Malayalam)** — original'
+  - user: is there a Telugu one?
+    assistant: 'INTENT: {"intent": "refine", "slots": {"language": "te"}}
+
+
+      Ye raha:
+
+      - **Drushyam (2014, Telugu)** — remake'
+  human_label: 1
+- item_id: coh-GS-08a-foil
+  kind: coherence
+  fixture_id: GS-08a
+  conversation:
+  - user: the Drishyam with Ajay Devgn
+    assistant: 'INTENT: {"intent": "find_by_title", "slots": {"title": "Drishyam",
+      "actor": "Ajay Devgn"}}
+
+
+      Ye raha:
+
+      - **Drishyam (2015, Hindi)** — remake'
+  - user: no, the original one
+    assistant: 'INTENT: {"intent": "find_by_title", "slots": {"title": "Drishyam",
+      "actor": "Ajay Devgn"}}
+
+
+      Ye raha:
+
+      - **Drishyam (2015, Hindi)** — remake'
+  - user: is there a Telugu one?
+    assistant: 'INTENT: {"intent": "find_by_title", "slots": {"title": "Drishyam",
+      "actor": "Ajay Devgn"}}
+
+
+      Ye raha:
+
+      - **Drishyam (2015, Hindi)** — remake'
+  human_label: 0
+- item_id: fai-GS-08a
+  kind: faithfulness
+  fixture_id: GS-08a
+  answer: 'INTENT: {"intent": "refine", "slots": {"language": "te"}}
+
+
+    Ye raha:
+
+    - **Drushyam (2014, Telugu)** — remake'
+  allowed_titles:
+  - Drishya
+  - Drishyam
+  - Drishyam 2
+  - Drushyam
+  - Papanasam
+  - దృశ్యం
+  - దృశ్యం 2
+  - ದೃಶ್ಯ 2
+  - ദൃശ്യം 2
+  human_label: 1
+- item_id: fai-GS-08a-foil
+  kind: faithfulness
+  fixture_id: GS-08a
+  answer: 'INTENT: {"intent": "refine", "slots": {"language": "te"}}
+
+
+    Ye raha:
+
+    - **Drushyam (2014, Telugu)** — remake Its acclaimed Bengali remake **Chokher
+    Aloy (2016)** is also worth watching.'
+  allowed_titles:
+  - Drishya
+  - Drishyam
+  - Drishyam 2
+  - Drushyam
+  - Papanasam
+  - దృశ్యం
+  - దృశ్యం 2
+  - ದೃಶ್ಯ 2
+  - ദൃശ്യം 2
+  human_label: 0
+- item_id: coh-GS-08b
+  kind: coherence
+  fixture_id: GS-08b
+  conversation:
+  - user: which Manichitrathazhu remake has Rajinikanth in it?
+    assistant: 'INTENT: {"intent": "find_by_title", "slots": {"title": "Manichitrathazhu",
+      "actor": "Rajinikanth"}}
+
+
+      Ye raha:
+
+      - **Chandramukhi (2005, Tamil)** — remake'
+  - user: no wait, the Hindi remake
+    assistant: 'INTENT: {"intent": "refine", "slots": {"language": "hi"}}
+
+
+      Ye raha:
+
+      - **Bhool Bhulaiyaa (2007, Hindi)** — remake'
+  - user: and the original?
+    assistant: 'INTENT: {"intent": "refine", "slots": {"era": "original"}}
+
+
+      Ye raha:
+
+      - **Manichitrathazhu (1993, Malayalam)** — original'
+  human_label: 1
+- item_id: coh-GS-08b-foil
+  kind: coherence
+  fixture_id: GS-08b
+  conversation:
+  - user: which Manichitrathazhu remake has Rajinikanth in it?
+    assistant: 'INTENT: {"intent": "find_by_title", "slots": {"title": "Manichitrathazhu",
+      "actor": "Rajinikanth"}}
+
+
+      Ye raha:
+
+      - **Chandramukhi (2005, Tamil)** — remake'
+  - user: no wait, the Hindi remake
+    assistant: 'INTENT: {"intent": "find_by_title", "slots": {"title": "Manichitrathazhu",
+      "actor": "Rajinikanth"}}
+
+
+      Ye raha:
+
+      - **Chandramukhi (2005, Tamil)** — remake'
+  - user: and the original?
+    assistant: 'INTENT: {"intent": "find_by_title", "slots": {"title": "Manichitrathazhu",
+      "actor": "Rajinikanth"}}
+
+
+      Ye raha:
+
+      - **Chandramukhi (2005, Tamil)** — remake'
+  human_label: 0
+- item_id: fai-GS-08b
+  kind: faithfulness
+  fixture_id: GS-08b
+  answer: 'INTENT: {"intent": "refine", "slots": {"era": "original"}}
+
+
+    Ye raha:
+
+    - **Manichitrathazhu (1993, Malayalam)** — original'
+  allowed_titles:
+  - Apthamitra
+  - Bhool Bhulaiyaa
+  - Chandramukhi
+  - Manichitrathazhu
+  - Rajmohol
+  human_label: 1
+- item_id: fai-GS-08b-foil
+  kind: faithfulness
+  fixture_id: GS-08b
+  answer: 'INTENT: {"intent": "refine", "slots": {"era": "original"}}
+
+
+    Ye raha:
+
+    - **Manichitrathazhu (1993, Malayalam)** — original Its acclaimed Bengali remake
+    **Chokher Aloy (2016)** is also worth watching.'
+  allowed_titles:
+  - Apthamitra
+  - Bhool Bhulaiyaa
+  - Chandramukhi
+  - Manichitrathazhu
+  - Rajmohol
+  human_label: 0
+- item_id: coh-GS-08c
+  kind: coherence
+  fixture_id: GS-08c
+  conversation:
+  - user: show me the Telugu version of Drishyam 2
+    assistant: 'INTENT: {"intent": "find_by_title", "slots": {"title": "Drishyam 2",
+      "language": "te"}}
+
+
+      Ye raha:
+
+      - **Drushyam 2 (2021, Telugu)** — remake'
+  - user: is there a Tamil version too?
+    assistant: 'INTENT: {"intent": "out_of_catalog", "slots": {"language": "ta"}}
+
+
+      I checked the catalog by title and story — that film has no match in it, so
+      I can''t list versions for you. NO_MATCH.'
+  - user: ok then the Kannada one
+    assistant: 'INTENT: {"intent": "refine", "slots": {"language": "kn"}}
+
+
+      Ye raha:
+
+      - **Drishya 2 (2021, Kannada)** — remake'
+  human_label: 0
+- item_id: coh-GS-08c-foil
+  kind: coherence
+  fixture_id: GS-08c
+  conversation:
+  - user: show me the Telugu version of Drishyam 2
+    assistant: 'INTENT: {"intent": "find_by_title", "slots": {"title": "Drishyam 2",
+      "language": "te"}}
+
+
+      Ye raha:
+
+      - **Drushyam 2 (2021, Telugu)** — remake'
+  - user: is there a Tamil version too?
+    assistant: 'INTENT: {"intent": "find_by_title", "slots": {"title": "Drishyam 2",
+      "language": "te"}}
+
+
+      Ye raha:
+
+      - **Drushyam 2 (2021, Telugu)** — remake'
+  - user: ok then the Kannada one
+    assistant: 'INTENT: {"intent": "find_by_title", "slots": {"title": "Drishyam 2",
+      "language": "te"}}
+
+
+      Ye raha:
+
+      - **Drushyam 2 (2021, Telugu)** — remake'
+  human_label: 0
+- item_id: fai-GS-08c
+  kind: faithfulness
+  fixture_id: GS-08c
+  answer: 'INTENT: {"intent": "refine", "slots": {"language": "kn"}}
+
+
+    Ye raha:
+
+    - **Drishya 2 (2021, Kannada)** — remake'
+  allowed_titles:
+  - Drishya
+  - Drishya 2
+  - Drishyam
+  - Drishyam 2
+  - Drushyam 2
+  - దృశ్యం
+  - దృశ్యం 2
+  - ದೃಶ್ಯ 2
+  - ദൃശ്യം 2
+  human_label: 1
+- item_id: fai-GS-08c-foil
+  kind: faithfulness
+  fixture_id: GS-08c
+  answer: 'INTENT: {"intent": "refine", "slots": {"language": "kn"}}
+
+
+    Ye raha:
+
+    - **Drishya 2 (2021, Kannada)** — remake Its acclaimed Bengali remake **Chokher
+    Aloy (2016)** is also worth watching.'
+  allowed_titles:
+  - Drishya
+  - Drishya 2
+  - Drishyam
+  - Drishyam 2
+  - Drushyam 2
+  - దృశ్యం
+  - దృశ్యం 2
+  - ದೃಶ್ಯ 2
+  - ദൃശ്യം 2
+  human_label: 0
