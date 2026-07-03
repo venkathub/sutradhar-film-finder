@@ -942,3 +942,27 @@ fully automated. (2) The live plans payload prices as `price_monthly_paise` (not
 a zero-price guard now hard-stops before any spend on catalogue shape drift. Both paths are
 mock-tested with the corrected real shapes. Caveat list gains: (c) instance creation is a
 one-time dashboard step by design.
+
+**Amendment 2 (2026-07-03, P3 task 10 — phase-2 live bootstrap findings, DEC-P3-7).** Executed the
+full from-scratch bootstrap on the real `essential-8gb` box (LXC, Proxmox, NATed). Five findings,
+all folded back into `provision.py` + its fake-transcript tests:
+(1) **AIC's managed edge firewall opens ONLY the SSH NAT (external 20036 → container 22),
+read-only, "cannot be modified"** — inbound 443/80 are permanently blocked, so the planned
+Caddy + Let's Encrypt public HTTPS is impossible on this tier. **Public HTTPS now rides an
+outbound `cloudflared` tunnel** (systemd-managed quick tunnel; user-confirmed choice; a named
+tunnel on a real domain is the drop-in upgrade, planned alongside the P6 static surface). The
+health gate checks end-to-end THROUGH the tunnel edge.
+(2) The NAT also made `ufw allow <external-port>` a **self-lockout** (internal sshd is 22) —
+recovered via API `reinstall` (clean-slate proof of the from-scratch property); ufw now allows
+both 22 and the external port.
+(3) `swapon` is not permitted inside the LXC container (host-managed swap) → swap step is
+best-effort (`optional=True`), warn-and-continue.
+(4) The pinned compose does NOT derive `DATABASE_URL` or the three `LANGFUSE_S3_*_SECRET_ACCESS_KEY`
+values from `POSTGRES_PASSWORD`/`MINIO_ROOT_PASSWORD` (defaults are literals) → the secrets step
+writes them explicitly, and a **heal-in-place** path fixes an existing `.env` without ever
+rotating secrets against an initialized volume, then re-ups compose.
+(5) Web service name is `langfuse-web`, not `web`.
+**Outcome:** instance healthy (`v3.203.3` answering over the tunnel), signup disabled, key-only
+sshd, ufw active, backups cron'd; laptop traced the full generation dry-run to it
+(run `20260703T012339Z-e7fff041`, GS-08c trace exported + committed, MLflow run `c2fb0eab…`).
+Standing cost unchanged (₹799/mo); tunnel adds ₹0.

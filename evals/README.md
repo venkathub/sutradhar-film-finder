@@ -210,7 +210,7 @@ turn), the Table 2 aggregates (`MetricsBlock` incl. per-slice breakdown and the
 
 ### Committed dry-run (P3 task 11 — machinery evidence, never Table 2)
 
-`evals/generation_runs/20260703T001051Z-c62806c0.json` — the scripted mock
+`evals/generation_runs/20260703T012339Z-e7fff041.json` — the scripted mock
 (`evals/mock_llm.py`, a canned-transcript player derived from the golden labels with
 placeholder binding against real tool results) driven through the full harness against the
 live graph + the pinned P2 retrieval replay:
@@ -225,9 +225,13 @@ live graph + the pinned P2 retrieval replay:
 | intent / slots | 1.0 / 1.0 | preamble parsing + micro-F1 across all 12 fixtures |
 | latency / tokens-per-sec | null | dry_run invariant (mock timings never look like GPU numbers) |
 
-MLflow evidence: generation dry-run → run `cc6cc337566940a1bcc272dcc5b6724b`
+MLflow evidence: generation dry-run → run `c2fb0eab52bd4691a8a70b35491d0dce`
 (`sutradhar/generation`); Table 1 backfill → run `26dc04707c7d4efda4c07dff64a7b8ba`
-(`sutradhar/retrieval`, discharging the P2 stamp note).
+(`sutradhar/retrieval`, discharging the P2 stamp note). Langfuse evidence: the dry-run
+traced live to the self-hosted instance (DEC-P3-7 on AIC Cloud, public HTTPS via
+cloudflared tunnel); the GS-08c trace (14 observations: agent → generation/tool spans)
+is exported and committed as `20260703T012339Z-e7fff041.trace.json` so the evidence
+outlives the tunnel URL.
 
 ## Observability (P3 task 10 — `sutradhar.obs`, DEC-P3-6/P3-2/P3-7)
 

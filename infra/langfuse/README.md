@@ -2,8 +2,10 @@
 
 Self-hosted tracing backend for the whole eval/serving stack. One `essential-8gb` AIC Cloud
 VPS (4 vCPU / 8 GB / 80 GB NVMe, dedicated IPv4, ₹799/mo — the cheapest tier *with* a public
-IPv4) runs the pinned Langfuse v3 compose stack behind Caddy TLS. Langfuse Cloud free tier is
-the documented fallback (DEC-P3-7 option A).
+IPv4) runs the pinned Langfuse v3 compose stack, published over an **outbound cloudflared
+tunnel** (AIC's managed edge firewall opens only SSH — inbound 443/80 are blocked and
+unmodifiable, verified live 2026-07-03; see the DEC-P3-7 amendments). Langfuse Cloud free
+tier is the documented fallback (DEC-P3-7 option A).
 
 ## One command
 
@@ -16,14 +18,16 @@ make langfuse-up        # idempotent from-scratch bootstrap; safe to re-run any 
 | Phase | Steps (each check-then-act) |
 |---|---|
 | 1 — instance (AIC API) | find `sutradhar-obs-01` → running? skip · stopped? start · absent? wallet pre-check → resolve `essential-8gb` from the live catalogue → **checkout is dashboard-only** (verified live 2026-07-03: the API returns 403 for checkout — the script prints exact one-time purchase instructions: plan `essential-8gb`, name `sutradhar-obs-01`, OS `ubuntu-24.04`, attach your SSH key; re-run then finds the instance and continues) |
-| 2 — configure (SSH) | 4 GB swap → Docker → **Docker-in-LXC nesting gate** (Essential VPS is LXC; a hard failure stops with an escalation message — AIC support / KVM-class product, never fought blindly) → clone pinned tag `v3.203.3` → secrets generated **once** (all `# CHANGEME` rotated; headless init with pinned org/project/user + project keys) → `docker compose up -d` → Caddy TLS **443 only** (interim domain `<ip>.sslip.io`) → `AUTH_DISABLE_SIGNUP=true` → nightly backup cron → HTTPS `/api/public/health` gate |
+| 2 — configure (SSH) | 4 GB swap → Docker → **Docker-in-LXC nesting gate** (Essential VPS is LXC; a hard failure stops with an escalation message — AIC support / KVM-class product, never fought blindly) → clone pinned tag `v3.203.3` → secrets generated **once** (all `# CHANGEME` rotated; headless init with pinned org/project/user + project keys) → `docker compose up -d` → **cloudflared quick tunnel** (systemd; outbound-only public HTTPS — no inbound ports exist on this tier) → ufw (22 + external SSH NAT port + 443/80) → `AUTH_DISABLE_SIGNUP=true` → nightly backup cron → health gate **through the tunnel edge** |
 
 Already-satisfied steps are detected and skipped; **no destructive operation without the
 explicit `--recreate` flag**. The script ends by printing the `LANGFUSE_HOST` +
 `LANGFUSE_PUBLIC_KEY`/`LANGFUSE_SECRET_KEY` lines for the laptop `.env`.
 
-Needs in `.env`: `AICCLOUD_API_KEY` (dashboard → Settings → API Keys). Optional:
-`--domain langfuse.example.com` once a real domain exists.
+Needs in `.env`: `AICCLOUD_API_KEY` (dashboard → Settings → API Keys). The tunnel URL is
+minted per cloudflared start (quick tunnel, no domain needed); upgrade to a stable named
+tunnel when a domain exists (planned with the P6 static surface). Committed trace exports
+are the durable evidence either way.
 
 ## Backups (the compose stack ships none)
 

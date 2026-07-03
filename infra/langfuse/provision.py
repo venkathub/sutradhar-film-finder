@@ -45,6 +45,9 @@ OS_IMAGE = "ubuntu-24.04"
 LANGFUSE_TAG = "v3.203.3"  # pinned release (verified on GitHub 2026-07-03)
 AIC_BASE_URL = "https://api.aiccloud.in"
 REMOTE_DIR = "/root/langfuse"
+TUNNEL_URL_GREP = (
+    "grep -oE 'https://[a-z0-9-]+[.]trycloudflare[.]com' /var/log/cloudflared.log | tail -1"
+)
 LOCAL_ASSETS = Path(__file__).resolve().parent
 
 
@@ -76,7 +79,10 @@ class AicApi:
 
     def list_vps(self) -> list[dict[str, Any]]:
         data = self._get("/api/v1/vps")
-        return list(data if isinstance(data, list) else data.get("items", []))
+        if isinstance(data, list):
+            return data
+        # Live shape (verified 2026-07-03): {"instances": [...]}.
+        return list(data.get("instances", data.get("items", [])))
 
     def start_vps(self, vps_id: Any) -> Any:
         return self._post(f"/api/v1/vps/{vps_id}/start")
@@ -189,6 +195,7 @@ class Step:
     act: list[str]  # commands run only when the check fails
     destructive: bool = False
     gate: bool = False  # act failure => BootstrapBlockedError (no blind retry)
+    optional: bool = False  # act failure => warn and continue (e.g. swap inside LXC)
 
 
 def _secrets_script(domain: str) -> str:
@@ -208,8 +215,17 @@ def _secrets_script(domain: str) -> str:
         "SALT=$PW_SALT\n"
         "ENCRYPTION_KEY=$ENC_KEY\n"
         "POSTGRES_PASSWORD=$PG_PW\n"
+        # Verified live 2026-07-03: the compose does NOT derive DATABASE_URL from
+        # POSTGRES_PASSWORD — it must be written explicitly or web/worker auth-fails
+        # against the rotated-password postgres.
+        "DATABASE_URL=postgresql://postgres:$PG_PW@postgres:5432/postgres\n"
         "CLICKHOUSE_PASSWORD=$CH_PW\n"
         "MINIO_ROOT_PASSWORD=$MINIO_PW\n"
+        # Live finding #2 of this class: the S3_*_SECRET_ACCESS_KEY defaults are the
+        # LITERAL 'miniosecret', not derived from MINIO_ROOT_PASSWORD — derive all three.
+        "LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY=$MINIO_PW\n"
+        "LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY=$MINIO_PW\n"
+        "LANGFUSE_S3_BATCH_EXPORT_SECRET_ACCESS_KEY=$MINIO_PW\n"
         "REDIS_AUTH=$REDIS_PW\n"
         "LANGFUSE_INIT_ORG_ID=sutradhar\n"
         "LANGFUSE_INIT_PROJECT_ID=sutradhar-p3\n"
@@ -229,17 +245,25 @@ def _backup_script_b64() -> str:
     return base64.b64encode((LOCAL_ASSETS / "backup_langfuse.sh").read_bytes()).decode("ascii")
 
 
-def bootstrap_steps(domain: str) -> list[Step]:
+def bootstrap_steps(domain: str, ssh_port: int = 22) -> list[Step]:
     """The ordered, check-then-act phase-2 plan (see module doc)."""
     compose = f"cd {REMOTE_DIR} && docker compose --env-file .env"
     return [
         Step(
+            # Verified live 2026-07-03: swapon is NOT PERMITTED inside a Proxmox LXC
+            # container (swap is host-managed) — best-effort only, warn and continue.
             name="swap-4g",
             check="swapon --show | grep -q /swapfile",
             act=[
                 "fallocate -l 4G /swapfile && chmod 600 /swapfile && mkswap /swapfile "
                 "&& swapon /swapfile && echo '/swapfile none swap sw 0 0' >> /etc/fstab"
             ],
+            optional=True,
+        ),
+        Step(
+            name="base-packages",
+            check="command -v curl && command -v git",
+            act=["apt-get update && apt-get install -y curl git ca-certificates"],
         ),
         Step(
             name="docker-installed",
@@ -251,6 +275,17 @@ def bootstrap_steps(domain: str) -> list[Step]:
             check="test -f /root/.docker-nesting-ok",
             act=["docker run --rm hello-world && touch /root/.docker-nesting-ok"],
             gate=True,
+        ),
+        Step(
+            # The AIC API exposes an ssh_password for the box — password auth must die
+            # (DEC-P3-7 hardening: key-only SSH).
+            name="sshd-key-only",
+            check="grep -qs '^PasswordAuthentication no' /etc/ssh/sshd_config.d/99-sutradhar.conf",
+            act=[
+                "printf 'PasswordAuthentication no\\nPermitRootLogin prohibit-password\\n' "
+                "> /etc/ssh/sshd_config.d/99-sutradhar.conf && "
+                "(systemctl reload ssh || systemctl reload sshd)"
+            ],
         ),
         Step(
             name="langfuse-cloned-pinned",
@@ -265,8 +300,30 @@ def bootstrap_steps(domain: str) -> list[Step]:
         ),
         Step(
             name="secrets-once",
-            check=f"test -f {REMOTE_DIR}/.env && ! grep -q CHANGEME {REMOTE_DIR}/.env",
-            act=[_secrets_script(domain)],
+            # DATABASE_URL presence is part of the contract (live finding: compose does
+            # not derive it); an .env missing it is healed in place — secrets are NEVER
+            # rotated against an already-initialized postgres volume.
+            check=(
+                f"test -f {REMOTE_DIR}/.env && ! grep -q CHANGEME {REMOTE_DIR}/.env "
+                f"&& grep -q '^DATABASE_URL=' {REMOTE_DIR}/.env "
+                f"&& grep -q '^LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY=' {REMOTE_DIR}/.env"
+            ),
+            act=[
+                f"cd {REMOTE_DIR} && if test -f .env; then "
+                "PG_PW=$(sed -n 's/^POSTGRES_PASSWORD=//p' .env) && "
+                "MINIO_PW=$(sed -n 's/^MINIO_ROOT_PASSWORD=//p' .env) && "
+                "{ grep -q '^DATABASE_URL=' .env || echo "
+                '"DATABASE_URL=postgresql://postgres:$PG_PW@postgres:5432/postgres" >> .env; } && '
+                "{ grep -q '^LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY=' .env || "
+                "printf '%s\\n%s\\n%s\\n' "
+                '"LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY=$MINIO_PW" '
+                '"LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY=$MINIO_PW" '
+                '"LANGFUSE_S3_BATCH_EXPORT_SECRET_ACCESS_KEY=$MINIO_PW" >> .env; } && '
+                # A healed .env must reach the running containers: compose recreates
+                # only what changed (a passing health check can't see env drift).
+                "docker compose --env-file .env up -d; "
+                f"else {_secrets_script(domain)}; fi"
+            ],
         ),
         Step(
             name="compose-up",
@@ -274,22 +331,47 @@ def bootstrap_steps(domain: str) -> list[Step]:
             act=[f"{compose} up -d"],
         ),
         Step(
-            name="caddy-tls-443",
-            check="test -f /etc/caddy/Caddyfile && grep -q 'reverse_proxy localhost:3000' "
-            "/etc/caddy/Caddyfile",
+            # Verified live 2026-07-03 (DEC-P3-7 amendment 2): the AIC edge firewall opens
+            # ONLY the managed SSH NAT — inbound 443/80 are blocked and unmodifiable, so
+            # Caddy + Let's Encrypt is impossible here. Public HTTPS rides an OUTBOUND
+            # cloudflared tunnel instead (quick tunnel until a domain exists; a named
+            # tunnel is the drop-in upgrade). systemd keeps it up across reboots.
+            name="cloudflared-tunnel",
+            check="systemctl is-active --quiet cloudflared-quick",
             act=[
-                "apt-get install -y caddy || (curl -1sLf "
-                "'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o "
-                "/usr/share/keyrings/caddy-stable-archive-keyring.gpg && apt-get update && "
-                "apt-get install -y caddy)",
-                f"printf '%s {{\\n    reverse_proxy localhost:3000\\n}}\\n' '{domain}' "
-                "> /etc/caddy/Caddyfile && systemctl reload caddy",
+                "test -x /usr/local/bin/cloudflared || (curl -fsSL -o /usr/local/bin/cloudflared"
+                " https://github.com/cloudflare/cloudflared/releases/latest/download/"
+                "cloudflared-linux-amd64 && chmod +x /usr/local/bin/cloudflared)",
+                "printf '[Unit]\\nDescription=cloudflared quick tunnel (langfuse)\\n"
+                "After=network-online.target\\n[Service]\\n"
+                "ExecStart=/usr/local/bin/cloudflared tunnel --no-autoupdate "
+                "--url http://localhost:3000 --logfile /var/log/cloudflared.log\\n"
+                "Restart=always\\nRestartSec=5\\n[Install]\\n"
+                "WantedBy=multi-user.target\\n' > /etc/systemd/system/cloudflared-quick.service",
+                "systemctl daemon-reload && systemctl enable --now cloudflared-quick",
+            ],
+        ),
+        Step(
+            # 443/80 for Caddy/ACME + SSH ONLY; compose web (:3000), MinIO, ClickHouse
+            # etc. stay unreachable from outside (DEC-P3-7 hardening). Verified live
+            # 2026-07-03: AIC NATs an external port (e.g. 20036) to the container's
+            # INTERNAL sshd port 22 — allow BOTH 22 and the external ssh_port, otherwise
+            # ufw locks out our own session (recovered via API reinstall).
+            name="ufw-firewall",
+            check="ufw status | grep -q 'Status: active'",
+            act=[
+                f"apt-get install -y ufw && ufw allow 22/tcp && ufw allow {ssh_port}/tcp "
+                "&& ufw allow 443/tcp && ufw allow 80/tcp && ufw --force enable"
             ],
         ),
         Step(
             name="signup-disabled",
             check=f"grep -q '^AUTH_DISABLE_SIGNUP=true' {REMOTE_DIR}/.env",
-            act=[f"echo 'AUTH_DISABLE_SIGNUP=true' >> {REMOTE_DIR}/.env && {compose} up -d web"],
+            # Service name in the pinned compose is langfuse-web (verified live 2026-07-03).
+            act=[
+                f"echo 'AUTH_DISABLE_SIGNUP=true' >> {REMOTE_DIR}/.env "
+                f"&& {compose} up -d langfuse-web"
+            ],
         ),
         Step(
             name="backup-cron",
@@ -308,8 +390,15 @@ def bootstrap_steps(domain: str) -> list[Step]:
         ),
         Step(
             name="https-health",
-            check=f"curl -skf https://{domain}/api/public/health",
-            act=[f"sleep 10 && curl -skf https://{domain}/api/public/health"],
+            # The tunnel URL is minted by cloudflared at start; health-check THROUGH it
+            # (end-to-end: edge -> tunnel -> web container), not just localhost.
+            check=(
+                f'URL=$({TUNNEL_URL_GREP}) && test -n "$URL" && curl -sf "$URL/api/public/health"'
+            ),
+            act=[
+                f"sleep 15 && URL=$({TUNNEL_URL_GREP}) && "
+                'test -n "$URL" && curl -sf "$URL/api/public/health"'
+            ],
             gate=True,
         ),
     ]
@@ -368,6 +457,7 @@ def run_bootstrap(
     ssh: Any,
     domain: str,
     *,
+    ssh_port: int = 22,
     recreate: bool = False,
     log: Callable[[str], None] = print,
 ) -> BootstrapReport:
@@ -379,7 +469,7 @@ def run_bootstrap(
             for cmd in step.act:
                 ssh.run(cmd)
             report.add(step.name, "configured")
-    for step in bootstrap_steps(domain):
+    for step in bootstrap_steps(domain, ssh_port):
         rc, _ = ssh.run(step.check)
         if rc == 0:
             log(f"[phase2] {step.name}: already satisfied — skipping")
@@ -395,11 +485,21 @@ def run_bootstrap(
                         "if this is the LXC nesting gate, escalate to AIC support / a "
                         "KVM-class product rather than fighting it (DEC-P3-7)"
                     )
+                if step.optional:
+                    log(
+                        f"[phase2] {step.name}: best-effort step failed (rc={rc}) — "
+                        f"continuing: {output.strip()[:160]}"
+                    )
+                    break
                 raise RuntimeError(f"{step.name}: {cmd!r} exited {rc}: {output.strip()[:400]}")
-        report.add(step.name, "configured")
+        else:
+            report.add(step.name, "configured")
+            continue
+        report.add(step.name, "skipped-optional")
     rc, env_dump = ssh.run(f"grep -E 'LANGFUSE_INIT_PROJECT_(PUBLIC|SECRET)_KEY' {REMOTE_DIR}/.env")
+    _, tunnel = ssh.run(TUNNEL_URL_GREP)
     log("[phase2] bootstrap converged. For the laptop .env:")
-    log(f"  LANGFUSE_HOST=https://{domain}")
+    log(f"  LANGFUSE_HOST={tunnel.strip() or 'https://' + domain + ' (tunnel URL missing)'}")
     for line in env_dump.strip().splitlines():
         log(f"  {line.replace('LANGFUSE_INIT_PROJECT_', 'LANGFUSE_')}")
     return report
@@ -450,11 +550,16 @@ def main(argv: list[str] | None = None) -> int:
         print(f"stopping here ({outcome.status}) — re-run `make langfuse-up` afterwards")
         return 1
     assert outcome.instance is not None
+    # Live instance shape (verified 2026-07-03): ip_address + ssh_port at the top level;
+    # keep the nested ssh{} fallback for the (never-observed) checkout-response shape.
     ssh_info = outcome.instance.get("ssh", {})
-    host = str(ssh_info.get("host") or outcome.instance.get("ip", ""))
+    host = str(
+        ssh_info.get("host") or outcome.instance.get("ip_address") or outcome.instance.get("ip", "")
+    )
+    port = int(ssh_info.get("port") or outcome.instance.get("ssh_port", 22))
     domain = args.domain or f"{host}.sslip.io"
-    ssh = SubprocessSsh(host=host, port=int(ssh_info.get("port", 22)))
-    run_bootstrap(ssh, domain, recreate=args.recreate)
+    ssh = SubprocessSsh(host=host, port=port)
+    run_bootstrap(ssh, domain, ssh_port=port, recreate=args.recreate)
     return 0
 
 

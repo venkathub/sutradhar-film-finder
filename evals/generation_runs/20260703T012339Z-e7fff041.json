@@ -1,5 +1,5 @@
 {
- "run_id": "20260703T001051Z-c62806c0",
+ "run_id": "20260703T012339Z-e7fff041",
  "mode": "dry_run",
  "model": "mock",
  "serving": null,
@@ -78,8 +78,8 @@
      }
     ],
     "latencies_ms": [
-     247.15,
-     2.46
+     249.89,
+     3.66
     ],
     "tool_rounds_exhausted": false
    },
@@ -184,8 +184,8 @@
      }
     ],
     "latencies_ms": [
-     1.77,
-     1.89
+     3.81,
+     3.06
     ],
     "tool_rounds_exhausted": false
    },
@@ -290,8 +290,8 @@
      }
     ],
     "latencies_ms": [
-     1.96,
-     2.62
+     2.76,
+     2.83
     ],
     "tool_rounds_exhausted": false
    },
@@ -395,8 +395,8 @@
      }
     ],
     "latencies_ms": [
-     1.51,
-     2.41
+     4.32,
+     2.54
     ],
     "tool_rounds_exhausted": false
    },
@@ -786,10 +786,10 @@
      }
     ],
     "latencies_ms": [
-     1.65,
-     2.3,
-     2.56,
-     3.2
+     3.25,
+     2.31,
+     2.94,
+     2.99
     ],
     "tool_rounds_exhausted": false
    },
@@ -1106,9 +1106,9 @@
      }
     ],
     "latencies_ms": [
-     1.52,
-     1.59,
-     2.9
+     3.68,
+     2.05,
+     2.73
     ],
     "tool_rounds_exhausted": false
    },
@@ -1571,9 +1571,9 @@
      }
     ],
     "latencies_ms": [
-     1.58,
-     2.23,
-     2.57
+     3.34,
+     2.13,
+     2.6
     ],
     "tool_rounds_exhausted": false
    },
@@ -1980,9 +1980,9 @@
      }
     ],
     "latencies_ms": [
-     1.62,
-     2.24,
-     2.98
+     1.73,
+     2.36,
+     2.66
     ],
     "tool_rounds_exhausted": false
    },
@@ -2312,9 +2312,9 @@
      }
     ],
     "latencies_ms": [
-     1.8,
-     2.44,
-     3.59
+     1.72,
+     2.21,
+     2.39
     ],
     "tool_rounds_exhausted": false
    },
@@ -2983,14 +2983,14 @@
      }
     ],
     "latencies_ms": [
-     1.79,
-     2.52,
-     3.51,
-     3.45,
-     4.22,
-     4.67,
-     5.25,
-     4.54
+     2.23,
+     2.3,
+     2.85,
+     3.11,
+     2.48,
+     4.36,
+     3.06,
+     3.66
     ],
     "tool_rounds_exhausted": false
    },
@@ -3540,14 +3540,14 @@
      }
     ],
     "latencies_ms": [
-     2.7,
-     2.39,
-     2.9,
-     2.55,
-     2.53,
-     3.14,
-     2.87,
-     4.05
+     2.3,
+     2.02,
+     2.92,
+     2.62,
+     3.6,
+     3.24,
+     4.33,
+     3.65
     ],
     "tool_rounds_exhausted": false
    },
@@ -4192,14 +4192,14 @@
      }
     ],
     "latencies_ms": [
-     1.73,
-     2.51,
-     2.75,
-     2.69,
-     3.16,
-     4.04,
-     3.05,
-     3.68
+     2.04,
+     1.97,
+     3.37,
+     2.64,
+     3.3,
+     3.12,
+     3.72,
+     3.79
     ],
     "tool_rounds_exhausted": false
    },
@@ -4296,8 +4296,8 @@
   }
  },
  "stamp": {
-  "created_at": "2026-07-03T00:10:51+00:00",
-  "code_sha": "c38c452cba8b3be104d88913bf72dfd08fd654b3",
+  "created_at": "2026-07-03T01:23:39+00:00",
+  "code_sha": "8dccbb3f1a2e5ac0fcd417dcd1f241e752e6fe21",
   "golden_set_hash": "f8fd77a0a60354d949a5baca8ebcc600028bba1ff692e36b169e4c7a11017469",
   "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
   "tool_schema_version": "v0",
