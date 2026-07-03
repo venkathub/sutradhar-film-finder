@@ -100,6 +100,7 @@ class AicApi:
 @dataclass
 class InstanceOutcome:
     status: str  # "running" | "started" | "created" | "needs-topup" | "awaiting-payment"
+    #             | "dashboard-checkout" (verified live: AIC checkout is dashboard-only)
     instance: dict[str, Any] | None = None
     detail: str = ""
 
@@ -129,7 +130,14 @@ def ensure_instance(
             f"plan {PLAN_SLUG!r} not in the live catalogue ({sorted(plans)}) — "
             "re-check DEC-P3-7 plan selection"
         )
-    price_paise = int(plan.get("price_paise", plan.get("price", 0)))
+    price_paise = int(
+        plan.get("price_monthly_paise", plan.get("price_paise", plan.get("price", 0)))
+    )
+    if price_paise <= 0:
+        raise BootstrapBlockedError(
+            f"plan {PLAN_SLUG!r} has no readable price in the catalogue payload — "
+            "re-verify the AIC plans API shape before any checkout"
+        )
     balance = api.wallet_balance_paise()
     if balance < price_paise + 100:  # +₹1 security fee
         need = (price_paise + 100 - balance) / 100
@@ -139,7 +147,25 @@ def ensure_instance(
         )
         return InstanceOutcome(status="needs-topup", detail=f"short ₹{need:.0f}")
 
-    order = api.checkout(PLAN_SLUG, INSTANCE_NAME, OS_IMAGE)
+    order: dict[str, Any]
+    try:
+        order = api.checkout(PLAN_SLUG, INSTANCE_NAME, OS_IMAGE)
+    except httpx.HTTPStatusError as exc:
+        if exc.response.status_code == 403:
+            # Verified live 2026-07-03: AIC serves checkout to the DASHBOARD only
+            # ("This endpoint is not available via API key"). The create leg is a
+            # documented manual step; find-or-create + phase 2 remain automated.
+            log(
+                "[phase1] AIC checkout is dashboard-only (403 via API key). Do this once:\n"
+                f"  1. dashboard -> VPS -> buy plan '{PLAN_SLUG}' (Rs.799/mo + Rs.1 fee)\n"
+                f"  2. name it EXACTLY {INSTANCE_NAME!r}; OS {OS_IMAGE!r}\n"
+                "  3. attach your SSH public key (key-only SSH; password auth is "
+                "disabled during bootstrap)\n"
+                "  4. re-run `make langfuse-up` — it will find the instance and "
+                "continue with phase 2"
+            )
+            return InstanceOutcome(status="dashboard-checkout", detail="checkout 403 via API")
+        raise
     log(
         f"[phase1] checkout order {order.get('orderId')!r} created — pay it via Razorpay "
         "in the browser (payment legs are browser-only by design)"
@@ -395,12 +421,12 @@ def _default_payment_prompt(order: dict[str, Any]) -> dict[str, Any] | None:
 
 
 def _local_ssh_public_keys() -> list[str]:
-    keys = []
-    for name in ("id_ed25519.pub", "id_rsa.pub"):
-        path = Path.home() / ".ssh" / name
-        if path.exists():
-            keys.append(path.read_text(encoding="utf-8").strip())
-    return keys
+    """Any *.pub under ~/.ssh (people name keys freely — verified live: Vkt-Jarvis.pub)."""
+    return [
+        p.read_text(encoding="utf-8").strip()
+        for p in sorted((Path.home() / ".ssh").glob("*.pub"))
+        if p.is_file()
+    ]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -420,7 +446,7 @@ def main(argv: list[str] | None = None) -> int:
             ssh_public_keys=_local_ssh_public_keys(),
             payment_prompt=_default_payment_prompt,
         )
-    if outcome.status in ("needs-topup", "awaiting-payment"):
+    if outcome.status in ("needs-topup", "awaiting-payment", "dashboard-checkout"):
         print(f"stopping here ({outcome.status}) — re-run `make langfuse-up` afterwards")
         return 1
     assert outcome.instance is not None

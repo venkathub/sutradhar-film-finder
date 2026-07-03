@@ -15,7 +15,7 @@ make langfuse-up        # idempotent from-scratch bootstrap; safe to re-run any 
 
 | Phase | Steps (each check-then-act) |
 |---|---|
-| 1 — instance (AIC API) | find `sutradhar-obs-01` → running? skip · stopped? start · absent? wallet pre-check → resolve `essential-8gb` from the live catalogue → checkout (Razorpay legs are **browser-only by design**: the script prints the order and waits; abort + re-run is safe) → verify with `sshKeys[]` (key-only SSH from first boot) |
+| 1 — instance (AIC API) | find `sutradhar-obs-01` → running? skip · stopped? start · absent? wallet pre-check → resolve `essential-8gb` from the live catalogue → **checkout is dashboard-only** (verified live 2026-07-03: the API returns 403 for checkout — the script prints exact one-time purchase instructions: plan `essential-8gb`, name `sutradhar-obs-01`, OS `ubuntu-24.04`, attach your SSH key; re-run then finds the instance and continues) |
 | 2 — configure (SSH) | 4 GB swap → Docker → **Docker-in-LXC nesting gate** (Essential VPS is LXC; a hard failure stops with an escalation message — AIC support / KVM-class product, never fought blindly) → clone pinned tag `v3.203.3` → secrets generated **once** (all `# CHANGEME` rotated; headless init with pinned org/project/user + project keys) → `docker compose up -d` → Caddy TLS **443 only** (interim domain `<ip>.sslip.io`) → `AUTH_DISABLE_SIGNUP=true` → nightly backup cron → HTTPS `/api/public/health` gate |
 
 Already-satisfied steps are detected and skipped; **no destructive operation without the

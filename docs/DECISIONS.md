@@ -930,3 +930,15 @@ ground truth; the live P5 query path uses the real retriever with live embedding
 Table 2 depend on GPU retrieval state); (b) abstain-on-unseen for ALL queries (would falsely
 abstain GS-07a/b whose recorded queries exist); (c) nearest-recorded-query fuzzy fallback
 (non-deterministic tool surface under paraphrase drift — noisier than pinning by fixture).
+
+**Amendment (2026-07-03, P3 task 10 — live API test findings, DEC-P3-7).** First run against the
+real AIC API (wallet funded ₹1000, key valid) surfaced two corrections: (1) **the checkout leg is
+dashboard-only** — `POST /api/v1/vps/checkout` returns `403 "This endpoint is not available via
+API key"` (the grooming-time plan assumed API checkout with browser-only Razorpay legs; in
+reality the *entire purchase* happens in the dashboard). `provision.py` now detects the 403 and
+stops with exact instructions (plan slug, instance name `sutradhar-obs-01`, OS, SSH key), and the
+re-run finds the instance and proceeds — find-or-create and the whole phase-2 bootstrap remain
+fully automated. (2) The live plans payload prices as `price_monthly_paise` (not `price_paise`);
+a zero-price guard now hard-stops before any spend on catalogue shape drift. Both paths are
+mock-tested with the corrected real shapes. Caveat list gains: (c) instance creation is a
+one-time dashboard step by design.

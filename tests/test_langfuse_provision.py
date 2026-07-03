@@ -59,8 +59,9 @@ class _FakeAic:
             return httpx.Response(
                 200,
                 json=[
-                    {"slug": "essential-4gb", "price_paise": 39_900},
-                    {"slug": "essential-8gb", "price_paise": 79_900},
+                    # Real catalogue shape (verified live 2026-07-03): price_monthly_paise.
+                    {"slug": "essential-4gb", "price_monthly_paise": 39_900},
+                    {"slug": "essential-8gb", "price_monthly_paise": 79_900},
                 ],
             )
         if path == "/api/v1/vps/checkout":
@@ -237,3 +238,48 @@ def test_step_plan_pins_tag_and_hardening() -> None:
     # Secrets are generated once and only when absent (check-then-act).
     assert "CHANGEME" in steps["secrets-once"].check
     assert "openssl rand" in " ".join(steps["secrets-once"].act)
+
+
+def test_unreadable_plan_price_blocks_before_any_checkout() -> None:
+    """A catalogue shape drift must hard-stop BEFORE spending (found live 2026-07-03:
+    the real field is price_monthly_paise, not price_paise)."""
+
+    class _WeirdPlans(_FakeAic):
+        def handler(self, request: httpx.Request) -> httpx.Response:
+            if request.url.path == "/api/v1/public/essential-vps-plans":
+                self.calls.append("GET plans")
+                return httpx.Response(200, json=[{"slug": "essential-8gb", "cost": 79_900}])
+            return super().handler(request)
+
+    fake = _WeirdPlans()
+    with pytest.raises(provision.BootstrapBlockedError, match="no readable price"):
+        provision.ensure_instance(
+            fake.api(), ssh_public_keys=["k"], payment_prompt=lambda o: None, log=lambda m: None
+        )
+    assert not any("checkout" in c for c in fake.calls)
+
+
+def test_dashboard_only_checkout_403_stops_with_instructions() -> None:
+    """Verified live 2026-07-03: AIC checkout returns 403 via API key — the script must
+    stop with dashboard instructions (find-or-create still fully automated on re-run)."""
+
+    class _DashboardOnly(_FakeAic):
+        def handler(self, request: httpx.Request) -> httpx.Response:
+            if request.url.path == "/api/v1/vps/checkout":
+                self.calls.append("POST /api/v1/vps/checkout")
+                return httpx.Response(
+                    403,
+                    json={"error": "This endpoint is not available via API key."},
+                )
+            return super().handler(request)
+
+    fake = _DashboardOnly()
+    logs: list[str] = []
+    outcome = provision.ensure_instance(
+        fake.api(), ssh_public_keys=["k"], payment_prompt=lambda o: None, log=logs.append
+    )
+    assert outcome.status == "dashboard-checkout"
+    joined = " ".join(logs)
+    assert provision.INSTANCE_NAME in joined  # exact name to use in the dashboard
+    assert "re-run" in joined
+    assert not any("verify" in c for c in fake.calls)  # nothing paid, nothing verified
