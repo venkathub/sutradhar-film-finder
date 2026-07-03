@@ -1,0 +1,12 @@
+# NO_MATCH decoy themes (P4_SPEC §3 D3): out-of-catalog *themes*, not real films, used by
+# out_of_catalog scaffolds. Test-enforced (tests/test_ft_training_slice_disjoint.py) to be
+# outside the rapidfuzz-0.80 radius of every negative plot query (GS-02 + held-out) and
+# every protected title surface — an abstention scaffold can never collide with a query
+# the negative suites assert must abstain, nor describe a catalogued film.
+decoy_themes:
+  - theme: a Punjabi film about a lighthouse keeper who trains pigeons to deliver wedding invitations
+    query_lang: en
+  - theme: oru Odia padam la oru street magician monsoon rain ah oru vaaram fully off pannuraan
+    query_lang: ta-latin
+  - theme: ek Marathi film jisme ek retired tabla player kho gaye instruments dhundhne ki detective agency kholta hai
+    query_lang: hi-latin
