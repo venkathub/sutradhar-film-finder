@@ -126,6 +126,22 @@ class Settings(BaseSettings):
     # Tier-1 gates on between GPU windows (DEC-P2-6 posture, generation surface).
     generation_run: str | None = Field(default=None, validation_alias="GENERATION_RUN")
 
+    # --- Synthetic-data teacher endpoint (P4, DEC-P4-1: Sarvam-M 24B self-hosted on
+    # the ephemeral GPU; frontier-API escalation is the same client with different
+    # env values — A<->B is config, never code). Unset by default — teacher-dependent
+    # steps skip cleanly, never crash (same posture as the judge). ---
+    teacher_base_url: str | None = Field(default=None, validation_alias="TEACHER_BASE_URL")
+    teacher_model: str | None = Field(default=None, validation_alias="TEACHER_MODEL")
+    teacher_api_key: str | None = Field(default=None, validation_alias="TEACHER_API_KEY")
+
+    # --- Fine-tune artifacts (P4, DEC-P4-7: HF Hub hosting with cards) ---
+    # Adapter repo (public at publish time), e.g. <user>/sutradhar-gemma4-e4b-qlora-v1.
+    hf_adapter_repo: str | None = Field(default=None, validation_alias="HF_ADAPTER_REPO")
+    # Dataset repo (PRIVATE-first pending the LICENSING review), e.g. <user>/sutradhar-ft-v1.
+    ft_dataset_repo: str | None = Field(default=None, validation_alias="FT_DATASET_REPO")
+    # Dataset id stamped on the card + sealed JSONL (non-secret, defaultable).
+    ft_dataset_id: str = Field(default="sutradhar-ft-v1", validation_alias="FT_DATASET_ID")
+
     # --- On-demand GPU ---
     gpu_type: str = Field(default="A100", validation_alias="GPU_TYPE")
 
