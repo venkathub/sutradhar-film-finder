@@ -1,0 +1,4015 @@
+{
+  "decoy_themes": [
+    {
+      "query_lang": "en",
+      "theme": "a Punjabi film about a lighthouse keeper who trains pigeons to deliver wedding invitations"
+    },
+    {
+      "query_lang": "ta-latin",
+      "theme": "oru Odia padam la oru street magician monsoon rain ah oru vaaram fully off pannuraan"
+    },
+    {
+      "query_lang": "hi-latin",
+      "theme": "ek Marathi film jisme ek retired tabla player kho gaye instruments dhundhne ki detective agency kholta hai"
+    }
+  ],
+  "slice_config": "data-pipeline/training_slice.yaml",
+  "tool_schema_sha256": "4c10ea97f1283d3687103594f0deb0d50f7a383cb5df269d25a5042312f3aec5",
+  "works": [
+    {
+      "canonical_title": "Ala Vaikunthapurramloo",
+      "franchise": "ala_vaikunthapurramloo",
+      "get_versions": {
+        "indian": {
+          "original": {
+            "cast_lead": [
+              "Allu Arjun",
+              "Pooja Hegde",
+              "Murali Sharma",
+              "Jayaram",
+              "Sushanth"
+            ],
+            "confidence": "HIGH",
+            "is_original": true,
+            "language": "te",
+            "relationship": "is_original_of",
+            "sources": [
+              {
+                "ref": "seed_slice@2026-07-03",
+                "source": "human"
+              },
+              {
+                "ref": "Q65057760",
+                "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                "source": "wikidata"
+              }
+            ],
+            "title": "Ala Vaikunthapurramloo",
+            "version_id": "853b0928-febd-4722-83f2-56b15369b835",
+            "year": 2020
+          },
+          "versions": [
+            {
+              "cast_lead": [
+                "Allu Arjun",
+                "Pooja Hegde",
+                "Murali Sharma",
+                "Jayaram",
+                "Sushanth"
+              ],
+              "confidence": "HIGH",
+              "is_original": true,
+              "language": "te",
+              "relationship": "is_original_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q65057760",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Ala Vaikunthapurramloo",
+              "version_id": "853b0928-febd-4722-83f2-56b15369b835",
+              "year": 2020
+            },
+            {
+              "cast_lead": [
+                "Kartik Aaryan",
+                "Kriti Sanon",
+                "Paresh Rawal",
+                "Manisha Koirala",
+                "Ronit Roy"
+              ],
+              "confidence": "HIGH",
+              "is_original": false,
+              "language": "hi",
+              "relationship": null,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q109284953",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Shehzada",
+              "version_id": "6a933a5f-6efb-4998-8a43-f9077aab5651",
+              "year": 2023
+            }
+          ]
+        }
+      },
+      "get_work": {
+        "based_on": [],
+        "canonical_title": "Ala Vaikunthapurramloo",
+        "confidence": "HIGH",
+        "first_release_year": 2020,
+        "original_language": "te",
+        "source_work": null,
+        "sources": [
+          {
+            "ref": "seed_slice@2026-07-03",
+            "source": "human"
+          },
+          {
+            "ref": "Q65057760",
+            "retrieved_at": "2026-07-03T07:18:30.546985Z",
+            "source": "wikidata"
+          }
+        ],
+        "work_id": "e8876779-ad0a-4a83-ab66-b87fa091925f",
+        "work_type": "film"
+      },
+      "original_language": "te",
+      "plot_excerpts": [
+        {
+          "excerpt": "It follows Bantu, a young man who endured criticism from his father his whole life. His world is turned upside down upon discovering that he was the real son of a millionaire switched at birth.",
+          "language": "en"
+        },
+        {
+          "excerpt": "Sulochana goes into a coma, keeping Valmiki's secret from coming out. 25 years later, Raj, raised at Jindal's house, is timid and innocent, while Bantu, raised by Valmiki, is street-smart and outspoken.",
+          "language": "en"
+        }
+      ],
+      "resolve_title": {
+        "Ala Vaeekunthapurramloo": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "Ala Vaikunthapurramloo",
+              "score": 0.95,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q65057760",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "853b0928-febd-4722-83f2-56b15369b835",
+              "work_id": "e8876779-ad0a-4a83-ab66-b87fa091925f",
+              "year": 2020
+            }
+          ]
+        },
+        "Ala Vaikunthapuramloo": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "Ala Vaikunthapurramloo",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q65057760",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "853b0928-febd-4722-83f2-56b15369b835",
+              "work_id": "e8876779-ad0a-4a83-ab66-b87fa091925f",
+              "year": 2020
+            }
+          ]
+        },
+        "Ala Vaikunthapurramloo": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "Ala Vaikunthapurramloo",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q65057760",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "853b0928-febd-4722-83f2-56b15369b835",
+              "work_id": "e8876779-ad0a-4a83-ab66-b87fa091925f",
+              "year": 2020
+            }
+          ]
+        },
+        "AlaVaikunthapurramloo": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "Ala Vaikunthapurramloo",
+              "score": 0.9744,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q65057760",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "853b0928-febd-4722-83f2-56b15369b835",
+              "work_id": "e8876779-ad0a-4a83-ab66-b87fa091925f",
+              "year": 2020
+            }
+          ]
+        },
+        "Shehzada": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "hi",
+              "matched_title": "Shehzada",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q109284953",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "6a933a5f-6efb-4998-8a43-f9077aab5651",
+              "work_id": "e8876779-ad0a-4a83-ab66-b87fa091925f",
+              "year": 2023
+            }
+          ]
+        }
+      },
+      "work_id": "e8876779-ad0a-4a83-ab66-b87fa091925f",
+      "work_key": "ala_vaikunthapurramloo"
+    },
+    {
+      "canonical_title": "Anniyan",
+      "franchise": "anniyan",
+      "get_versions": {
+        "indian": {
+          "original": {
+            "cast_lead": [
+              "Vikram",
+              "Sadha",
+              "Prakash Raj",
+              "Vivek",
+              "Nedumudi Venu"
+            ],
+            "confidence": "HIGH",
+            "is_original": true,
+            "language": "ta",
+            "relationship": "is_original_of",
+            "sources": [
+              {
+                "ref": "seed_slice@2026-07-03",
+                "source": "human"
+              },
+              {
+                "ref": "Q2851751",
+                "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                "source": "wikidata"
+              }
+            ],
+            "title": "Anniyan",
+            "version_id": "a8e8f7f3-8b3a-46e7-8f3b-b572db2bd9dd",
+            "year": 2005
+          },
+          "versions": [
+            {
+              "cast_lead": [
+                "Vikram",
+                "Sadha",
+                "Prakash Raj",
+                "Vivek",
+                "Nedumudi Venu"
+              ],
+              "confidence": "HIGH",
+              "is_original": true,
+              "language": "ta",
+              "relationship": "is_original_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q2851751",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Anniyan",
+              "version_id": "a8e8f7f3-8b3a-46e7-8f3b-b572db2bd9dd",
+              "year": 2005
+            },
+            {
+              "cast_lead": [],
+              "confidence": "MEDIUM",
+              "is_original": false,
+              "language": "te",
+              "relationship": "is_official_dub_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                }
+              ],
+              "title": "Aparichitudu",
+              "version_id": "8d6df725-ac8d-48b1-b45a-c48444906d8e",
+              "year": 2005
+            }
+          ]
+        }
+      },
+      "get_work": {
+        "based_on": [],
+        "canonical_title": "Anniyan",
+        "confidence": "HIGH",
+        "first_release_year": 2005,
+        "original_language": "ta",
+        "source_work": null,
+        "sources": [
+          {
+            "ref": "seed_slice@2026-07-03",
+            "source": "human"
+          },
+          {
+            "ref": "Q2851751",
+            "retrieved_at": "2026-07-03T07:18:30.546985Z",
+            "source": "wikidata"
+          }
+        ],
+        "work_id": "b7c8f40f-33d8-465a-b2f0-9c0f4430696f",
+        "work_type": "film"
+      },
+      "original_language": "ta",
+      "plot_excerpts": [
+        {
+          "excerpt": "Ambi, who accompanies her to the government office, refuses to help her. Later, when Nandini and Remo are on a date, Remo transforms into Anniyan and attempts to punish her for corruption.",
+          "language": "en"
+        }
+      ],
+      "resolve_title": {
+        "Aniyan": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Anniyan",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q2851751",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "a8e8f7f3-8b3a-46e7-8f3b-b572db2bd9dd",
+              "work_id": "b7c8f40f-33d8-465a-b2f0-9c0f4430696f",
+              "year": 2005
+            }
+          ]
+        },
+        "Anneeyan": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Anniyan",
+              "score": 0.8333,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q2851751",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "a8e8f7f3-8b3a-46e7-8f3b-b572db2bd9dd",
+              "work_id": "b7c8f40f-33d8-465a-b2f0-9c0f4430696f",
+              "year": 2005
+            }
+          ]
+        },
+        "Anniyan": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Anniyan",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q2851751",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "a8e8f7f3-8b3a-46e7-8f3b-b572db2bd9dd",
+              "work_id": "b7c8f40f-33d8-465a-b2f0-9c0f4430696f",
+              "year": 2005
+            }
+          ]
+        },
+        "Apareechitudu": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "Aparichitudu",
+              "score": 0.9167,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                }
+              ],
+              "version_id": "8d6df725-ac8d-48b1-b45a-c48444906d8e",
+              "work_id": "b7c8f40f-33d8-465a-b2f0-9c0f4430696f",
+              "year": 2005
+            },
+            {
+              "language": "ta",
+              "matched_title": "Aparichithudu",
+              "score": 0.88,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q2851751",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "a8e8f7f3-8b3a-46e7-8f3b-b572db2bd9dd",
+              "work_id": "b7c8f40f-33d8-465a-b2f0-9c0f4430696f",
+              "year": 2005
+            }
+          ]
+        },
+        "Aparichitudu": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "Aparichitudu",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                }
+              ],
+              "version_id": "8d6df725-ac8d-48b1-b45a-c48444906d8e",
+              "work_id": "b7c8f40f-33d8-465a-b2f0-9c0f4430696f",
+              "year": 2005
+            },
+            {
+              "language": "ta",
+              "matched_title": "Aparichithudu",
+              "score": 0.96,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q2851751",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "a8e8f7f3-8b3a-46e7-8f3b-b572db2bd9dd",
+              "work_id": "b7c8f40f-33d8-465a-b2f0-9c0f4430696f",
+              "year": 2005
+            }
+          ]
+        }
+      },
+      "work_id": "b7c8f40f-33d8-465a-b2f0-9c0f4430696f",
+      "work_key": "anniyan"
+    },
+    {
+      "canonical_title": "Arjun Reddy",
+      "franchise": "arjun_reddy",
+      "get_versions": {
+        "indian": {
+          "original": {
+            "cast_lead": [
+              "Vijay Deverakonda",
+              "Shalini Pandey",
+              "Rahul Ramakrishna",
+              "Kamal Kamaraju",
+              "Kanchana"
+            ],
+            "confidence": "HIGH",
+            "is_original": true,
+            "language": "te",
+            "relationship": "is_original_of",
+            "sources": [
+              {
+                "ref": "seed_slice@2026-07-03",
+                "source": "human"
+              },
+              {
+                "ref": "Q28419404",
+                "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                "source": "wikidata"
+              }
+            ],
+            "title": "Arjun Reddy",
+            "version_id": "026fc716-d0a4-4c74-8101-609f8df30f84",
+            "year": 2017
+          },
+          "versions": [
+            {
+              "cast_lead": [
+                "Vijay Deverakonda",
+                "Shalini Pandey",
+                "Rahul Ramakrishna",
+                "Kamal Kamaraju",
+                "Kanchana"
+              ],
+              "confidence": "HIGH",
+              "is_original": true,
+              "language": "te",
+              "relationship": "is_original_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q28419404",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Arjun Reddy",
+              "version_id": "026fc716-d0a4-4c74-8101-609f8df30f84",
+              "year": 2017
+            },
+            {
+              "cast_lead": [
+                "Shahid Kapoor",
+                "Kiara Advani",
+                "Arjan Bajwa",
+                "Suresh Oberoi",
+                "Nikita Dutta"
+              ],
+              "confidence": "HIGH",
+              "is_original": false,
+              "language": "hi",
+              "relationship": null,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q58411760",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Kabir Singh",
+              "version_id": "621cf294-2842-45ff-a6ba-6585dcf36fa7",
+              "year": 2019
+            },
+            {
+              "cast_lead": [
+                "Dhruv Vikram",
+                "Banita Sandhu",
+                "Priya Anand",
+                "Raja",
+                "Dheepa Ramanujam"
+              ],
+              "confidence": "HIGH",
+              "is_original": false,
+              "language": "ta",
+              "relationship": null,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q43259962",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Adithya Varma",
+              "version_id": "81d64dfb-8eaf-402a-94a8-22a1330c6b59",
+              "year": 2019
+            }
+          ]
+        }
+      },
+      "get_work": {
+        "based_on": [],
+        "canonical_title": "Arjun Reddy",
+        "confidence": "HIGH",
+        "first_release_year": 2017,
+        "original_language": "te",
+        "source_work": null,
+        "sources": [
+          {
+            "ref": "seed_slice@2026-07-03",
+            "source": "human"
+          },
+          {
+            "ref": "Q28419404",
+            "retrieved_at": "2026-07-03T07:18:30.546985Z",
+            "source": "wikidata"
+          }
+        ],
+        "work_id": "5032ce41-95e6-42e8-8223-769c454f419d",
+        "work_type": "film"
+      },
+      "original_language": "te",
+      "plot_excerpts": [
+        {
+          "excerpt": "Adithya graduates with an MBBS degree and leaves for Mussoorie to pursue a master's degree in orthopaedic surgery. Over the course of three years, Adithya's and Meera's relationship becomes stronger.",
+          "language": "en"
+        },
+        {
+          "excerpt": "Arjun refuses to lie to protect his career, openly admitting to his substance abuse. Consequently, his medical license is suspended for five years and he is evicted from his apartment.",
+          "language": "en"
+        }
+      ],
+      "resolve_title": {
+        "Adeethya Varma": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Adithya Varma",
+              "score": 0.9231,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q43259962",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "81d64dfb-8eaf-402a-94a8-22a1330c6b59",
+              "work_id": "5032ce41-95e6-42e8-8223-769c454f419d",
+              "year": 2019
+            }
+          ]
+        },
+        "Adithya Varma": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Adithya Varma",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q43259962",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "81d64dfb-8eaf-402a-94a8-22a1330c6b59",
+              "work_id": "5032ce41-95e6-42e8-8223-769c454f419d",
+              "year": 2019
+            }
+          ]
+        },
+        "AdithyaVarma": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Adithya Varma",
+              "score": 0.96,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q43259962",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "81d64dfb-8eaf-402a-94a8-22a1330c6b59",
+              "work_id": "5032ce41-95e6-42e8-8223-769c454f419d",
+              "year": 2019
+            }
+          ]
+        },
+        "Arjun Reddy": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "Arjun Reddy",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q28419404",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "026fc716-d0a4-4c74-8101-609f8df30f84",
+              "work_id": "5032ce41-95e6-42e8-8223-769c454f419d",
+              "year": 2017
+            },
+            {
+              "language": "hi",
+              "matched_title": "Arjun Reddy",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q58411760",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "621cf294-2842-45ff-a6ba-6585dcf36fa7",
+              "work_id": "5032ce41-95e6-42e8-8223-769c454f419d",
+              "year": 2019
+            }
+          ]
+        },
+        "Arjun Redy": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "Arjun Reddy",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q28419404",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "026fc716-d0a4-4c74-8101-609f8df30f84",
+              "work_id": "5032ce41-95e6-42e8-8223-769c454f419d",
+              "year": 2017
+            },
+            {
+              "language": "hi",
+              "matched_title": "Arjun Reddy",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q58411760",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "621cf294-2842-45ff-a6ba-6585dcf36fa7",
+              "work_id": "5032ce41-95e6-42e8-8223-769c454f419d",
+              "year": 2019
+            }
+          ]
+        },
+        "ArjunReddy": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "Arjun Reddy",
+              "score": 0.9474,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q28419404",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "026fc716-d0a4-4c74-8101-609f8df30f84",
+              "work_id": "5032ce41-95e6-42e8-8223-769c454f419d",
+              "year": 2017
+            },
+            {
+              "language": "hi",
+              "matched_title": "Arjun Reddy",
+              "score": 0.9474,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q58411760",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "621cf294-2842-45ff-a6ba-6585dcf36fa7",
+              "work_id": "5032ce41-95e6-42e8-8223-769c454f419d",
+              "year": 2019
+            }
+          ]
+        },
+        "Kabeer Singh": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "hi",
+              "matched_title": "Kabir Singh",
+              "score": 0.9091,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q58411760",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "621cf294-2842-45ff-a6ba-6585dcf36fa7",
+              "work_id": "5032ce41-95e6-42e8-8223-769c454f419d",
+              "year": 2019
+            }
+          ]
+        },
+        "Kabir Singh": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "hi",
+              "matched_title": "Kabir Singh",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q58411760",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "621cf294-2842-45ff-a6ba-6585dcf36fa7",
+              "work_id": "5032ce41-95e6-42e8-8223-769c454f419d",
+              "year": 2019
+            }
+          ]
+        },
+        "KabirSingh": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "hi",
+              "matched_title": "Kabir Singh",
+              "score": 0.9524,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q58411760",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "621cf294-2842-45ff-a6ba-6585dcf36fa7",
+              "work_id": "5032ce41-95e6-42e8-8223-769c454f419d",
+              "year": 2019
+            }
+          ]
+        }
+      },
+      "work_id": "5032ce41-95e6-42e8-8223-769c454f419d",
+      "work_key": "arjun_reddy"
+    },
+    {
+      "canonical_title": "Bigil",
+      "franchise": "bigil",
+      "get_versions": {
+        "indian": {
+          "original": {
+            "cast_lead": [
+              "Vijay",
+              "Nayanthara",
+              "Jackie Shroff",
+              "Kathir",
+              "Vivek"
+            ],
+            "confidence": "HIGH",
+            "is_original": true,
+            "language": "ta",
+            "relationship": "is_original_of",
+            "sources": [
+              {
+                "ref": "seed_slice@2026-07-03",
+                "source": "human"
+              },
+              {
+                "ref": "Q59725832",
+                "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                "source": "wikidata"
+              }
+            ],
+            "title": "Bigil",
+            "version_id": "ead2ee50-a45c-42c5-9c5a-4a7d39562e32",
+            "year": 2019
+          },
+          "versions": [
+            {
+              "cast_lead": [
+                "Vijay",
+                "Nayanthara",
+                "Jackie Shroff",
+                "Kathir",
+                "Vivek"
+              ],
+              "confidence": "HIGH",
+              "is_original": true,
+              "language": "ta",
+              "relationship": "is_original_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q59725832",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Bigil",
+              "version_id": "ead2ee50-a45c-42c5-9c5a-4a7d39562e32",
+              "year": 2019
+            },
+            {
+              "cast_lead": [],
+              "confidence": "MEDIUM",
+              "is_original": false,
+              "language": "te",
+              "relationship": "is_official_dub_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                }
+              ],
+              "title": "Whistle",
+              "version_id": "3e0c4ba5-aa64-4082-80c7-ea983747e580",
+              "year": 2019
+            }
+          ]
+        }
+      },
+      "get_work": {
+        "based_on": [],
+        "canonical_title": "Bigil",
+        "confidence": "HIGH",
+        "first_release_year": 2019,
+        "original_language": "ta",
+        "source_work": null,
+        "sources": [
+          {
+            "ref": "seed_slice@2026-07-03",
+            "source": "human"
+          },
+          {
+            "ref": "Q59725832",
+            "retrieved_at": "2026-07-03T07:18:30.546985Z",
+            "source": "wikidata"
+          }
+        ],
+        "work_id": "828e6bae-c67c-4357-8379-3ad2fdffd5a9",
+        "work_type": "film"
+      },
+      "original_language": "ta",
+      "plot_excerpts": [
+        {
+          "excerpt": "Michael is a goon from Royapuram, Chennai who works to help his slum. He has a comical relationship with his girlfriend Angel Aasirvatham and a running feud with Daniel, a rival gangster.",
+          "language": "en"
+        }
+      ],
+      "resolve_title": {
+        "Beegil": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Bigil",
+              "score": 0.8,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q59725832",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "ead2ee50-a45c-42c5-9c5a-4a7d39562e32",
+              "work_id": "828e6bae-c67c-4357-8379-3ad2fdffd5a9",
+              "year": 2019
+            }
+          ]
+        },
+        "Bigil": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Bigil",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q59725832",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "ead2ee50-a45c-42c5-9c5a-4a7d39562e32",
+              "work_id": "828e6bae-c67c-4357-8379-3ad2fdffd5a9",
+              "year": 2019
+            }
+          ]
+        },
+        "Wheestle": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Whistle",
+              "score": 0.8571,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q59725832",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "ead2ee50-a45c-42c5-9c5a-4a7d39562e32",
+              "work_id": "828e6bae-c67c-4357-8379-3ad2fdffd5a9",
+              "year": 2019
+            },
+            {
+              "language": "te",
+              "matched_title": "Whistle",
+              "score": 0.8571,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                }
+              ],
+              "version_id": "3e0c4ba5-aa64-4082-80c7-ea983747e580",
+              "work_id": "828e6bae-c67c-4357-8379-3ad2fdffd5a9",
+              "year": 2019
+            }
+          ]
+        },
+        "Whistle": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Whistle",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q59725832",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "ead2ee50-a45c-42c5-9c5a-4a7d39562e32",
+              "work_id": "828e6bae-c67c-4357-8379-3ad2fdffd5a9",
+              "year": 2019
+            },
+            {
+              "language": "te",
+              "matched_title": "Whistle",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                }
+              ],
+              "version_id": "3e0c4ba5-aa64-4082-80c7-ea983747e580",
+              "work_id": "828e6bae-c67c-4357-8379-3ad2fdffd5a9",
+              "year": 2019
+            }
+          ]
+        }
+      },
+      "work_id": "828e6bae-c67c-4357-8379-3ad2fdffd5a9",
+      "work_key": "bigil"
+    },
+    {
+      "canonical_title": "Bodyguard",
+      "franchise": "bodyguard",
+      "get_versions": {
+        "indian": {
+          "original": {
+            "cast_lead": [
+              "Nayanthara",
+              "Dileep",
+              "Mithra Kurian",
+              "Thyagarajan",
+              "Harisree Ashokan"
+            ],
+            "confidence": "HIGH",
+            "is_original": true,
+            "language": "ml",
+            "relationship": "is_original_of",
+            "sources": [
+              {
+                "ref": "seed_slice@2026-07-03",
+                "source": "human"
+              },
+              {
+                "ref": "Q4937000",
+                "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                "source": "wikidata"
+              }
+            ],
+            "title": "Bodyguard",
+            "version_id": "5adb4906-b90e-4367-96ae-a055dab72c72",
+            "year": 2010
+          },
+          "versions": [
+            {
+              "cast_lead": [
+                "Nayanthara",
+                "Dileep",
+                "Mithra Kurian",
+                "Thyagarajan",
+                "Harisree Ashokan"
+              ],
+              "confidence": "HIGH",
+              "is_original": true,
+              "language": "ml",
+              "relationship": "is_original_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q4937000",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Bodyguard",
+              "version_id": "5adb4906-b90e-4367-96ae-a055dab72c72",
+              "year": 2010
+            },
+            {
+              "cast_lead": [
+                "Vijay",
+                "Asin Thottumkal",
+                "Vadivelu",
+                "Rajkiran",
+                "Mithra Kurian"
+              ],
+              "confidence": "HIGH",
+              "is_original": false,
+              "language": "ta",
+              "relationship": "is_remake_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q6343662",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Kaavalan",
+              "version_id": "b04504dc-6f88-4186-b698-4155a91de4c1",
+              "year": 2011
+            },
+            {
+              "cast_lead": [
+                "Salman Khan",
+                "Kareena Kapoor Khan",
+                "Hazel Keech",
+                "Raj Babbar",
+                "Mahesh Manjrekar"
+              ],
+              "confidence": "HIGH",
+              "is_original": false,
+              "language": "hi",
+              "relationship": "is_remake_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q312951",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Bodyguard",
+              "version_id": "74531232-36bc-4f78-8753-a3c66a4614c2",
+              "year": 2011
+            },
+            {
+              "cast_lead": [
+                "Venkatesh",
+                "Trisha Krishnan",
+                "Saloni Aswani",
+                "Prakash Raj",
+                "Reshma Rathore"
+              ],
+              "confidence": "HIGH",
+              "is_original": false,
+              "language": "te",
+              "relationship": "is_remake_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q4937001",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Bodyguard",
+              "version_id": "4e864197-2bc2-49b1-9673-09abf6cf290f",
+              "year": 2012
+            }
+          ]
+        }
+      },
+      "get_work": {
+        "based_on": [],
+        "canonical_title": "Bodyguard",
+        "confidence": "HIGH",
+        "first_release_year": 2010,
+        "original_language": "ml",
+        "source_work": null,
+        "sources": [
+          {
+            "ref": "seed_slice@2026-07-03",
+            "source": "human"
+          },
+          {
+            "ref": "Q4937000",
+            "retrieved_at": "2026-07-03T07:18:30.546985Z",
+            "source": "wikidata"
+          }
+        ],
+        "work_id": "c32ec58e-d29a-41b7-a4c6-fe3f93ff5e69",
+        "work_type": "film"
+      },
+      "original_language": "ml",
+      "plot_excerpts": [
+        {
+          "excerpt": "Jayakrishnan thus becomes the bodyguard of Ashokan's daughter Ammu. Jayakrishnan follows Ammu to her college as her bodyguard.",
+          "language": "en"
+        },
+        {
+          "excerpt": "Lovely Balwant Singh is assigned as Divya Rana's bodyguard to protect her against militant political adversaries led by Ranjan Mahatre targeting her father Sartaj Rana, who saved Lovely's mother in a car accident years prior. Divya becomes irritated with Lovely's constant protection, and creates Chhaya, a fellow univer",
+          "language": "en"
+        }
+      ],
+      "resolve_title": {
+        "Bodyguard": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "Bodyguard",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q4937001",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "4e864197-2bc2-49b1-9673-09abf6cf290f",
+              "work_id": "c32ec58e-d29a-41b7-a4c6-fe3f93ff5e69",
+              "year": 2012
+            },
+            {
+              "language": "hi",
+              "matched_title": "Bodyguard",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q312951",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "74531232-36bc-4f78-8753-a3c66a4614c2",
+              "work_id": "c32ec58e-d29a-41b7-a4c6-fe3f93ff5e69",
+              "year": 2011
+            },
+            {
+              "language": "ml",
+              "matched_title": "Bodyguard",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q4937000",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "5adb4906-b90e-4367-96ae-a055dab72c72",
+              "work_id": "c32ec58e-d29a-41b7-a4c6-fe3f93ff5e69",
+              "year": 2010
+            }
+          ]
+        },
+        "Kaavalan": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Kavalan",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q6343662",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "b04504dc-6f88-4186-b698-4155a91de4c1",
+              "work_id": "c32ec58e-d29a-41b7-a4c6-fe3f93ff5e69",
+              "year": 2011
+            }
+          ]
+        },
+        "Kavalan": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Kavalan",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q6343662",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "b04504dc-6f88-4186-b698-4155a91de4c1",
+              "work_id": "c32ec58e-d29a-41b7-a4c6-fe3f93ff5e69",
+              "year": 2011
+            }
+          ]
+        }
+      },
+      "work_id": "c32ec58e-d29a-41b7-a4c6-fe3f93ff5e69",
+      "work_key": "bodyguard"
+    },
+    {
+      "canonical_title": "Don",
+      "franchise": "don_hi",
+      "get_versions": {
+        "indian": {
+          "original": {
+            "cast_lead": [
+              "Amitabh Bachchan",
+              "Zeenat Aman",
+              "Pran Sikand",
+              "Iftekhar",
+              "Om Shivpuri"
+            ],
+            "confidence": "HIGH",
+            "is_original": true,
+            "language": "hi",
+            "relationship": "is_original_of",
+            "sources": [
+              {
+                "ref": "seed_slice@2026-07-03",
+                "source": "human"
+              },
+              {
+                "ref": "Q1238847",
+                "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                "source": "wikidata"
+              }
+            ],
+            "title": "Don",
+            "version_id": "41355c4a-1ac1-474e-8c8d-9c20b110c9b3",
+            "year": 1978
+          },
+          "versions": [
+            {
+              "cast_lead": [
+                "Amitabh Bachchan",
+                "Zeenat Aman",
+                "Pran Sikand",
+                "Iftekhar",
+                "Om Shivpuri"
+              ],
+              "confidence": "HIGH",
+              "is_original": true,
+              "language": "hi",
+              "relationship": "is_original_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q1238847",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Don",
+              "version_id": "41355c4a-1ac1-474e-8c8d-9c20b110c9b3",
+              "year": 1978
+            },
+            {
+              "cast_lead": [
+                "Shah Rukh Khan",
+                "Priyanka Chopra Jonas",
+                "Arjun Rampal",
+                "Boman Irani",
+                "Om Puri"
+              ],
+              "confidence": "HIGH",
+              "is_original": false,
+              "language": "hi",
+              "relationship": "is_remake_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q662436",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Don",
+              "version_id": "16730548-ca98-4929-be9a-29ee7ad3534b",
+              "year": 2006
+            }
+          ]
+        }
+      },
+      "get_work": {
+        "based_on": [],
+        "canonical_title": "Don",
+        "confidence": "HIGH",
+        "first_release_year": 1978,
+        "original_language": "hi",
+        "source_work": null,
+        "sources": [
+          {
+            "ref": "seed_slice@2026-07-03",
+            "source": "human"
+          },
+          {
+            "ref": "Q1238847",
+            "retrieved_at": "2026-07-03T07:18:30.546985Z",
+            "source": "wikidata"
+          }
+        ],
+        "work_id": "923f8e38-dd09-47fa-bf90-d7adc8d26a94",
+        "work_type": "film"
+      },
+      "original_language": "hi",
+      "plot_excerpts": [
+        {
+          "excerpt": "Singhania is one of the two lieutenants of a deceased kingpin, known as Boris; the other is Vardhaan, whose whereabouts are unknown. Don kills Ramesh, one of his close associates, after he tries to leave the gang without informing him first.",
+          "language": "en"
+        },
+        {
+          "excerpt": "Vijay provides a diary with the secret information of the crime network to D'Silva, but he is about to be killed by Roma because her brother Ramesh as well as his fiancée Kamini were killed by Don earlier. At this juncture, D'Silva arrives and tells her that he is Vijay and not Don.",
+          "language": "en"
+        }
+      ],
+      "resolve_title": {
+        "Don": {
+          "ambiguous": true,
+          "candidates": [
+            {
+              "language": "hi",
+              "matched_title": "Don",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q662436",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "16730548-ca98-4929-be9a-29ee7ad3534b",
+              "work_id": "923f8e38-dd09-47fa-bf90-d7adc8d26a94",
+              "year": 2006
+            },
+            {
+              "language": "hi",
+              "matched_title": "Don",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q1238847",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "41355c4a-1ac1-474e-8c8d-9c20b110c9b3",
+              "work_id": "923f8e38-dd09-47fa-bf90-d7adc8d26a94",
+              "year": 1978
+            },
+            {
+              "language": "ta",
+              "matched_title": "Don",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q105474617",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "14aec4c2-b152-4b07-96c0-687855b15cf4",
+              "work_id": "9d879b7d-839a-4b88-8e9c-a6b1f3a33191",
+              "year": 2022
+            }
+          ]
+        }
+      },
+      "work_id": "923f8e38-dd09-47fa-bf90-d7adc8d26a94",
+      "work_key": "don_1978"
+    },
+    {
+      "canonical_title": "Don",
+      "franchise": "don_ta",
+      "get_versions": {
+        "indian": {
+          "original": {
+            "cast_lead": [
+              "Sivakarthikeyan",
+              "Priyanka Arul Mohan",
+              "S. J. Suryah",
+              "Samuthirakani",
+              "Soori"
+            ],
+            "confidence": "HIGH",
+            "is_original": true,
+            "language": "ta",
+            "relationship": "is_original_of",
+            "sources": [
+              {
+                "ref": "seed_slice@2026-07-03",
+                "source": "human"
+              },
+              {
+                "ref": "Q105474617",
+                "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                "source": "wikidata"
+              }
+            ],
+            "title": "Don",
+            "version_id": "14aec4c2-b152-4b07-96c0-687855b15cf4",
+            "year": 2022
+          },
+          "versions": [
+            {
+              "cast_lead": [
+                "Sivakarthikeyan",
+                "Priyanka Arul Mohan",
+                "S. J. Suryah",
+                "Samuthirakani",
+                "Soori"
+              ],
+              "confidence": "HIGH",
+              "is_original": true,
+              "language": "ta",
+              "relationship": "is_original_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q105474617",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Don",
+              "version_id": "14aec4c2-b152-4b07-96c0-687855b15cf4",
+              "year": 2022
+            }
+          ]
+        }
+      },
+      "get_work": {
+        "based_on": [],
+        "canonical_title": "Don",
+        "confidence": "HIGH",
+        "first_release_year": 2022,
+        "original_language": "ta",
+        "source_work": null,
+        "sources": [
+          {
+            "ref": "seed_slice@2026-07-03",
+            "source": "human"
+          },
+          {
+            "ref": "Q105474617",
+            "retrieved_at": "2026-07-03T07:18:30.546985Z",
+            "source": "wikidata"
+          }
+        ],
+        "work_id": "9d879b7d-839a-4b88-8e9c-a6b1f3a33191",
+        "work_type": "film"
+      },
+      "original_language": "ta",
+      "plot_excerpts": [
+        {
+          "excerpt": "Angaiyarkanni is impressed and reciprocates her feelings. Amidst this, Bhoominathan unexpectedly returns from Russia after 2 months and Bhoominathan discovers that Chakaravarthi sent him Russia.",
+          "language": "en"
+        }
+      ],
+      "resolve_title": {
+        "Don": {
+          "ambiguous": true,
+          "candidates": [
+            {
+              "language": "hi",
+              "matched_title": "Don",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q662436",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "16730548-ca98-4929-be9a-29ee7ad3534b",
+              "work_id": "923f8e38-dd09-47fa-bf90-d7adc8d26a94",
+              "year": 2006
+            },
+            {
+              "language": "hi",
+              "matched_title": "Don",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q1238847",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "41355c4a-1ac1-474e-8c8d-9c20b110c9b3",
+              "work_id": "923f8e38-dd09-47fa-bf90-d7adc8d26a94",
+              "year": 1978
+            },
+            {
+              "language": "ta",
+              "matched_title": "Don",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q105474617",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "14aec4c2-b152-4b07-96c0-687855b15cf4",
+              "work_id": "9d879b7d-839a-4b88-8e9c-a6b1f3a33191",
+              "year": 2022
+            }
+          ]
+        }
+      },
+      "work_id": "9d879b7d-839a-4b88-8e9c-a6b1f3a33191",
+      "work_key": "don_2022"
+    },
+    {
+      "canonical_title": "Kanchana",
+      "franchise": "muni_kanchana",
+      "get_versions": {
+        "indian": {
+          "original": {
+            "cast_lead": [
+              "Raghava Lawrence",
+              "R. Sarathkumar",
+              "Kovai Sarala",
+              "Devadarshini",
+              "Sriman"
+            ],
+            "confidence": "HIGH",
+            "is_original": true,
+            "language": "ta",
+            "relationship": "is_original_of",
+            "sources": [
+              {
+                "ref": "seed_slice@2026-07-03",
+                "source": "human"
+              },
+              {
+                "ref": "Q6936071",
+                "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                "source": "wikidata"
+              }
+            ],
+            "title": "Kanchana",
+            "version_id": "6817ce87-70ae-4072-9593-f383d4004baa",
+            "year": 2011
+          },
+          "versions": [
+            {
+              "cast_lead": [
+                "Raghava Lawrence",
+                "R. Sarathkumar",
+                "Kovai Sarala",
+                "Devadarshini",
+                "Sriman"
+              ],
+              "confidence": "HIGH",
+              "is_original": true,
+              "language": "ta",
+              "relationship": "is_original_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q6936071",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Kanchana",
+              "version_id": "6817ce87-70ae-4072-9593-f383d4004baa",
+              "year": 2011
+            },
+            {
+              "cast_lead": [
+                "Akshay Kumar",
+                "Kiara Advani",
+                "Ayesha Raza Mishra",
+                "Manu Rishi Chadha",
+                "Ashwini Kalsekar"
+              ],
+              "confidence": "HIGH",
+              "is_original": false,
+              "language": "hi",
+              "relationship": "is_remake_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q63349731",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Laxmii",
+              "version_id": "fdb93add-82c1-4cc8-b091-b08a01f6e1c6",
+              "year": 2020
+            }
+          ]
+        },
+        "indian_sequels": {
+          "original": {
+            "cast_lead": [
+              "Raghava Lawrence",
+              "R. Sarathkumar",
+              "Kovai Sarala",
+              "Devadarshini",
+              "Sriman"
+            ],
+            "confidence": "HIGH",
+            "is_original": true,
+            "language": "ta",
+            "relationship": "is_original_of",
+            "sources": [
+              {
+                "ref": "seed_slice@2026-07-03",
+                "source": "human"
+              },
+              {
+                "ref": "Q6936071",
+                "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                "source": "wikidata"
+              }
+            ],
+            "title": "Kanchana",
+            "version_id": "6817ce87-70ae-4072-9593-f383d4004baa",
+            "year": 2011
+          },
+          "versions": [
+            {
+              "cast_lead": [
+                "Raghava Lawrence",
+                "R. Sarathkumar",
+                "Kovai Sarala",
+                "Devadarshini",
+                "Sriman"
+              ],
+              "confidence": "HIGH",
+              "is_original": true,
+              "language": "ta",
+              "relationship": "is_original_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q6936071",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Kanchana",
+              "version_id": "6817ce87-70ae-4072-9593-f383d4004baa",
+              "year": 2011
+            },
+            {
+              "cast_lead": [
+                "Akshay Kumar",
+                "Kiara Advani",
+                "Ayesha Raza Mishra",
+                "Manu Rishi Chadha",
+                "Ashwini Kalsekar"
+              ],
+              "confidence": "HIGH",
+              "is_original": false,
+              "language": "hi",
+              "relationship": "is_remake_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q63349731",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Laxmii",
+              "version_id": "fdb93add-82c1-4cc8-b091-b08a01f6e1c6",
+              "year": 2020
+            }
+          ]
+        }
+      },
+      "get_work": {
+        "based_on": [],
+        "canonical_title": "Kanchana",
+        "confidence": "HIGH",
+        "first_release_year": 2011,
+        "original_language": "ta",
+        "source_work": null,
+        "sources": [
+          {
+            "ref": "seed_slice@2026-07-03",
+            "source": "human"
+          },
+          {
+            "ref": "Q6936071",
+            "retrieved_at": "2026-07-03T07:18:30.546985Z",
+            "source": "wikidata"
+          }
+        ],
+        "work_id": "fca2fc86-feb7-482c-afa5-c5ecb75ac7ab",
+        "work_type": "film"
+      },
+      "original_language": "ta",
+      "plot_excerpts": [
+        {
+          "excerpt": "Raghava does not notice that his cricket stumps are stained with blood after piercing corpses buried under the land. Raghava woos Kamakshi's younger sister Priya, who has come to stay with them, while Vatsala and Kamakshi become panic-stricken by perpetual supernatural occurrences at their residence.",
+          "language": "en"
+        },
+        {
+          "excerpt": "Asif and Shaan visit the grounds next door that are believed to be haunted. While he is putting stumps into the ground for a game of cricket, the stumps hit a buried body.",
+          "language": "en"
+        }
+      ],
+      "resolve_title": {
+        "Kanchana": {
+          "ambiguous": true,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Kanchana",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q6936071",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "6817ce87-70ae-4072-9593-f383d4004baa",
+              "work_id": "fca2fc86-feb7-482c-afa5-c5ecb75ac7ab",
+              "year": 2011
+            },
+            {
+              "language": "ta",
+              "matched_title": "Kanchana 2",
+              "score": 0.8889,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q6936064",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "9b064b1f-8a6a-493e-9fe0-c6b46a7e4ae0",
+              "work_id": "ce082e6a-3a3a-459a-aa82-def2a77ffe5f",
+              "year": 2015
+            }
+          ]
+        },
+        "Laxmeei": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "hi",
+              "matched_title": "Laxmii",
+              "score": 0.9091,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q63349731",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "fdb93add-82c1-4cc8-b091-b08a01f6e1c6",
+              "work_id": "fca2fc86-feb7-482c-afa5-c5ecb75ac7ab",
+              "year": 2020
+            }
+          ]
+        },
+        "Laxmii": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "hi",
+              "matched_title": "Laxmii",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q63349731",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "fdb93add-82c1-4cc8-b091-b08a01f6e1c6",
+              "work_id": "fca2fc86-feb7-482c-afa5-c5ecb75ac7ab",
+              "year": 2020
+            }
+          ]
+        }
+      },
+      "work_id": "fca2fc86-feb7-482c-afa5-c5ecb75ac7ab",
+      "work_key": "kanchana"
+    },
+    {
+      "canonical_title": "Kanchana 2",
+      "franchise": "muni_kanchana",
+      "get_versions": {
+        "indian": {
+          "original": {
+            "cast_lead": [
+              "Raghava Lawrence",
+              "Kovai Sarala",
+              "Taapsee Pannu",
+              "Jayaprakash",
+              "Pooja Ramachandran"
+            ],
+            "confidence": "HIGH",
+            "is_original": true,
+            "language": "ta",
+            "relationship": "is_original_of",
+            "sources": [
+              {
+                "ref": "seed_slice@2026-07-03",
+                "source": "human"
+              },
+              {
+                "ref": "Q6936064",
+                "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                "source": "wikidata"
+              }
+            ],
+            "title": "Kanchana 2",
+            "version_id": "9b064b1f-8a6a-493e-9fe0-c6b46a7e4ae0",
+            "year": 2015
+          },
+          "versions": [
+            {
+              "cast_lead": [
+                "Raghava Lawrence",
+                "Kovai Sarala",
+                "Taapsee Pannu",
+                "Jayaprakash",
+                "Pooja Ramachandran"
+              ],
+              "confidence": "HIGH",
+              "is_original": true,
+              "language": "ta",
+              "relationship": "is_original_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q6936064",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Kanchana 2",
+              "version_id": "9b064b1f-8a6a-493e-9fe0-c6b46a7e4ae0",
+              "year": 2015
+            }
+          ]
+        },
+        "indian_sequels": {
+          "original": {
+            "cast_lead": [
+              "Raghava Lawrence",
+              "Kovai Sarala",
+              "Taapsee Pannu",
+              "Jayaprakash",
+              "Pooja Ramachandran"
+            ],
+            "confidence": "HIGH",
+            "is_original": true,
+            "language": "ta",
+            "relationship": "is_original_of",
+            "sources": [
+              {
+                "ref": "seed_slice@2026-07-03",
+                "source": "human"
+              },
+              {
+                "ref": "Q6936064",
+                "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                "source": "wikidata"
+              }
+            ],
+            "title": "Kanchana 2",
+            "version_id": "9b064b1f-8a6a-493e-9fe0-c6b46a7e4ae0",
+            "year": 2015
+          },
+          "versions": [
+            {
+              "cast_lead": [
+                "Raghava Lawrence",
+                "Kovai Sarala",
+                "Taapsee Pannu",
+                "Jayaprakash",
+                "Pooja Ramachandran"
+              ],
+              "confidence": "HIGH",
+              "is_original": true,
+              "language": "ta",
+              "relationship": "is_original_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q6936064",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Kanchana 2",
+              "version_id": "9b064b1f-8a6a-493e-9fe0-c6b46a7e4ae0",
+              "year": 2015
+            }
+          ]
+        }
+      },
+      "get_work": {
+        "based_on": [],
+        "canonical_title": "Kanchana 2",
+        "confidence": "HIGH",
+        "first_release_year": 2015,
+        "original_language": "ta",
+        "source_work": null,
+        "sources": [
+          {
+            "ref": "seed_slice@2026-07-03",
+            "source": "human"
+          },
+          {
+            "ref": "Q6936064",
+            "retrieved_at": "2026-07-03T07:18:30.546985Z",
+            "source": "wikidata"
+          }
+        ],
+        "work_id": "ce082e6a-3a3a-459a-aa82-def2a77ffe5f",
+        "work_type": "film"
+      },
+      "original_language": "ta",
+      "plot_excerpts": [
+        {
+          "excerpt": "Raghava is a cameraman for the channel Green TV, where his crush Nandini works. He still has a fear of ghosts and lives with his mother.",
+          "language": "en"
+        }
+      ],
+      "resolve_title": {
+        "Kanchana 2": {
+          "ambiguous": true,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Kanchana 2",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q6936064",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "9b064b1f-8a6a-493e-9fe0-c6b46a7e4ae0",
+              "work_id": "ce082e6a-3a3a-459a-aa82-def2a77ffe5f",
+              "year": 2015
+            },
+            {
+              "language": "ta",
+              "matched_title": "Kanchana",
+              "score": 0.8889,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q6936071",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "6817ce87-70ae-4072-9593-f383d4004baa",
+              "work_id": "fca2fc86-feb7-482c-afa5-c5ecb75ac7ab",
+              "year": 2011
+            }
+          ]
+        },
+        "Kanchana2": {
+          "ambiguous": true,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Kanchana 2",
+              "score": 0.9474,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q6936064",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "9b064b1f-8a6a-493e-9fe0-c6b46a7e4ae0",
+              "work_id": "ce082e6a-3a3a-459a-aa82-def2a77ffe5f",
+              "year": 2015
+            },
+            {
+              "language": "ta",
+              "matched_title": "Kanchana",
+              "score": 0.9412,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q6936071",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "6817ce87-70ae-4072-9593-f383d4004baa",
+              "work_id": "fca2fc86-feb7-482c-afa5-c5ecb75ac7ab",
+              "year": 2011
+            }
+          ]
+        }
+      },
+      "work_id": "ce082e6a-3a3a-459a-aa82-def2a77ffe5f",
+      "work_key": "kanchana_2"
+    },
+    {
+      "canonical_title": "Mersal",
+      "franchise": "mersal",
+      "get_versions": {
+        "indian": {
+          "original": {
+            "cast_lead": [
+              "Vijay",
+              "S. J. Suryah",
+              "Samantha Ruth Prabhu",
+              "Nithya Menen",
+              "Kajal Aggarwal"
+            ],
+            "confidence": "HIGH",
+            "is_original": true,
+            "language": "ta",
+            "relationship": "is_original_of",
+            "sources": [
+              {
+                "ref": "seed_slice@2026-07-03",
+                "source": "human"
+              },
+              {
+                "ref": "Q30612603",
+                "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                "source": "wikidata"
+              }
+            ],
+            "title": "Mersal",
+            "version_id": "0756450d-5454-4918-a396-f24a9db79b9d",
+            "year": 2017
+          },
+          "versions": [
+            {
+              "cast_lead": [
+                "Vijay",
+                "S. J. Suryah",
+                "Samantha Ruth Prabhu",
+                "Nithya Menen",
+                "Kajal Aggarwal"
+              ],
+              "confidence": "HIGH",
+              "is_original": true,
+              "language": "ta",
+              "relationship": "is_original_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q30612603",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Mersal",
+              "version_id": "0756450d-5454-4918-a396-f24a9db79b9d",
+              "year": 2017
+            },
+            {
+              "cast_lead": [],
+              "confidence": "MEDIUM",
+              "is_original": false,
+              "language": "te",
+              "relationship": "is_official_dub_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                }
+              ],
+              "title": "Adirindhi",
+              "version_id": "e6bf2788-5663-4d91-a0b7-a2b818ed6e8e",
+              "year": 2017
+            }
+          ]
+        }
+      },
+      "get_work": {
+        "based_on": [],
+        "canonical_title": "Mersal",
+        "confidence": "HIGH",
+        "first_release_year": 2017,
+        "original_language": "ta",
+        "source_work": null,
+        "sources": [
+          {
+            "ref": "seed_slice@2026-07-03",
+            "source": "human"
+          },
+          {
+            "ref": "Q30612603",
+            "retrieved_at": "2026-07-03T07:18:30.546985Z",
+            "source": "wikidata"
+          }
+        ],
+        "work_id": "22f5ef4f-6b8d-468e-bc88-7cba9615a7e6",
+        "work_type": "film"
+      },
+      "original_language": "ta",
+      "plot_excerpts": [
+        {
+          "excerpt": "The film follows Maaran, a reputed doctor who charges meagre amounts from his patients and leads a double life as a vigilante magician fighting medical crimes. After he is arrested, his past is revealed.",
+          "language": "en"
+        }
+      ],
+      "resolve_title": {
+        "Adeerindhi": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Adirindhi",
+              "score": 0.8889,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q30612603",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "0756450d-5454-4918-a396-f24a9db79b9d",
+              "work_id": "22f5ef4f-6b8d-468e-bc88-7cba9615a7e6",
+              "year": 2017
+            },
+            {
+              "language": "te",
+              "matched_title": "Adirindhi",
+              "score": 0.8889,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                }
+              ],
+              "version_id": "e6bf2788-5663-4d91-a0b7-a2b818ed6e8e",
+              "work_id": "22f5ef4f-6b8d-468e-bc88-7cba9615a7e6",
+              "year": 2017
+            }
+          ]
+        },
+        "Adirindhi": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Adirindhi",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q30612603",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "0756450d-5454-4918-a396-f24a9db79b9d",
+              "work_id": "22f5ef4f-6b8d-468e-bc88-7cba9615a7e6",
+              "year": 2017
+            },
+            {
+              "language": "te",
+              "matched_title": "Adirindhi",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                }
+              ],
+              "version_id": "e6bf2788-5663-4d91-a0b7-a2b818ed6e8e",
+              "work_id": "22f5ef4f-6b8d-468e-bc88-7cba9615a7e6",
+              "year": 2017
+            }
+          ]
+        },
+        "Mersal": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Mersal",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q30612603",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "0756450d-5454-4918-a396-f24a9db79b9d",
+              "work_id": "22f5ef4f-6b8d-468e-bc88-7cba9615a7e6",
+              "year": 2017
+            }
+          ]
+        }
+      },
+      "work_id": "22f5ef4f-6b8d-468e-bc88-7cba9615a7e6",
+      "work_key": "mersal"
+    },
+    {
+      "canonical_title": "Muni",
+      "franchise": "muni_kanchana",
+      "get_versions": {
+        "indian": {
+          "original": {
+            "cast_lead": [
+              "Raghava Lawrence",
+              "Rajkiran",
+              "Kovai Sarala",
+              "Vinu Chakravarthy",
+              "Vedhika"
+            ],
+            "confidence": "HIGH",
+            "is_original": true,
+            "language": "ta",
+            "relationship": "is_original_of",
+            "sources": [
+              {
+                "ref": "seed_slice@2026-07-03",
+                "source": "human"
+              },
+              {
+                "ref": "Q6936063",
+                "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                "source": "wikidata"
+              }
+            ],
+            "title": "Muni",
+            "version_id": "fcf6b0e0-0e5f-4698-a580-4feda82d8cb6",
+            "year": 2007
+          },
+          "versions": [
+            {
+              "cast_lead": [
+                "Raghava Lawrence",
+                "Rajkiran",
+                "Kovai Sarala",
+                "Vinu Chakravarthy",
+                "Vedhika"
+              ],
+              "confidence": "HIGH",
+              "is_original": true,
+              "language": "ta",
+              "relationship": "is_original_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q6936063",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Muni",
+              "version_id": "fcf6b0e0-0e5f-4698-a580-4feda82d8cb6",
+              "year": 2007
+            }
+          ]
+        },
+        "indian_sequels": {
+          "original": {
+            "cast_lead": [
+              "Raghava Lawrence",
+              "Rajkiran",
+              "Kovai Sarala",
+              "Vinu Chakravarthy",
+              "Vedhika"
+            ],
+            "confidence": "HIGH",
+            "is_original": true,
+            "language": "ta",
+            "relationship": "is_original_of",
+            "sources": [
+              {
+                "ref": "seed_slice@2026-07-03",
+                "source": "human"
+              },
+              {
+                "ref": "Q6936063",
+                "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                "source": "wikidata"
+              }
+            ],
+            "title": "Muni",
+            "version_id": "fcf6b0e0-0e5f-4698-a580-4feda82d8cb6",
+            "year": 2007
+          },
+          "versions": [
+            {
+              "cast_lead": [
+                "Raghava Lawrence",
+                "Rajkiran",
+                "Kovai Sarala",
+                "Vinu Chakravarthy",
+                "Vedhika"
+              ],
+              "confidence": "HIGH",
+              "is_original": true,
+              "language": "ta",
+              "relationship": "is_original_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q6936063",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Muni",
+              "version_id": "fcf6b0e0-0e5f-4698-a580-4feda82d8cb6",
+              "year": 2007
+            }
+          ]
+        }
+      },
+      "get_work": {
+        "based_on": [],
+        "canonical_title": "Muni",
+        "confidence": "HIGH",
+        "first_release_year": 2007,
+        "original_language": "ta",
+        "source_work": null,
+        "sources": [
+          {
+            "ref": "seed_slice@2026-07-03",
+            "source": "human"
+          },
+          {
+            "ref": "Q6936063",
+            "retrieved_at": "2026-07-03T07:18:30.546985Z",
+            "source": "wikidata"
+          }
+        ],
+        "work_id": "0435fb49-927b-4d56-8ead-a7a4bada7a78",
+        "work_type": "film"
+      },
+      "original_language": "ta",
+      "plot_excerpts": [
+        {
+          "excerpt": "Ganesh, a man with phasmophobia who refuses to go out after 6 PM, moves into a new house with his mother, father, and wife Priya. All of a sudden, Ganesh is possessed by a ghost and starts behaving in a rude manner; his family cannot understand his behaviour, so they seek the help of a priest named Andaiyar.",
+          "language": "en"
+        }
+      ],
+      "resolve_title": {
+        "Muni": {
+          "ambiguous": true,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Muni",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q6936063",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "fcf6b0e0-0e5f-4698-a580-4feda82d8cb6",
+              "work_id": "0435fb49-927b-4d56-8ead-a7a4bada7a78",
+              "year": 2007
+            },
+            {
+              "language": "ta",
+              "matched_title": "Muni 2",
+              "score": 0.8,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q6936071",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "6817ce87-70ae-4072-9593-f383d4004baa",
+              "work_id": "fca2fc86-feb7-482c-afa5-c5ecb75ac7ab",
+              "year": 2011
+            },
+            {
+              "language": "ta",
+              "matched_title": "Muni 3",
+              "score": 0.8,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q6936064",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "9b064b1f-8a6a-493e-9fe0-c6b46a7e4ae0",
+              "work_id": "ce082e6a-3a3a-459a-aa82-def2a77ffe5f",
+              "year": 2015
+            }
+          ]
+        }
+      },
+      "work_id": "0435fb49-927b-4d56-8ead-a7a4bada7a78",
+      "work_key": "muni"
+    },
+    {
+      "canonical_title": "Pokiri",
+      "franchise": "pokiri",
+      "get_versions": {
+        "indian": {
+          "original": {
+            "cast_lead": [
+              "Mahesh Babu",
+              "Ileana D'Cruz",
+              "Prakash Raj",
+              "Nassar",
+              "Brahmanandam"
+            ],
+            "confidence": "HIGH",
+            "is_original": true,
+            "language": "te",
+            "relationship": "is_original_of",
+            "sources": [
+              {
+                "ref": "seed_slice@2026-07-03",
+                "source": "human"
+              },
+              {
+                "ref": "Q3630260",
+                "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                "source": "wikidata"
+              }
+            ],
+            "title": "Pokiri",
+            "version_id": "104b128d-0986-429e-8bf8-93ad90bb6631",
+            "year": 2006
+          },
+          "versions": [
+            {
+              "cast_lead": [
+                "Mahesh Babu",
+                "Ileana D'Cruz",
+                "Prakash Raj",
+                "Nassar",
+                "Brahmanandam"
+              ],
+              "confidence": "HIGH",
+              "is_original": true,
+              "language": "te",
+              "relationship": "is_original_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q3630260",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Pokiri",
+              "version_id": "104b128d-0986-429e-8bf8-93ad90bb6631",
+              "year": 2006
+            },
+            {
+              "cast_lead": [
+                "Vijay",
+                "Asin Thottumkal",
+                "Prakash Raj",
+                "Napoleon",
+                "Nassar"
+              ],
+              "confidence": "HIGH",
+              "is_original": false,
+              "language": "ta",
+              "relationship": null,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q1796783",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Pokkiri",
+              "version_id": "fe731bf6-9c12-439d-b666-89d00ecaab3d",
+              "year": 2007
+            },
+            {
+              "cast_lead": [
+                "Salman Khan",
+                "Vinod Khanna",
+                "Ayesha Takia",
+                "Mahesh Manjrekar",
+                "Prakash Raj"
+              ],
+              "confidence": "HIGH",
+              "is_original": false,
+              "language": "hi",
+              "relationship": null,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q2622347",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Wanted",
+              "version_id": "6ff8e87d-4958-4b0d-8ab7-ac7703f5f1f8",
+              "year": 2009
+            }
+          ]
+        }
+      },
+      "get_work": {
+        "based_on": [],
+        "canonical_title": "Pokiri",
+        "confidence": "HIGH",
+        "first_release_year": 2006,
+        "original_language": "te",
+        "source_work": null,
+        "sources": [
+          {
+            "ref": "seed_slice@2026-07-03",
+            "source": "human"
+          },
+          {
+            "ref": "Q3630260",
+            "retrieved_at": "2026-07-03T07:18:30.546985Z",
+            "source": "wikidata"
+          }
+        ],
+        "work_id": "4a41a211-8535-4805-97df-c2687d072f67",
+        "work_type": "film"
+      },
+      "original_language": "te",
+      "plot_excerpts": [
+        {
+          "excerpt": "Pandu, a thug working for money and living in Hyderabad along with his friends, is hired by Narayana to beat up Ali Bhai's henchman Mallesh. Pandu later joins Ali Bhai's gang after being offered money to join.",
+          "language": "en"
+        },
+        {
+          "excerpt": "The film is about Tamizh, a ruthless, fearless hit man in the Chennai underworld. He swiftly joins the mafia with the dislike of other members in the gang.",
+          "language": "en"
+        }
+      ],
+      "resolve_title": {
+        "Pokeeri": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "Pokiri",
+              "score": 0.8333,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q3630260",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "104b128d-0986-429e-8bf8-93ad90bb6631",
+              "work_id": "4a41a211-8535-4805-97df-c2687d072f67",
+              "year": 2006
+            },
+            {
+              "language": "ta",
+              "matched_title": "போக்கிரி",
+              "score": 0.8333,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q1796783",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "fe731bf6-9c12-439d-b666-89d00ecaab3d",
+              "work_id": "4a41a211-8535-4805-97df-c2687d072f67",
+              "year": 2007
+            }
+          ]
+        },
+        "Pokiri": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "Pokiri",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q3630260",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "104b128d-0986-429e-8bf8-93ad90bb6631",
+              "work_id": "4a41a211-8535-4805-97df-c2687d072f67",
+              "year": 2006
+            },
+            {
+              "language": "ta",
+              "matched_title": "போக்கிரி",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q1796783",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "fe731bf6-9c12-439d-b666-89d00ecaab3d",
+              "work_id": "4a41a211-8535-4805-97df-c2687d072f67",
+              "year": 2007
+            }
+          ]
+        },
+        "Pokkeeri": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "Pokiri",
+              "score": 0.8333,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q3630260",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "104b128d-0986-429e-8bf8-93ad90bb6631",
+              "work_id": "4a41a211-8535-4805-97df-c2687d072f67",
+              "year": 2006
+            },
+            {
+              "language": "ta",
+              "matched_title": "போக்கிரி",
+              "score": 0.8333,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q1796783",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "fe731bf6-9c12-439d-b666-89d00ecaab3d",
+              "work_id": "4a41a211-8535-4805-97df-c2687d072f67",
+              "year": 2007
+            }
+          ]
+        },
+        "Pokkiri": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "Pokiri",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q3630260",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "104b128d-0986-429e-8bf8-93ad90bb6631",
+              "work_id": "4a41a211-8535-4805-97df-c2687d072f67",
+              "year": 2006
+            },
+            {
+              "language": "ta",
+              "matched_title": "போக்கிரி",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q1796783",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "fe731bf6-9c12-439d-b666-89d00ecaab3d",
+              "work_id": "4a41a211-8535-4805-97df-c2687d072f67",
+              "year": 2007
+            }
+          ]
+        },
+        "Wanted": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "hi",
+              "matched_title": "Wanted",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q2622347",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "6ff8e87d-4958-4b0d-8ab7-ac7703f5f1f8",
+              "work_id": "4a41a211-8535-4805-97df-c2687d072f67",
+              "year": 2009
+            }
+          ]
+        }
+      },
+      "work_id": "4a41a211-8535-4805-97df-c2687d072f67",
+      "work_key": "pokiri"
+    },
+    {
+      "canonical_title": "Premam",
+      "franchise": "premam",
+      "get_versions": {
+        "indian": {
+          "original": {
+            "cast_lead": [
+              "Nivin Pauly",
+              "Madonna Sebastian",
+              "Sai Pallavi",
+              "Anupama Parameswaran",
+              "Shabareesh Varma"
+            ],
+            "confidence": "HIGH",
+            "is_original": true,
+            "language": "ml",
+            "relationship": "is_original_of",
+            "sources": [
+              {
+                "ref": "seed_slice@2026-07-03",
+                "source": "human"
+              },
+              {
+                "ref": "Q19895421",
+                "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                "source": "wikidata"
+              }
+            ],
+            "title": "Premam",
+            "version_id": "4e25b577-2d8d-472b-a0cd-e94edbab8545",
+            "year": 2015
+          },
+          "versions": [
+            {
+              "cast_lead": [
+                "Nivin Pauly",
+                "Madonna Sebastian",
+                "Sai Pallavi",
+                "Anupama Parameswaran",
+                "Shabareesh Varma"
+              ],
+              "confidence": "HIGH",
+              "is_original": true,
+              "language": "ml",
+              "relationship": "is_original_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q19895421",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Premam",
+              "version_id": "4e25b577-2d8d-472b-a0cd-e94edbab8545",
+              "year": 2015
+            },
+            {
+              "cast_lead": [
+                "Naga Chaitanya Akkineni",
+                "Shruti Haasan",
+                "Madonna Sebastian",
+                "Anupama Parameswaran",
+                "Praveen"
+              ],
+              "confidence": "HIGH",
+              "is_original": false,
+              "language": "te",
+              "relationship": null,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q23013780",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Premam",
+              "version_id": "16e1a708-71bd-4c4d-9931-3a372750e939",
+              "year": 2016
+            }
+          ]
+        }
+      },
+      "get_work": {
+        "based_on": [],
+        "canonical_title": "Premam",
+        "confidence": "HIGH",
+        "first_release_year": 2015,
+        "original_language": "ml",
+        "source_work": null,
+        "sources": [
+          {
+            "ref": "seed_slice@2026-07-03",
+            "source": "human"
+          },
+          {
+            "ref": "Q19895421",
+            "retrieved_at": "2026-07-03T07:18:30.546985Z",
+            "source": "wikidata"
+          }
+        ],
+        "work_id": "2163077f-1962-4dac-8223-6a007d6f138a",
+        "work_type": "film"
+      },
+      "original_language": "ml",
+      "plot_excerpts": [
+        {
+          "excerpt": "He is infatuated with Mary, considered the most beautiful girl in the village of Uliyannoor–Thottakkattukara. Along with his friends Shambu and Koya, George often follows Mary in an attempt to speak with her, but he is intimidated by her father, who is known to assault boys who harass his daughter.",
+          "language": "en"
+        },
+        {
+          "excerpt": "The film opens in the year 2000, where Vikram, is shown to be a shy and modest young man who loves Suma who, unfortunately for Vicky, is loved by all the boys in the area. After a desperate attempt to write a love letter, Vikram is unable to give it to Suma due to her strict militarian father.",
+          "language": "en"
+        }
+      ],
+      "resolve_title": {
+        "Premam": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "Premam",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q23013780",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "16e1a708-71bd-4c4d-9931-3a372750e939",
+              "work_id": "2163077f-1962-4dac-8223-6a007d6f138a",
+              "year": 2016
+            },
+            {
+              "language": "ml",
+              "matched_title": "പ്രേമം",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q19895421",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "4e25b577-2d8d-472b-a0cd-e94edbab8545",
+              "work_id": "2163077f-1962-4dac-8223-6a007d6f138a",
+              "year": 2015
+            }
+          ]
+        }
+      },
+      "work_id": "2163077f-1962-4dac-8223-6a007d6f138a",
+      "work_key": "premam"
+    },
+    {
+      "canonical_title": "U Turn",
+      "franchise": "u_turn",
+      "get_versions": {
+        "indian": {
+          "original": {
+            "cast_lead": [
+              "Shraddha Srinath",
+              "Skanda Ashok",
+              "Roger Narayan",
+              "Dilip Raj",
+              "Radhika Narayan"
+            ],
+            "confidence": "HIGH",
+            "is_original": true,
+            "language": "kn",
+            "relationship": "is_original_of",
+            "sources": [
+              {
+                "ref": "seed_slice@2026-07-03",
+                "source": "human"
+              },
+              {
+                "ref": "Q25217692",
+                "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                "source": "wikidata"
+              }
+            ],
+            "title": "U Turn",
+            "version_id": "5aba2743-6440-4f32-9d28-c5fed6322556",
+            "year": 2016
+          },
+          "versions": [
+            {
+              "cast_lead": [
+                "Shraddha Srinath",
+                "Skanda Ashok",
+                "Roger Narayan",
+                "Dilip Raj",
+                "Radhika Narayan"
+              ],
+              "confidence": "HIGH",
+              "is_original": true,
+              "language": "kn",
+              "relationship": "is_original_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q25217692",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "U Turn",
+              "version_id": "5aba2743-6440-4f32-9d28-c5fed6322556",
+              "year": 2016
+            },
+            {
+              "cast_lead": [
+                "Samantha Ruth Prabhu",
+                "Aadhi Pinisetty",
+                "Rahul Ravindran",
+                "Bhumika Chawla",
+                "Narain"
+              ],
+              "confidence": "HIGH",
+              "is_original": false,
+              "language": "te",
+              "relationship": "is_remake_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q56275026",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "U Turn",
+              "version_id": "8b09ae44-65da-4398-bd05-88ef47745997",
+              "year": 2018
+            },
+            {
+              "cast_lead": [],
+              "confidence": "MEDIUM",
+              "is_original": false,
+              "language": "ta",
+              "relationship": "is_official_dub_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                }
+              ],
+              "title": "U Turn",
+              "version_id": "0bc81c01-cfe5-4ad8-97fe-388e5a6cc16f",
+              "year": 2018
+            },
+            {
+              "cast_lead": [
+                "Alaya F",
+                "Priyanshu Painyuli",
+                "Rajesh Sharma",
+                "Manu Rishi Chadha",
+                "Aashim Gulati"
+              ],
+              "confidence": "HIGH",
+              "is_original": false,
+              "language": "hi",
+              "relationship": "is_remake_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q117842616",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "U-Turn",
+              "version_id": "87966c37-370c-4509-981e-1a9540036aac",
+              "year": 2023
+            }
+          ]
+        }
+      },
+      "get_work": {
+        "based_on": [],
+        "canonical_title": "U Turn",
+        "confidence": "HIGH",
+        "first_release_year": 2016,
+        "original_language": "kn",
+        "source_work": null,
+        "sources": [
+          {
+            "ref": "seed_slice@2026-07-03",
+            "source": "human"
+          },
+          {
+            "ref": "Q25217692",
+            "retrieved_at": "2026-07-03T07:18:30.546985Z",
+            "source": "wikidata"
+          }
+        ],
+        "work_id": "e06cc8ba-349c-42e0-ba49-4458404a3746",
+        "work_type": "film"
+      },
+      "original_language": "kn",
+      "plot_excerpts": [
+        {
+          "excerpt": "Rachana, an intern with The Indian Express, is working on an article on the accidents at a flyover in Bengaluru. She also has a crush on the crime reporter Aditya, whose help she seeks for research material on accidents on the flyover.",
+          "language": "en"
+        },
+        {
+          "excerpt": "Rachana, an intern with The Times of India, is working on an article about incidents occurring on a flyover. She has a crush on crime reporter Aditya and seeks his help to gather information on the accidents.",
+          "language": "en"
+        }
+      ],
+      "resolve_title": {
+        "U Turn": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "U Turn",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q56275026",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "8b09ae44-65da-4398-bd05-88ef47745997",
+              "work_id": "e06cc8ba-349c-42e0-ba49-4458404a3746",
+              "year": 2018
+            },
+            {
+              "language": "kn",
+              "matched_title": "U Turn",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q25217692",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "5aba2743-6440-4f32-9d28-c5fed6322556",
+              "work_id": "e06cc8ba-349c-42e0-ba49-4458404a3746",
+              "year": 2016
+            },
+            {
+              "language": "ta",
+              "matched_title": "U Turn",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                }
+              ],
+              "version_id": "0bc81c01-cfe5-4ad8-97fe-388e5a6cc16f",
+              "work_id": "e06cc8ba-349c-42e0-ba49-4458404a3746",
+              "year": 2018
+            },
+            {
+              "language": "hi",
+              "matched_title": "U-Turn",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q117842616",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "87966c37-370c-4509-981e-1a9540036aac",
+              "work_id": "e06cc8ba-349c-42e0-ba49-4458404a3746",
+              "year": 2023
+            }
+          ]
+        },
+        "U-Turn": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "U Turn",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q56275026",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "8b09ae44-65da-4398-bd05-88ef47745997",
+              "work_id": "e06cc8ba-349c-42e0-ba49-4458404a3746",
+              "year": 2018
+            },
+            {
+              "language": "kn",
+              "matched_title": "U Turn",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q25217692",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "5aba2743-6440-4f32-9d28-c5fed6322556",
+              "work_id": "e06cc8ba-349c-42e0-ba49-4458404a3746",
+              "year": 2016
+            },
+            {
+              "language": "ta",
+              "matched_title": "U Turn",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                }
+              ],
+              "version_id": "0bc81c01-cfe5-4ad8-97fe-388e5a6cc16f",
+              "work_id": "e06cc8ba-349c-42e0-ba49-4458404a3746",
+              "year": 2018
+            },
+            {
+              "language": "hi",
+              "matched_title": "U-Turn",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q117842616",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "87966c37-370c-4509-981e-1a9540036aac",
+              "work_id": "e06cc8ba-349c-42e0-ba49-4458404a3746",
+              "year": 2023
+            }
+          ]
+        },
+        "UTurn": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "U Turn",
+              "score": 0.9091,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q56275026",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "8b09ae44-65da-4398-bd05-88ef47745997",
+              "work_id": "e06cc8ba-349c-42e0-ba49-4458404a3746",
+              "year": 2018
+            },
+            {
+              "language": "kn",
+              "matched_title": "U Turn",
+              "score": 0.9091,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q25217692",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "5aba2743-6440-4f32-9d28-c5fed6322556",
+              "work_id": "e06cc8ba-349c-42e0-ba49-4458404a3746",
+              "year": 2016
+            },
+            {
+              "language": "ta",
+              "matched_title": "U Turn",
+              "score": 0.9091,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                }
+              ],
+              "version_id": "0bc81c01-cfe5-4ad8-97fe-388e5a6cc16f",
+              "work_id": "e06cc8ba-349c-42e0-ba49-4458404a3746",
+              "year": 2018
+            },
+            {
+              "language": "hi",
+              "matched_title": "U-Turn",
+              "score": 0.9091,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q117842616",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "87966c37-370c-4509-981e-1a9540036aac",
+              "work_id": "e06cc8ba-349c-42e0-ba49-4458404a3746",
+              "year": 2023
+            }
+          ]
+        }
+      },
+      "work_id": "e06cc8ba-349c-42e0-ba49-4458404a3746",
+      "work_key": "u_turn"
+    },
+    {
+      "canonical_title": "Vikramarkudu",
+      "franchise": "vikramarkudu",
+      "get_versions": {
+        "indian": {
+          "original": {
+            "cast_lead": [
+              "Ravi Teja",
+              "Baby Neha",
+              "Anushka Shetty",
+              "Ajay",
+              "Vineet Kumar"
+            ],
+            "confidence": "HIGH",
+            "is_original": true,
+            "language": "te",
+            "relationship": "is_original_of",
+            "sources": [
+              {
+                "ref": "seed_slice@2026-07-03",
+                "source": "human"
+              },
+              {
+                "ref": "Q7929598",
+                "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                "source": "wikidata"
+              }
+            ],
+            "title": "Vikramarkudu",
+            "version_id": "cd9aa795-adc4-4b6d-a7aa-5ebd1a25da17",
+            "year": 2006
+          },
+          "versions": [
+            {
+              "cast_lead": [
+                "Ravi Teja",
+                "Baby Neha",
+                "Anushka Shetty",
+                "Ajay",
+                "Vineet Kumar"
+              ],
+              "confidence": "HIGH",
+              "is_original": true,
+              "language": "te",
+              "relationship": "is_original_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q7929598",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Vikramarkudu",
+              "version_id": "cd9aa795-adc4-4b6d-a7aa-5ebd1a25da17",
+              "year": 2006
+            },
+            {
+              "cast_lead": [
+                "Karthi",
+                "Tamannaah Bhatia",
+                "Santhanam",
+                "Bhumika Chawla",
+                "Manobala"
+              ],
+              "confidence": "HIGH",
+              "is_original": false,
+              "language": "ta",
+              "relationship": "is_remake_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q3530982",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Siruthai",
+              "version_id": "3847dba8-632e-423b-bb9d-efc84404607b",
+              "year": 2011
+            },
+            {
+              "cast_lead": [
+                "Akshay Kumar",
+                "Sonakshi Sinha",
+                "Nassar",
+                "Yashpal Sharma",
+                "Mushtaq Khan"
+              ],
+              "confidence": "HIGH",
+              "is_original": false,
+              "language": "hi",
+              "relationship": "is_remake_of",
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q7371867",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "title": "Rowdy Rathore",
+              "version_id": "ef6031fc-ca35-4541-858b-9be3e313ef97",
+              "year": 2012
+            }
+          ]
+        }
+      },
+      "get_work": {
+        "based_on": [],
+        "canonical_title": "Vikramarkudu",
+        "confidence": "HIGH",
+        "first_release_year": 2006,
+        "original_language": "te",
+        "source_work": null,
+        "sources": [
+          {
+            "ref": "seed_slice@2026-07-03",
+            "source": "human"
+          },
+          {
+            "ref": "Q7929598",
+            "retrieved_at": "2026-07-03T07:18:30.546985Z",
+            "source": "wikidata"
+          }
+        ],
+        "work_id": "021501db-9e1f-447b-a073-adb434cca75f",
+        "work_type": "film"
+      },
+      "original_language": "te",
+      "plot_excerpts": [
+        {
+          "excerpt": "He finds a photo of Chinki and her father, who looks exactly like Shiva, thus realizing why Chinki thinks Shiva is her father. Eventually, it is revealed that Chinki's father is ASP Vikram Rathore, a brave, disciplined, and respected police officer whom criminals fear.",
+          "language": "en"
+        },
+        {
+          "excerpt": "The story revolves around \"Rocket\" Raja, a petty thief who comes across a little girl says that he's her father. When he learns the truth about his lookalike Rathnavel Pandian, who's an honest cop, he decides to turn a new leaf and help get rid of a crime gang.",
+          "language": "en"
+        }
+      ],
+      "resolve_title": {
+        "Rowdy Rathore": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "hi",
+              "matched_title": "Rowdy Rathore",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q7371867",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "ef6031fc-ca35-4541-858b-9be3e313ef97",
+              "work_id": "021501db-9e1f-447b-a073-adb434cca75f",
+              "year": 2012
+            }
+          ]
+        },
+        "RowdyRathore": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "hi",
+              "matched_title": "Rowdy Rathore",
+              "score": 0.96,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q7371867",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "ef6031fc-ca35-4541-858b-9be3e313ef97",
+              "work_id": "021501db-9e1f-447b-a073-adb434cca75f",
+              "year": 2012
+            }
+          ]
+        },
+        "Seeruthai": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Siruthai",
+              "score": 0.875,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q3530982",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "3847dba8-632e-423b-bb9d-efc84404607b",
+              "work_id": "021501db-9e1f-447b-a073-adb434cca75f",
+              "year": 2011
+            }
+          ]
+        },
+        "Siruthai": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "ta",
+              "matched_title": "Siruthai",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q3530982",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "3847dba8-632e-423b-bb9d-efc84404607b",
+              "work_id": "021501db-9e1f-447b-a073-adb434cca75f",
+              "year": 2011
+            }
+          ]
+        },
+        "Veekramarkudu": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "Vikramarkudu",
+              "score": 0.9167,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q7929598",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "cd9aa795-adc4-4b6d-a7aa-5ebd1a25da17",
+              "work_id": "021501db-9e1f-447b-a073-adb434cca75f",
+              "year": 2006
+            }
+          ]
+        },
+        "Vikramarkudu": {
+          "ambiguous": false,
+          "candidates": [
+            {
+              "language": "te",
+              "matched_title": "Vikramarkudu",
+              "score": 1.0,
+              "sources": [
+                {
+                  "ref": "seed_slice@2026-07-03",
+                  "source": "human"
+                },
+                {
+                  "ref": "Q7929598",
+                  "retrieved_at": "2026-07-03T07:18:30.546985Z",
+                  "source": "wikidata"
+                }
+              ],
+              "version_id": "cd9aa795-adc4-4b6d-a7aa-5ebd1a25da17",
+              "work_id": "021501db-9e1f-447b-a073-adb434cca75f",
+              "year": 2006
+            }
+          ]
+        }
+      },
+      "work_id": "021501db-9e1f-447b-a073-adb434cca75f",
+      "work_key": "vikramarkudu"
+    }
+  ]
+}

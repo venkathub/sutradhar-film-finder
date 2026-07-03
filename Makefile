@@ -8,7 +8,7 @@
 COMPOSE ?= docker compose -f infra/docker-compose.yml
 
 .DEFAULT_GOAL := help
-.PHONY: help setup fmt lint typecheck test test-int check up down down-v mlflow-up mlflow-down db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ingest-training resolve-conflicts export-training-entities extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
+.PHONY: help setup fmt lint typecheck test test-int check up down down-v mlflow-up mlflow-down db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ingest-training resolve-conflicts export-training-entities ft-snapshot build-ft-scaffold extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
         smoke hf-check gpu-validate gpu-nuke
 
 help: ## List available targets
@@ -108,6 +108,12 @@ resolve-conflicts: ## Apply human-reviewed conflict resolutions (audited YAML; l
 
 export-training-entities: ## Emit the D3 entity-disjointness fixture list from gate views (P4)
 	uv run python finetune/export_training_entities.py
+
+ft-snapshot: ## P4: export gate-view tool-result recordings for the scaffold generator (needs up)
+	uv run python finetune/build_dataset.py snapshot
+
+build-ft-scaffold: ## P4: generate the scaffold-only dataset from the committed snapshot (no DB)
+	uv run python finetune/build_dataset.py scaffold
 
 smoke: ## LLM connectivity smoke test (green whether the GPU endpoint is up or off)
 	uv run python -m sutradhar.serving.smoke
