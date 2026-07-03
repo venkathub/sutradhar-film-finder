@@ -1,0 +1,12 @@
+{
+  "texts_total": 6426,
+  "accepted": 4625,
+  "rejected": 1801,
+  "rejection_rate": 0.2803,
+  "escalation_triggered": false,
+  "stamp": {
+    "model": "sarvamai/sarvam-m",
+    "revision": "01534a53c46f2788e392dbb3d994e0fa8f04d3fd",
+    "prompt_sha256": "950c3c3cf3e584bc06a11ef38995766fc57abee0b9c734843102d2f74ac26061"
+  }
+}

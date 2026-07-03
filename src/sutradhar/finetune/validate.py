@@ -404,6 +404,7 @@ def verify_locked(
     # Abstention token survives (rule 5) — a NO_MATCH answer may not stop abstaining.
     if "NO_MATCH" in original and "NO_MATCH" not in rewritten:
         reasons.append("NO_MATCH token dropped")
+
     # Whitespace-collapse guard (2026-07-03 pilot: the teacher occasionally glues words —
     # "amanwithphasmophobia"): a rewrite may not contain absurdly longer "words" than the
     # original had.

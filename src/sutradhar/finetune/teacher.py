@@ -19,6 +19,7 @@ CI never calls a model: tests inject a fake ``rewrite`` callable (DEC-P2-6 postu
 from __future__ import annotations
 
 import hashlib
+import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -176,15 +177,22 @@ class TeacherClient:
         if self._client is None:
             raise RuntimeError("teacher off (TEACHER_BASE_URL unset) — surface pass skipped")
         prompt = render_prompt(locked_text, register, kind, self._prompt_path)
-        result = self._client.chat(
-            [{"role": "user", "content": prompt}],
-            temperature=self._temperature,
-            max_tokens=self._max_tokens,
-            extra_body={"chat_template_kwargs": {"enable_thinking": self._enable_thinking}},
-        )
-        if result.status != "up":
-            raise RuntimeError(f"teacher call failed: {result.detail}")
-        return clean_teacher_output(result.content or "")
+        # Transport resilience (2026-07-03 full-pass finding: the JarvisLabs Cloudflare
+        # proxy throws transient 5xx under sustained concurrency): retry with backoff
+        # before failing the whole pass.
+        last_detail = ""
+        for attempt in range(5):
+            result = self._client.chat(
+                [{"role": "user", "content": prompt}],
+                temperature=self._temperature,
+                max_tokens=self._max_tokens,
+                extra_body={"chat_template_kwargs": {"enable_thinking": self._enable_thinking}},
+            )
+            if result.status == "up":
+                return clean_teacher_output(result.content or "")
+            last_detail = result.detail or "unknown"
+            time.sleep(min(15 * (attempt + 1), 60))
+        raise RuntimeError(f"teacher call failed after retries: {last_detail}")
 
 
 # --- The surface pass ---
