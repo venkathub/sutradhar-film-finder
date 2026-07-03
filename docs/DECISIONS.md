@@ -966,3 +966,21 @@ rotating secrets against an initialized volume, then re-ups compose.
 sshd, ufw active, backups cron'd; laptop traced the full generation dry-run to it
 (run `20260703T012339Z-e7fff041`, GS-08c trace exported + committed, MLflow run `c2fb0eab…`).
 Standing cost unchanged (₹799/mo); tunnel adds ₹0.
+
+**Amendment (2026-07-03, P3 task 13 — judge FROZEN, DEC-P3-1).** Human-agreement validation
+executed: 30-item blind worksheet (6 coherence + 24 faithfulness, 15 deterministic foils) from
+the committed dry-run transcripts, labelled by the user (one label corrected on review —
+`fai-GS-07e`, whose non-foil answer carries the seeded invention), judged by **gpt-oss-20b served
+by vLLM in one ephemeral A100 session** (create→judge→destroy: machine 438566, up in 297 s,
+destroyed, ≈6 min ≪ the ≤1 h envelope). **Result: percent agreement 0.867, Cohen's κ = 0.738 —
+PASS (≥ 0.6)**; coherence slice perfect (κ = 1.0, n=6), faithfulness κ = 0.673 (n=24); 0
+judge_errors (guided decoding + pinned low reasoning effort worked as governed). All 4
+disagreements share one mode: the judge forgave trailing invented-film recommendations on
+otherwise-grounded foils — reinforcing that the deterministic detector GATES and the judge is
+supplementary (DEC-P3-3). **Frozen judge config:** `openai/gpt-oss-20b @ revision
+6cee5e81ee83917806bbde320786a8fb61efebee`, coherence rubric `judge_coherence_v1.md`
+(hash b08612f1…), faithfulness rubric `judge_faithfulness_v1.md`, temperature 0,
+reasoning_effort low, guided JSON (plus a tested plain-retry fallback). Phi-4-14B alternate and
+the frontier escalation were NOT needed. Methodology note: labels were produced by the project
+owner with an assistant-flagged single-item review correction; report + verdicts committed at
+`evals/judge_validation/report.json`.

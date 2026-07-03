@@ -165,7 +165,14 @@ escalation is pure config — proven by test against both endpoint styles.
   invented-movie faithfulness foil; provenance in a separate key file), the human fills
   every `human_label`, `make judge-validate` scores it with the pinned judge and reports
   percent agreement + **Cohen's κ (gate: ≥ 0.6)** → `evals/judge_validation/report.json`.
-  Judge–human agreement result: _pending task 13 (the labelling + ephemeral GPU session)_.
+  **Judge–human agreement result (2026-07-03, task 13): percent agreement 0.867,
+  Cohen's κ = 0.738 — PASS** (coherence κ = 1.0 n=6; faithfulness κ = 0.673 n=24; 0
+  judge_errors; one ephemeral A100 session, ≈6 min, destroyed). Frozen judge:
+  `openai/gpt-oss-20b @ 6cee5e81…`, rubric hashes pinned, temperature 0, low reasoning
+  effort, guided JSON. All 4 disagreements were the judge forgiving trailing invented-film
+  mentions on grounded foils — the deterministic detector gates for exactly this reason.
+  Full verdicts: `evals/judge_validation/report.json` (labels by the project owner; one
+  item corrected on review — see DEC-P3-1 amendment).
 
 ## RAGAS adapter (P3 task 8 — `sutradhar.evals.ragas_metrics`, DEC-P3-3)
 

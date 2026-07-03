@@ -298,3 +298,21 @@ def test_compute_report_requires_all_labels() -> None:
     items, _ = build_worksheet([_transcript("GS-07a", ["**X (2000)**"], ["q"])])
     with pytest.raises(ValueError, match="unlabelled"):
         compute_report(items, _client(lambda r: _verdict_response()))
+
+
+def test_guided_decoding_rejection_falls_back_to_plain_call() -> None:
+    """A 400 on guided_json/reasoning_effort (seen with some serving stacks) must retry
+    once without extra_body instead of burning the batch as judge_error."""
+    calls: list[dict[str, Any]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        calls.append(body)
+        if "guided_json" in body:
+            return httpx.Response(400, json={"error": "guided decoding not supported"})
+        return _verdict_response(0.67)
+
+    verdict = _client(handler).judge_coherence([{"user": "u", "assistant": "a"}])
+    assert verdict.score == 0.67
+    assert len(calls) == 2
+    assert "guided_json" in calls[0] and "guided_json" not in calls[1]

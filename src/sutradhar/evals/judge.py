@@ -170,12 +170,23 @@ class JudgeClient:
             result = self._client.chat(
                 [{"role": "user", "content": prompt}],
                 temperature=0.0,
-                max_tokens=512,
+                max_tokens=2048,  # reasoning models spend tokens thinking before the JSON
                 extra_body={
                     "guided_json": VERDICT_JSON_SCHEMA,
                     "reasoning_effort": "low",
                 },
             )
+            if result.status == "error":
+                # Some serving stacks reject guided decoding / reasoning_effort for some
+                # models (HTTP 400). Retry ONCE without the extra body — parse_verdict is
+                # lenient enough to extract embedded JSON; the degradation is recorded.
+                result = self._client.chat(
+                    [{"role": "user", "content": prompt}],
+                    temperature=0.0,
+                    max_tokens=2048,
+                )
+                if result.status == "up":
+                    span.update(metadata={"guided_decoding": "rejected; plain retry used"})
             if result.status != "up":
                 span.update(output={"error": result.status}, level="ERROR")
                 return JudgeVerdict(error=f"judge_error: endpoint {result.status}: {result.detail}")

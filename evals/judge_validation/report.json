@@ -1,0 +1,282 @@
+{
+  "n_items": 30,
+  "percent_agreement": 0.8666666666666667,
+  "cohens_kappa": 0.7379912663755458,
+  "per_kind": {
+    "coherence": {
+      "n": 6.0,
+      "percent_agreement": 1.0,
+      "cohens_kappa": 1.0
+    },
+    "faithfulness": {
+      "n": 24.0,
+      "percent_agreement": 0.8333333333333334,
+      "cohens_kappa": 0.673469387755102
+    }
+  },
+  "judge": {
+    "coherence": {
+      "model": "openai/gpt-oss-20b",
+      "base_url": "https://530c3d4385662.notebooksn.jarvislabs.net/v1",
+      "revision": "6cee5e81ee83917806bbde320786a8fb61efebee",
+      "prompt_file": "judge_coherence_v1.md",
+      "prompt_hash": "b08612f167a5a7c58818535a65c6e90a996dcbdcfec1460086a68f9ad44c7259",
+      "temperature": 0.0,
+      "reasoning_effort": "low",
+      "ragas_version": null
+    },
+    "faithfulness": {
+      "model": "openai/gpt-oss-20b",
+      "base_url": "https://530c3d4385662.notebooksn.jarvislabs.net/v1",
+      "revision": "6cee5e81ee83917806bbde320786a8fb61efebee",
+      "prompt_file": "judge_faithfulness_v1.md",
+      "prompt_hash": "5665f303f64eb77fe4b66b630903f4ba53c4659ad0dbfd8db4eb7e185e331ef9",
+      "temperature": 0.0,
+      "reasoning_effort": "low",
+      "ragas_version": null
+    }
+  },
+  "verdicts": [
+    {
+      "item_id": "fai-GS-02d",
+      "kind": "faithfulness",
+      "judge_score": 1.0,
+      "judge_binary": 1,
+      "human_label": 1,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-02d-foil",
+      "kind": "faithfulness",
+      "judge_score": 0.0,
+      "judge_binary": 0,
+      "human_label": 0,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-02e",
+      "kind": "faithfulness",
+      "judge_score": 1.0,
+      "judge_binary": 1,
+      "human_label": 1,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-02e-foil",
+      "kind": "faithfulness",
+      "judge_score": 0.0,
+      "judge_binary": 0,
+      "human_label": 0,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-02f",
+      "kind": "faithfulness",
+      "judge_score": 1.0,
+      "judge_binary": 1,
+      "human_label": 1,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-02f-foil",
+      "kind": "faithfulness",
+      "judge_score": 0.0,
+      "judge_binary": 0,
+      "human_label": 0,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-02g",
+      "kind": "faithfulness",
+      "judge_score": 1.0,
+      "judge_binary": 1,
+      "human_label": 1,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-02g-foil",
+      "kind": "faithfulness",
+      "judge_score": 0.0,
+      "judge_binary": 0,
+      "human_label": 0,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-07a",
+      "kind": "faithfulness",
+      "judge_score": 1.0,
+      "judge_binary": 1,
+      "human_label": 1,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-07a-foil",
+      "kind": "faithfulness",
+      "judge_score": 1.0,
+      "judge_binary": 1,
+      "human_label": 0,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-07b",
+      "kind": "faithfulness",
+      "judge_score": 1.0,
+      "judge_binary": 1,
+      "human_label": 1,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-07b-foil",
+      "kind": "faithfulness",
+      "judge_score": 0.0,
+      "judge_binary": 0,
+      "human_label": 0,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-07c",
+      "kind": "faithfulness",
+      "judge_score": 1.0,
+      "judge_binary": 1,
+      "human_label": 1,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-07c-foil",
+      "kind": "faithfulness",
+      "judge_score": 1.0,
+      "judge_binary": 1,
+      "human_label": 0,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-07d",
+      "kind": "faithfulness",
+      "judge_score": 1.0,
+      "judge_binary": 1,
+      "human_label": 1,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-07d-foil",
+      "kind": "faithfulness",
+      "judge_score": 1.0,
+      "judge_binary": 1,
+      "human_label": 0,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-07e",
+      "kind": "faithfulness",
+      "judge_score": 0.0,
+      "judge_binary": 0,
+      "human_label": 0,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-07e-foil",
+      "kind": "faithfulness",
+      "judge_score": 0.0,
+      "judge_binary": 0,
+      "human_label": 0,
+      "judge_error": null
+    },
+    {
+      "item_id": "coh-GS-08a",
+      "kind": "coherence",
+      "judge_score": 1.0,
+      "judge_binary": 1,
+      "human_label": 1,
+      "judge_error": null
+    },
+    {
+      "item_id": "coh-GS-08a-foil",
+      "kind": "coherence",
+      "judge_score": 0.0,
+      "judge_binary": 0,
+      "human_label": 0,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-08a",
+      "kind": "faithfulness",
+      "judge_score": 1.0,
+      "judge_binary": 1,
+      "human_label": 1,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-08a-foil",
+      "kind": "faithfulness",
+      "judge_score": 0.0,
+      "judge_binary": 0,
+      "human_label": 0,
+      "judge_error": null
+    },
+    {
+      "item_id": "coh-GS-08b",
+      "kind": "coherence",
+      "judge_score": 1.0,
+      "judge_binary": 1,
+      "human_label": 1,
+      "judge_error": null
+    },
+    {
+      "item_id": "coh-GS-08b-foil",
+      "kind": "coherence",
+      "judge_score": 0.0,
+      "judge_binary": 0,
+      "human_label": 0,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-08b",
+      "kind": "faithfulness",
+      "judge_score": 0.5,
+      "judge_binary": 1,
+      "human_label": 1,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-08b-foil",
+      "kind": "faithfulness",
+      "judge_score": 0.0,
+      "judge_binary": 0,
+      "human_label": 0,
+      "judge_error": null
+    },
+    {
+      "item_id": "coh-GS-08c",
+      "kind": "coherence",
+      "judge_score": 0.33,
+      "judge_binary": 0,
+      "human_label": 0,
+      "judge_error": null
+    },
+    {
+      "item_id": "coh-GS-08c-foil",
+      "kind": "coherence",
+      "judge_score": 0.0,
+      "judge_binary": 0,
+      "human_label": 0,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-08c",
+      "kind": "faithfulness",
+      "judge_score": 1.0,
+      "judge_binary": 1,
+      "human_label": 1,
+      "judge_error": null
+    },
+    {
+      "item_id": "fai-GS-08c-foil",
+      "kind": "faithfulness",
+      "judge_score": 1.0,
+      "judge_binary": 1,
+      "human_label": 0,
+      "judge_error": null
+    }
+  ],
+  "gate": "kappa=0.738 \u2014 PASS (>= 0.6, judge freezable)"
+}

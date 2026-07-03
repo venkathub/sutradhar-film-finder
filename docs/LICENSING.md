@@ -27,3 +27,5 @@
 ## Code
 
 This repository: MIT (see `pyproject.toml`). `indic-transliteration` (Python): MIT.
+
+| openai/gpt-oss-20b (LLM-as-judge, DEC-P3-1; rev 6cee5e81) | Apache 2.0 | Self-hosted on the ephemeral GPU for judge/RAGAS batch passes only; never serves users; weights pinned by revision SHA |
