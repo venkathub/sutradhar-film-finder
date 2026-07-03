@@ -199,5 +199,41 @@ def scaffold(
     typer.echo(json.dumps({b: sum(v.values()) for b, v in sorted(stats.items())}, indent=2))
 
 
+@app.command()
+def validate(
+    dataset: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/scaffolds.jsonl"), "--dataset"
+    ),
+    report_out: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/validation_report.json")
+    ),
+) -> None:
+    """Run every validation layer over a dataset JSONL (task 5; exit 1 on any issue)."""
+    from sutradhar.finetune.dataset import read_jsonl
+    from sutradhar.finetune.validate import validate_dataset
+
+    conversations = read_jsonl(dataset)
+    report = validate_dataset(conversations)
+    report_out.parent.mkdir(parents=True, exist_ok=True)
+    report_out.write_text(
+        json.dumps(report.model_dump(mode="json"), indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    decon = report.decontamination
+    typer.echo(
+        f"conversations: {report.conversations}\n"
+        f"issues:        {len(report.issues)}\n"
+        f"decontamination max similarity: golden={decon.max_similarity_golden} "
+        f"exemplars={decon.max_similarity_exemplars} negatives={decon.max_similarity_negatives} "
+        f"(threshold {decon.threshold}; violations: {len(decon.violations)})\n"
+        f"report: {report_out}"
+    )
+    for issue in report.issues[:20]:
+        typer.echo(f"  ! {issue.conv_id} [{issue.kind}] {issue.detail}", err=True)
+    if not report.ok:
+        raise typer.Exit(1)
+    typer.echo("OK — dataset passes all validation layers")
+
+
 if __name__ == "__main__":
     app()

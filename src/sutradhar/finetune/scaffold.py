@@ -219,11 +219,11 @@ USER_TEMPLATES: dict[str, dict[str, list[str]]] = {
     },
     "list_versions": {
         "en": [
-            "show me all language versions of {title}",
+            "which languages was {title} made in? give me the full list",
             "list every version of {title} in the catalog",
         ],
         "hi-latin": [
-            "{title} ke saare versions dikha do",
+            "{title} ka har language version batao",
             "{title} kitni languages mein bana hai?",
         ],
         "ta-latin": ["{title} oda ella language versions um sollu"],
@@ -258,7 +258,7 @@ USER_TEMPLATES: dict[str, dict[str, list[str]]] = {
 REFINE_TEMPLATES: dict[str, dict[str, list[str]]] = {
     "language": {
         "en": ["only the {value} one please", "just show the {value} version"],
-        "hi-latin": ["sirf {value} wala", "bas {value} wala dikhao"],
+        "hi-latin": ["mujhe bas {value} version do", "bas {value} wala dikhao"],
         "ta-latin": ["{value} version mattum kaamí", "{value} la irukkuradhu mattum"],
         "kn-latin": ["{value} version matra thorisi"],
         "te-latin": ["{value} version matrame chupinchu"],
