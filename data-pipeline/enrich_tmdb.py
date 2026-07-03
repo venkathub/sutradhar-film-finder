@@ -18,6 +18,7 @@ from sqlalchemy import select
 
 from sutradhar.graph.db import create_graph_engine, create_session_factory
 from sutradhar.graph.schema import Version
+from sutradhar.pipeline.seed import load_seed_slice
 from sutradhar.pipeline.snapshots import latest_snapshot_dir, load_snapshot, write_snapshot
 from sutradhar.pipeline.tmdb import TMDBClient, enrich_tmdb, parse_movie
 
@@ -34,13 +35,29 @@ def main(
     snapshot_root: Path = typer.Option(  # noqa: B008 — typer idiom
         SNAPSHOT_ROOT, help="Snapshot base directory."
     ),
+    slice_path: Path | None = typer.Option(  # noqa: B008 — typer idiom
+        None,
+        "--slice",
+        help="Restrict to versions whose QIDs come from this slice YAML "
+        "(P4 training run; default: all versions).",
+    ),
 ) -> None:
     engine = create_graph_engine()
     factory = create_session_factory(engine)
 
+    slice_qids: set[str] | None = None
+    if slice_path is not None:
+        slice_ = load_seed_slice(slice_path)
+        slice_qids = {qid for _, qid in slice_._iter_qids()}
+
     with factory() as session:
+        rows = session.execute(select(Version.tmdb_id, Version.wikidata_qid)).all()
         tmdb_ids = sorted(
-            {v for v in session.scalars(select(Version.tmdb_id)).all() if v is not None}
+            {
+                r.tmdb_id
+                for r in rows
+                if r.tmdb_id is not None and (slice_qids is None or r.wikidata_qid in slice_qids)
+            }
         )
         if not tmdb_ids:
             typer.echo("no versions with tmdb_id — run ingest-spine first", err=True)

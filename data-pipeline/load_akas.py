@@ -25,6 +25,7 @@ from sutradhar.pipeline.imdb import (
     rows_from_jsonable,
     rows_to_jsonable,
 )
+from sutradhar.pipeline.seed import load_seed_slice
 from sutradhar.pipeline.snapshots import latest_snapshot_dir, load_snapshot, write_snapshot
 
 app = typer.Typer(add_completion=False)
@@ -43,12 +44,28 @@ def main(
     snapshot_root: Path = typer.Option(  # noqa: B008 — typer idiom
         SNAPSHOT_ROOT, help="Snapshot base directory."
     ),
+    slice_path: Path | None = typer.Option(  # noqa: B008 — typer idiom
+        None,
+        "--slice",
+        help="Restrict to versions whose QIDs come from this slice YAML "
+        "(P4 training run; default: all versions).",
+    ),
 ) -> None:
     engine = create_graph_engine()
     factory = create_session_factory(engine)
 
+    slice_qids: set[str] | None = None
+    if slice_path is not None:
+        slice_ = load_seed_slice(slice_path)
+        slice_qids = {qid for _, qid in slice_._iter_qids()}
+
     with factory() as session:
-        tconsts = {t for t in session.scalars(select(Version.imdb_id)).all() if t is not None}
+        id_rows = session.execute(select(Version.imdb_id, Version.wikidata_qid)).all()
+        tconsts = {
+            r.imdb_id
+            for r in id_rows
+            if r.imdb_id is not None and (slice_qids is None or r.wikidata_qid in slice_qids)
+        }
         if not tconsts:
             typer.echo("no versions with imdb_id — run ingest-spine first", err=True)
             raise typer.Exit(1)

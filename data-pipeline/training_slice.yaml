@@ -439,3 +439,12 @@ backlog:
     reason: >
       reported 2014 Bengali remake; QID/edge not verified against live Wikidata
       2026-07-03 — backlog pending a structured record
+  - name: Bikram Singha The Lion Is Back (Bengali remake of Vikramarkudu)
+    reason: >
+      discovered via P144 backlink (Q4907444) during the 2026-07-03 spine ingest;
+      user-reviewed 2026-07-03 — backlog only (§7 Q1 convention), training data does
+      not need maximal coverage
+  - name: Bodyguard (Kannada remake of Bodyguard ml)
+    reason: >
+      discovered via P144 backlink (Q4936999) during the 2026-07-03 spine ingest;
+      user-reviewed 2026-07-03 — backlog only (§7 Q1 convention)

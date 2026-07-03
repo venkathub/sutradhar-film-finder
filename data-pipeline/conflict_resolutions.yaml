@@ -1,0 +1,13 @@
+# Human conflict resolutions (layered gate, P1_SPEC §1.5: never silently resolved).
+# Applied by data-pipeline/resolve_conflicts.py; each entry records the evidence trail.
+resolutions:
+  - wikidata_qid: Q43259962
+    field: release_year
+    chosen_value: 2019
+    reviewer: human-gate
+    date: "2026-07-03"
+    evidence: >
+      Seed (2019) + TMDB 585561 (release_date 2019-11-21) agree — 2 independent sources;
+      Wikidata P577=2018 is stale (item predates the reshot/renamed release: the Bala cut
+      was shelved, the released film is dir. Gireesaaya, 2019). P4 training-slice ingest,
+      user-confirmed 2026-07-03.

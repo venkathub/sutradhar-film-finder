@@ -1053,6 +1053,30 @@ themes (also radius-checked). **Consequence:** entity disjointness turns the bef
 behaviour-transfer claim, not memorization; decontamination scope = golden ∪ exemplars ∪ all
 negatives, reported on the dataset card.
 
+**Execution note (2026-07-03, P4 task 3 — ingested).** Final membership: **11 franchises / 15
+works / 34 gate-visible versions** (`data-pipeline/training_slice.yaml`; every QID verified live
+against Wikidata P31/P577/P364 before commit): Vikramarkudu→Siruthai+Rowdy Rathore,
+Anniyan+Aparichitudu(dub), Muni→Kanchana→Kanchana 2 (sequel ladder)+Laxmii(remake),
+Pokiri→Pokkiri+Wanted, Bodyguard ml→ta/hi/te, Arjun Reddy→Kabir Singh+Adithya Varma, U Turn
+kn→te/ta(bilingual)+hi, Mersal+Adirindhi(dub), Bigil+Whistle(dub), Premam ml→te,
+Ala Vaikunthapurramloo→Shehzada, and the Don 1978/2006-vs-Don 2022 (ta) collision pair; 3
+NO_MATCH decoy themes in `training_decoys.yaml`. Exclusion test green BEFORE ingestion; closest
+protected approach 0.667 (Vikramarkudu~Vikram), threshold 0.80. Ingestion via the existing chain
+with a behaviour-preserving `--slice` option on the slice-driven CLIs + dedicated
+`data/raw/*-training` snapshot roots (`make ingest-training`) so golden `--offline` replays stay
+untouched. **Pipeline fix exposed by the new data shape:** the QID-less version-upsert fallback
+keyed on `(work_id, language)` and merged the first same-language remake (Don hi-1978→hi-2006)
+into a self-edge; re-keyed to `(work_id, language, release_year)` (regression-tested in
+`test_ingest_spine.py`; dub-track idempotency preserved). One conflict opened and human-resolved
+(Adithya Varma year: seed+TMDB=2019 vs stale Wikidata P577=2018 → 2019; new
+`data-pipeline/resolve_conflicts.py` applies the audited `conflict_resolutions.yaml` — P1 shipped
+zero conflicts so no applier existed). Discovered P144 backlinks (Bikram Singha Q4907444,
+kn Bodyguard Q4936999) → backlog only, user-reviewed. Post-ingestion: graph = 30 works / 65
+versions / 34 edges; full integration suite green incl. `test_negatives_absent` over the grown
+index; Table 1 pinned run untouched. Entity fixture list committed:
+`finetune/training_slice_entities.json` (emitted by `finetune/export_training_entities.py` from
+gate views only).
+
 ## DEC-P4-4 — QLoRA configuration: r=16, α=32, all-linear targets, NF4 (2026-07-03)
 
 **Status:** Accepted (P4 grooming; user-confirmed — P4_SPEC §3 D4). Values live in the hashed

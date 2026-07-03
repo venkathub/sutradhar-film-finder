@@ -309,6 +309,29 @@ lift"): flagship gate **PASS** (1.00 on all five flagships), edge coverage 19/20
 proximate edge has no stating source — recorded, not invented), precision 0.352, **6 verified
 edges beyond Wikidata**, 10 corroborations.
 
+## P4 training slice (D3, DEC-P4-3 — ingested 2026-07-03)
+
+The QLoRA training data (P4) is scaffolded from a **dedicated, entity-disjoint slice** —
+`training_slice.yaml` (11 franchises / 15 works / 34 gate-visible versions; every QID verified
+live against Wikidata) + `training_decoys.yaml` (NO_MATCH themes). It flows through the SAME
+pipeline + gates via a behaviour-preserving `--slice` option on the slice-driven CLIs and
+dedicated `data/raw/*-training` snapshot roots (golden `--offline` replays stay untouched):
+
+```bash
+make ingest-training           # disjointness gate FIRST, then the full chain
+make resolve-conflicts         # apply human-reviewed conflict_resolutions.yaml (audited)
+make export-training-entities  # emit finetune/training_slice_entities.json from gate views
+```
+
+Guard rails: `tests/test_ft_training_slice_disjoint.py` (every training title outside the
+rapidfuzz-0.80 radius of golden titles, GS-02 + held-out negatives, and prompt exemplars — run
+BEFORE ingestion), then `test_negatives_absent` re-asserted over the grown index. The slice adds
+rows to the graph but **not** to the P2 chunk index or any retrieval fixture — Table 1 stays
+byte-identical. Ingestion fixes made here: version-upsert fallback re-keyed to
+`(work_id, language, release_year)` (first same-language remake, Don hi-1978→hi-2006, exposed a
+merge-to-self-edge bug); `resolve_conflicts.py` added (P1 shipped zero open conflicts, so no
+applier existed — the Adithya Varma year conflict is its first audited resolution).
+
 ## Status: P1 COMPLETE (2026-07-02)
 
 All 16 P1 tasks shipped. **30-second demo:** `make graph-demo` — resolves any title (any script,

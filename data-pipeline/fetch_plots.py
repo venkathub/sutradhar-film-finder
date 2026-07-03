@@ -41,6 +41,11 @@ def main(
     snapshot_root: Path = typer.Option(  # noqa: B008 — typer idiom
         SNAPSHOT_ROOT, help="Snapshot base directory."
     ),
+    wikidata_snapshot_root: Path = typer.Option(  # noqa: B008 — typer idiom
+        WIKIDATA_SNAPSHOT_ROOT,
+        help="Wikidata snapshot base to read sitelinks from (P4 training run uses "
+        "data/raw/wikidata-training so golden replays stay untouched).",
+    ),
 ) -> None:
     engine = create_graph_engine()
     factory = create_session_factory(engine)
@@ -57,7 +62,7 @@ def main(
             payload = load_snapshot(snap_dir, "pages")
             typer.echo(f"replaying snapshot {snap_dir}")
         else:
-            wd_snap = latest_snapshot_dir(WIKIDATA_SNAPSHOT_ROOT)
+            wd_snap = latest_snapshot_dir(wikidata_snapshot_root)
             entities = load_snapshot(wd_snap, "entities")
             sitelinks = sitelinks_from_entities(entities)
             typer.echo(f"sitelinks from {wd_snap} for {len(sitelinks)} QIDs")

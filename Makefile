@@ -8,7 +8,7 @@
 COMPOSE ?= docker compose -f infra/docker-compose.yml
 
 .DEFAULT_GOAL := help
-.PHONY: help setup fmt lint typecheck test test-int check up down down-v mlflow-up mlflow-down db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
+.PHONY: help setup fmt lint typecheck test test-int check up down down-v mlflow-up mlflow-down db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ingest-training resolve-conflicts export-training-entities extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
         smoke hf-check gpu-validate gpu-nuke
 
 help: ## List available targets
@@ -93,6 +93,21 @@ graph-report: ## Coverage per franchise + extraction lift + reproducibility stam
 	uv run python data-pipeline/graph_report.py
 
 ingest-seed: ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ## Full seed-slice ingestion chain (needs up + db-migrate + TMDB_API_KEY)
+
+ingest-training: ## P4 training-slice ingestion (D3, DEC-P4-3): disjointness gate, then the existing chain over data-pipeline/training_slice.yaml (separate snapshot roots)
+	uv run pytest tests/test_ft_training_slice_disjoint.py -q
+	uv run python data-pipeline/ingest_spine.py --slice data-pipeline/training_slice.yaml --snapshot-root data/raw/wikidata-training
+	uv run python data-pipeline/enrich_tmdb.py --slice data-pipeline/training_slice.yaml --snapshot-root data/raw/tmdb-training
+	uv run python data-pipeline/load_akas.py --slice data-pipeline/training_slice.yaml --snapshot-root data/raw/imdb-training
+	uv run python data-pipeline/fetch_plots.py --snapshot-root data/raw/wikipedia-training --wikidata-snapshot-root data/raw/wikidata-training
+	uv run python data-pipeline/rekey_titles.py
+	uv run python data-pipeline/build_graph.py
+
+resolve-conflicts: ## Apply human-reviewed conflict resolutions (audited YAML; layered gate §1.5)
+	uv run python data-pipeline/resolve_conflicts.py
+
+export-training-entities: ## Emit the D3 entity-disjointness fixture list from gate views (P4)
+	uv run python finetune/export_training_entities.py
 
 smoke: ## LLM connectivity smoke test (green whether the GPU endpoint is up or off)
 	uv run python -m sutradhar.serving.smoke
