@@ -316,7 +316,9 @@ def _upsert_version(
     entity: WikidataEntity | None,
     sources: list[SourceRef],
 ) -> tuple[Version, bool]:
-    """Upsert one version (QID key, ``(work_id, language)`` fallback for QID-less dub tracks).
+    """Upsert one version (QID key; ``(work_id, language, release_year)`` fallback for
+    QID-less dub tracks — release_year disambiguates same-language remakes inside one
+    work, e.g. Don (hi 1978) vs Don (hi 2006) in the P4 training slice).
 
     Returns ``(version, year_conflict)`` — a seed-vs-Wikidata year disagreement is surfaced,
     never silently resolved (the caller writes the conflicts row).
@@ -331,6 +333,7 @@ def _upsert_version(
             select(Version).where(
                 Version.work_id == work.work_id,
                 Version.language == seed_version.language,
+                Version.release_year == seed_version.release_year,
             )
         ).first()
 
