@@ -921,7 +921,7 @@ def _run_ft_judge(base_url: str, run_ids: list[str]) -> tuple[int, str, str]:
 
 
 def _latest_run_id(runs_dir: Path = Path("evals/generation_runs")) -> str:
-    runs = sorted(p.stem for p in runs_dir.glob("*.json"))
+    runs = sorted(p.stem for p in runs_dir.glob("*.json") if ".trace" not in p.name)
     if not runs:
         raise RuntimeError("no generation-run artifact found after capture")
     return runs[-1]
