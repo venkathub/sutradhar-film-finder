@@ -43,8 +43,15 @@ class Settings(BaseSettings):
         default="http://localhost:8000/v1",
         validation_alias="LLM_BASE_URL",
     )
-    llm_model: str = Field(default="google/gemma-4-E4B", validation_alias="LLM_MODEL")
+    llm_model: str = Field(default="google/gemma-4-E4B-it", validation_alias="LLM_MODEL")
     llm_api_key: str = Field(default="EMPTY", validation_alias="LLM_API_KEY")
+    # vLLM serving flags for the model under test (P4 window finding, 2026-07-04: tool
+    # calling needs --enable-auto-tool-choice + a model-family parser or every tools
+    # request 400s). Model-family-specific => env-swappable, never hardcoded in sessions.
+    vllm_serve_flags: str = Field(
+        default="--enable-auto-tool-choice --tool-call-parser gemma4 --reasoning-parser gemma4",
+        validation_alias="VLLM_SERVE_FLAGS",
+    )
     llm_timeout_s: float = Field(default=10.0, validation_alias="LLM_TIMEOUT_S")
 
     # --- Retrieval models (env defaults = DEC-0002 pins; not loaded in P0) ---

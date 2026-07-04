@@ -171,6 +171,14 @@ def main(
     out = out_dir / f"{artifact.run_id}.json"
     out.write_text(artifact.model_dump_json(indent=1) + "\n", encoding="utf-8")
     typer.echo(f"committed generation-run artifact: {out}")
+    if mode == "live" and metrics.fixtures_completed == 0:
+        typer.echo(
+            f"FATAL: 0/{metrics.fixtures_total} fixtures completed against the live "
+            "endpoint — the serving config is broken (tool parser? model?); artifact "
+            "kept for diagnostics but this run is NOT a benchmark column",
+            err=True,
+        )
+        raise typer.Exit(4)
 
     # --- observability evidence (both degrade cleanly when off/unreachable) ---
     tracer.flush()

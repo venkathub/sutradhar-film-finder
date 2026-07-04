@@ -163,7 +163,7 @@ def _run(
         counter["n"] += 1
         return rcs.get(variant, 0), f"captured {variant}", ""
 
-    def fake_judge(base_url: str, run_ids: list[str]) -> tuple[int, str, str]:
+    def fake_judge(base_url: str, embed_url: str, run_ids: list[str]) -> tuple[int, str, str]:
         captures.append(("judge", ",".join(run_ids)))
         return judge_rc, "judged", ""
 

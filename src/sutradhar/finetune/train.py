@@ -27,13 +27,16 @@ from pydantic import BaseModel, ConfigDict, field_validator
 # §6.6 reproducible-environment pins for the training container (single source; the
 # task-10 startup script installs exactly these). transformers matches uv.lock.
 TRAINING_PIPS: tuple[str, ...] = (
+    # Resolved as a mutually-compatible set via `uv pip compile` (2026-07-04, after the
+    # first window attempt died on a peft<->transformers-v5 import break): guessing pins
+    # individually is how one burns a GPU window.
     "torch==2.9.1",
     "transformers==5.13.0",
-    "trl==0.28.0",
-    "peft==0.18.1",
-    "bitsandbytes==0.49.1",
-    "datasets==4.5.0",
-    "accelerate==1.13.0",
+    "trl==1.7.1",
+    "peft==0.19.1",
+    "bitsandbytes==0.49.2",
+    "datasets==5.0.0",
+    "accelerate==1.14.0",
 )
 
 
@@ -73,7 +76,7 @@ class TrainConfig(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    base_model: str = "google/gemma-4-E4B"  # DEC-0001; env-swappable at session time
+    base_model: str = "google/gemma-4-E4B-it"  # DEC-0001; env-swappable at session time
     lora: LoraSettings = LoraSettings()
     quant: QuantSettings = QuantSettings()
 

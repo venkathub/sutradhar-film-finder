@@ -33,6 +33,30 @@ def load_rows(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
 
 
+def resolve_target_modules(model, wanted: list[str]) -> list[str]:
+    """Resolve DEC-P4-4's seven projection targets against the ACTUAL module tree.
+
+    Gemma 4 wraps projections in Gemma4ClippableLinear(linear=Linear4bit) — PEFT cannot
+    inject into the wrapper (2026-07-04 window finding), so wrapped targets resolve to
+    their inner ``<name>.linear``. Same seven projections, addressed where the weights
+    actually live; the resolved list is logged + stamped into training_metrics.json.
+    """
+    resolved: set[str] = set()
+    for name, module in model.named_modules():
+        leaf = name.rsplit(".", 1)[-1]
+        if leaf not in wanted:
+            continue
+        # Text stack only: the multimodal towers carry plain-Linear q/k/v_proj whose bare
+        # suffixes would cross-match the wrapped text-stack modules (2026-07-04 attempt 7).
+        if any(t in name for t in ("vision", "audio", "tower")):
+            continue
+        # FULL paths, never bare suffixes; wrappers resolve to their inner .linear.
+        resolved.add(f"{name}.linear" if hasattr(module, "linear") else name)
+    if not resolved:
+        raise SystemExit(f"no target modules matched {wanted} — wrong architecture?")
+    return sorted(resolved)
+
+
 def preflight_mask_probe(tokenizer, rows: list[dict]) -> None:
     """Re-assert assistant-only masking on-box with the REAL tokenizer (task-8 guard)."""
     probe = rows[0]
@@ -61,7 +85,13 @@ def main() -> int:
     parser.add_argument("--train", type=Path, required=True)
     parser.add_argument("--val", type=Path, required=True)
     parser.add_argument("--out-dir", type=Path, default=Path("/home/ft_out"))
-    parser.add_argument("--push-adapter-repo", default=os.environ.get("HF_ADAPTER_REPO", ""))
+    parser.add_argument(
+        "--chat-template",
+        type=Path,
+        default=None,
+        help="Train-time chat template with {% generation %} markers (task-12 finding: "
+        "the -it template renders byte-identically but ships without markers).",
+    )
     args = parser.parse_args()
 
     body = json.loads(args.config.read_text(encoding="utf-8"))
@@ -89,6 +119,9 @@ def main() -> int:
     train_rows = load_rows(args.train)
     val_rows = load_rows(args.val)
     tokenizer = AutoTokenizer.from_pretrained(cfg["base_model"])
+    if args.chat_template is not None:
+        tokenizer.chat_template = args.chat_template.read_text(encoding="utf-8")
+        print(f"[config] train-time chat template loaded from {args.chat_template}", flush=True)
     preflight_mask_probe(tokenizer, train_rows)
 
     compute_dtype = getattr(torch, cfg["quant"]["compute_dtype"])
@@ -104,11 +137,16 @@ def main() -> int:
         dtype=compute_dtype,
         device_map="auto",
     )
+    resolved_targets = resolve_target_modules(model, list(cfg["lora"]["target_modules"]))
+    print(
+        f"[lora] resolved {len(resolved_targets)} target modules (first 3: {resolved_targets[:3]})",
+        flush=True,
+    )
     lora = LoraConfig(
         r=cfg["lora"]["r"],
         lora_alpha=cfg["lora"]["alpha"],
         lora_dropout=cfg["lora"]["dropout"],
-        target_modules=list(cfg["lora"]["target_modules"]),
+        target_modules=resolved_targets,
         task_type="CAUSAL_LM",
     )
 
@@ -156,6 +194,7 @@ def main() -> int:
 
     metrics = {
         "config_hash": actual_hash,
+        "resolved_target_modules": resolved_targets,
         "train_result": dict(result.metrics),
         "log_history": trainer.state.log_history,
         "best_model_checkpoint": trainer.state.best_model_checkpoint,
@@ -169,32 +208,7 @@ def main() -> int:
     )
     print(f"[train] done: best={trainer.state.best_metric} adapter={adapter_dir}", flush=True)
 
-    # --- merge (vLLM serves the MERGED model for a comparable tokens/sec column, §2.4) ---
-    del model, trainer
-    torch.cuda.empty_cache()
-    from peft import PeftModel
-
-    base = AutoModelForCausalLM.from_pretrained(
-        cfg["base_model"], dtype=compute_dtype, device_map="cpu"
-    )
-    merged = PeftModel.from_pretrained(base, str(adapter_dir)).merge_and_unload()
-    merged_dir = out_dir / "merged"
-    merged.save_pretrained(str(merged_dir))
-    tokenizer.save_pretrained(str(merged_dir))
-    print(f"[merge] merged model at {merged_dir}", flush=True)
-
-    if args.push_adapter_repo:
-        from huggingface_hub import HfApi
-
-        api = HfApi(token=os.environ.get("HF_TOKEN"))
-        api.create_repo(repo_id=args.push_adapter_repo, private=True, exist_ok=True)
-        api.upload_folder(folder_path=str(adapter_dir), repo_id=args.push_adapter_repo)
-        api.upload_file(
-            path_or_fileobj=out_dir / "training_metrics.json",
-            path_in_repo="training_metrics.json",
-            repo_id=args.push_adapter_repo,
-        )
-        print(f"[push] adapter + metrics -> {args.push_adapter_repo}", flush=True)
+    # merge + processor packaging live in merge_adapter.py (window phase [2b]).
     return 0
 
 

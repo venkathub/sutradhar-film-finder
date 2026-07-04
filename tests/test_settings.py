@@ -34,7 +34,7 @@ def test_defaults_load(monkeypatch: pytest.MonkeyPatch) -> None:
     _clear_env(monkeypatch)
     s = Settings(_env_file=None)
     assert s.llm_base_url == "http://localhost:8000/v1"
-    assert s.llm_model == "google/gemma-4-E4B"
+    assert s.llm_model == "google/gemma-4-E4B-it"
     assert s.llm_api_key == "EMPTY"
     assert s.llm_timeout_s == 10.0
     assert s.embed_model == "BAAI/bge-m3"

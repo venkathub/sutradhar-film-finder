@@ -26,6 +26,7 @@ import os
 import subprocess
 import sys
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -67,6 +68,17 @@ class Relay:
             self.api.file_exists(self.repo, f"runs/{self.run_id}/{name}", repo_type="dataset")
         )
 
+    def exists_abs(self, path_in_repo: str) -> bool:
+        return bool(self.api.file_exists(self.repo, path_in_repo, repo_type="dataset"))
+
+    def put_dir(self, local: Path, name: str) -> None:
+        self.api.upload_folder(
+            folder_path=str(local),
+            path_in_repo=f"runs/{self.run_id}/{name}",
+            repo_id=self.repo,
+            repo_type="dataset",
+        )
+
     def get(self, name: str) -> Path:
         from huggingface_hub import hf_hub_download
 
@@ -98,6 +110,51 @@ def wait_local_health(port: int, timeout_s: float = 2700) -> None:
             pass
         time.sleep(POLL_S)
     raise TimeoutError(f"local vLLM on :{port} not healthy within {timeout_s}s")
+
+
+PROBE_TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "resolve_title",
+            "description": "probe",
+            "parameters": {
+                "type": "object",
+                "properties": {"title": {"type": "string"}},
+                "required": ["title"],
+            },
+        },
+    }
+]
+
+
+def tools_selftest(model: str, port: int) -> None:
+    """A tools-bearing chat request MUST return 200 before any marker goes up —
+    the 2026-07-04 window burn: tools requests 400 without the family tool parser."""
+    body = json.dumps(
+        {
+            "model": model,
+            "messages": [{"role": "user", "content": "find Pokiri versions"}],
+            "tools": PROBE_TOOLS,
+            "max_tokens": 32,
+        }
+    ).encode()
+    req = urllib.request.Request(
+        f"http://127.0.0.1:{port}/v1/chat/completions",
+        data=body,
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            if resp.status != 200:
+                raise SystemExit(f"tools self-test HTTP {resp.status} — check serve_flags")
+    except urllib.error.HTTPError as exc:
+        detail = exc.read()[:500].decode(errors="replace")
+        raise SystemExit(
+            f"tools self-test FAILED ({exc.code}): {detail} — serve_flags missing the "
+            "tool parser? refusing to expose a capture endpoint"
+        ) from exc
+    log("tools self-test: 200 OK")
 
 
 def serve_vllm(model: str, port: int, extra: list[str] | None = None) -> subprocess.Popen:
@@ -139,42 +196,114 @@ def main() -> int:
     subprocess.check_call(["pip", "install", "-q", "-U", "vllm"])  # noqa: S603,S607
     proc = serve_vllm(base_model, SERVE_PORT, serve_flags)
     wait_local_health(SERVE_PORT)
+    tools_selftest(base_model, SERVE_PORT)
     relay.put("BASE_UP")
     log("BASE_UP — waiting for BASE_CAPTURED")
     relay.wait("BASE_CAPTURED", marker_timeout)
     stop(proc)
 
-    # [2] train + merge ----------------------------------------------------------------
+    # [2] train (RESUMABLE: skip if an adapter already exists on the relay) ------------
+    # ISOLATED venv: the serving env belongs to vLLM (its own torch build); installing
+    # the training pins into it broke transformers' torch-backed lazy imports on the
+    # 2026-07-04 attempt. The pins get a clean interpreter; vLLM's env stays untouched
+    # for phase [3].
     pins = window["training_pips"]
-    subprocess.check_call(["pip", "install", "-q", *pins])  # noqa: S603,S607
-    config = relay.get("train_config.json")
-    train_rows = relay.get("train_rows.jsonl")
-    val_rows = relay.get("val_rows.jsonl")
-    script = relay.get("train_qlora.py")
+    venv = Path("/home/trainenv")
+    subprocess.check_call([sys.executable, "-m", "venv", str(venv)])  # noqa: S603
+    train_python = str(venv / "bin" / "python")
+    subprocess.check_call(  # noqa: S603
+        [train_python, "-m", "pip", "install", "-q", "huggingface_hub", *pins]
+    )
     out_dir = Path("/home/ft_out")
+    adapter_dir = out_dir / "adapter"
+    # PHASE CHECKPOINT (2026-07-04 lesson: a merge-serve crash must never cost the
+    # training run again). resume_from = a relay prefix holding a finished adapter
+    # (e.g. "rescue" or "runs/<old-id>/out"); this run's own out/adapter counts too.
+    resume_prefix = window.get("resume_from") or f"runs/{args.run_id}/out"
+    if relay.exists_abs(f"{resume_prefix}/adapter/adapter_model.safetensors"):
+        log(f"RESUME: adapter found at {resume_prefix}/adapter — skipping training")
+        import shutil
+
+        from huggingface_hub import snapshot_download
+
+        snap = snapshot_download(
+            repo_id=args.repo,
+            repo_type="dataset",
+            allow_patterns=[
+                f"{resume_prefix}/adapter/*",
+                f"{resume_prefix}/training_metrics.json",
+            ],
+        )
+        shutil.copytree(Path(snap) / resume_prefix / "adapter", adapter_dir, dirs_exist_ok=True)
+        tm = Path(snap) / resume_prefix / "training_metrics.json"
+        if tm.exists():
+            relay.put_file(tm, "out/training_metrics.json")
+    else:
+        config = relay.get("train_config.json")
+        train_rows = relay.get("train_rows.jsonl")
+        val_rows = relay.get("val_rows.jsonl")
+        script = relay.get("train_qlora.py")
+        template = relay.get("gemma4_train_template.jinja")
+        rc = subprocess.call(  # noqa: S603
+            [
+                train_python,
+                str(script),
+                "--config",
+                str(config),
+                "--train",
+                str(train_rows),
+                "--val",
+                str(val_rows),
+                "--out-dir",
+                str(out_dir),
+                "--chat-template",
+                str(template),
+            ]
+        )
+        metrics = out_dir / "training_metrics.json"
+        if metrics.exists():
+            relay.put_file(metrics, "out/training_metrics.json")
+        if rc != 0:
+            raise SystemExit(f"training failed rc={rc}")
+        # CHECKPOINT the adapter to the relay IMMEDIATELY — before any serving step can
+        # fail — so no later phase can ever cost the training run again.
+        relay.put_dir(adapter_dir, "out/adapter")
+        log("adapter checkpointed to the relay")
+
+    # [2b] merge: the proven graft recipe (multimodal class + KV-sharing tensors);
+    # the processor is saved with the SERVING env python (torchvision/PIL live there).
+    merge_script = relay.get("merge_adapter.py")
+    merged_dir = out_dir / "merged"
+    rc = subprocess.call(  # noqa: S603
+        [
+            train_python,
+            str(merge_script),
+            "--base",
+            base_model,
+            "--adapter",
+            str(adapter_dir),
+            "--out",
+            str(merged_dir),
+        ]
+    )
+    if rc != 0:
+        raise SystemExit(f"merge failed rc={rc}")
     rc = subprocess.call(  # noqa: S603
         [
             sys.executable,
-            str(script),
-            "--config",
-            str(config),
-            "--train",
-            str(train_rows),
-            "--val",
-            str(val_rows),
-            "--out-dir",
-            str(out_dir),
+            "-c",
+            "from transformers import AutoProcessor; "
+            f"AutoProcessor.from_pretrained({base_model!r}).save_pretrained({str(merged_dir)!r}); "
+            "print('[merge] processor saved')",
         ]
     )
-    metrics = out_dir / "training_metrics.json"
-    if metrics.exists():
-        relay.put_file(metrics, "out/training_metrics.json")
     if rc != 0:
-        raise SystemExit(f"training failed rc={rc}")
+        raise SystemExit("processor save failed")
 
     # [3] merged column (byte-identical serving flags) ----------------------------------
-    proc = serve_vllm(str(out_dir / "merged"), SERVE_PORT, serve_flags)
+    proc = serve_vllm(str(merged_dir), SERVE_PORT, serve_flags)
     wait_local_health(SERVE_PORT)
+    tools_selftest(str(merged_dir), SERVE_PORT)
     relay.put("MERGED_UP")
     log("MERGED_UP — waiting for QLORA_CAPTURED")
     relay.wait("QLORA_CAPTURED", marker_timeout)

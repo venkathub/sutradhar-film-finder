@@ -150,7 +150,9 @@ def _default_deps() -> Deps:
             template="pytorch",
             storage=settings.gpu_storage_gb,
             name=INSTANCE_NAME,
-            http_ports=str(SERVE_PORT),
+            # Expose the serve port AND the embed port (P4 window step [5]: BGE-M3 on
+            # :8001 for the laptop-driven RAGAS pass — P3 never needed it off-box).
+            http_ports=f"{SERVE_PORT},{EMBED_SERVE_PORT}",
             script_id=str(script_id) if script_id is not None else None,
         )
 
@@ -883,12 +885,18 @@ def _run_ft_benchmark(base_url: str, variant: str) -> tuple[int, str, str]:
     proc = subprocess.run(  # noqa: S603 — our own entrypoint, controlled args
         args, env=env, capture_output=True, text=True, timeout=3600
     )
+    # rc=3 = the runner's GS-02 gate fired ON THE MODEL UNDER TEST. For the window that
+    # is a RESULT (the artifact is recorded; DEC-P4-8's guard judges it at verdict time),
+    # not an orchestration failure — a hallucinating BASE column is exactly the honest
+    # baseline the benchmark exists to document (found live 2026-07-04).
+    if proc.returncode == 3:
+        note = "\n[window] GS-02 gate fired on this column — recorded; verdict applies DEC-P4-8"
+        return 0, proc.stdout + note, proc.stderr
     return proc.returncode, proc.stdout, proc.stderr
 
 
-def _run_ft_judge(base_url: str, run_ids: list[str]) -> tuple[int, str, str]:
+def _run_ft_judge(base_url: str, embed_url: str, run_ids: list[str]) -> tuple[int, str, str]:
     """Default judge runner: re-judge + RAGAS every captured column artifact."""
-    import os
     import subprocess
 
     settings = get_settings()
@@ -896,7 +904,7 @@ def _run_ft_judge(base_url: str, run_ids: list[str]) -> tuple[int, str, str]:
         **os.environ,
         "JUDGE_BASE_URL": base_url,
         "JUDGE_MODEL": settings.require("judge_model"),
-        "EMBED_BASE_URL": base_url.replace(f":{SERVE_PORT}", f":{EMBED_SERVE_PORT}"),
+        "EMBED_BASE_URL": embed_url,
     }
     out, err = "", ""
     for run_id in run_ids:
@@ -920,6 +928,16 @@ def _run_ft_judge(base_url: str, run_ids: list[str]) -> tuple[int, str, str]:
     return 0, out, err
 
 
+def _embed_base_url(instance: Any, base_url: str) -> str:
+    """The BGE-M3 endpoint (:8001) as reachable from the laptop: prefer an instance
+    endpoint that names the embed port; fall back to a port swap on the serve URL."""
+    for ep in getattr(instance, "endpoints", None) or []:
+        ep = str(ep).rstrip("/")
+        if str(EMBED_SERVE_PORT) in ep:
+            return ep if ep.endswith("/v1") else f"{ep}/v1"
+    return base_url.replace(str(SERVE_PORT), str(EMBED_SERVE_PORT), 1)
+
+
 def _latest_run_id(runs_dir: Path = Path("evals/generation_runs")) -> str:
     runs = sorted(p.stem for p in runs_dir.glob("*.json") if ".trace" not in p.name)
     if not runs:
@@ -933,7 +951,7 @@ def finetune_session(
     hub: HubRelay | None = None,
     *,
     run_benchmark: Callable[[str, str], tuple[int, str, str]] = _run_ft_benchmark,
-    run_judge_pass: Callable[[str, list[str]], tuple[int, str, str]] = _run_ft_judge,
+    run_judge_pass: Callable[[str, str, list[str]], tuple[int, str, str]] = _run_ft_judge,
     latest_run_id: Callable[[], str] = _latest_run_id,
     window_timeout_s: float = DEFAULT_WINDOW_TIMEOUT_S,
     marker_timeout_s: float = DEFAULT_MARKER_TIMEOUT_S,
@@ -961,6 +979,8 @@ def finetune_session(
         "val_rows.jsonl": trl_dir / "val_rows.jsonl",
         "train_qlora.py": FT_TRAIN_SCRIPT,
         "gpu_window.py": FT_WINDOW_SCRIPT,
+        "gemma4_train_template.jinja": FT_TRAIN_SCRIPT.parent / "gemma4_train_template.jinja",
+        "merge_adapter.py": FT_TRAIN_SCRIPT.parent / "merge_adapter.py",
     }
     missing = [name for name, path in payload.items() if not path.exists()]
     if missing:
@@ -971,9 +991,12 @@ def finetune_session(
         "base_model": base_model,
         "judge_model": judge_model,
         "embed_model": settings.embed_model,
-        "serve_flags": [],
+        "serve_flags": settings.vllm_serve_flags.split(),
         "training_pips": list(TRAINING_PIPS),
         "marker_timeout_s": marker_timeout_s,
+        # RESUME (2026-07-04 lesson): a relay prefix holding a finished adapter — the
+        # window skips training entirely and goes straight to merge/captures.
+        "resume_from": os.environ.get("FT_RESUME_FROM", ""),
     }
     deps.log(f"[gpu-finetune] window {run_id}: uploading relay payload …")
     for name, path in payload.items():
@@ -1068,7 +1091,8 @@ def finetune_session(
             ev.status = "error"
             ev.detail = "JUDGE_UP never appeared"
             return ev
-        rc, out, err = run_judge_pass(base_url, captured_runs)
+        embed_url = _embed_base_url(instance, base_url)
+        rc, out, err = run_judge_pass(base_url, embed_url, captured_runs)
         deps.log(out)
         if rc != 0:
             ev.status = "error"
