@@ -300,10 +300,15 @@ def main() -> int:
     if rc != 0:
         raise SystemExit("processor save failed")
 
-    # [3] merged column (byte-identical serving flags) ----------------------------------
-    proc = serve_vllm(str(merged_dir), SERVE_PORT, serve_flags)
+    # [3] merged column (byte-identical serving flags; explicit served name — vLLM
+    # otherwise registers the model under the local PATH and every named request 404s,
+    # found live 2026-07-04 attempt 9).
+    merged_name = window.get("merged_served_name", "sutradhar-qlora-merged")
+    proc = serve_vllm(
+        str(merged_dir), SERVE_PORT, [*serve_flags, "--served-model-name", merged_name]
+    )
     wait_local_health(SERVE_PORT)
-    tools_selftest(str(merged_dir), SERVE_PORT)
+    tools_selftest(merged_name, SERVE_PORT)
     relay.put("MERGED_UP")
     log("MERGED_UP — waiting for QLORA_CAPTURED")
     relay.wait("QLORA_CAPTURED", marker_timeout)

@@ -821,6 +821,7 @@ def teacher_session(
 # half, relay-shipped). Strict order: base capture -> train -> merged capture(s) ->
 # judge/RAGAS both columns -> pull -> DESTROY (teardown in finally, as always).
 
+FT_MERGED_SERVED_NAME = "sutradhar-qlora-merged"  # vLLM --served-model-name for phase [3]
 FT_TRL_DIR = Path("data/artifacts/finetune/trl")
 FT_WINDOW_ARTIFACTS = Path("data/artifacts/finetune/window")
 FT_WINDOW_SCRIPT = Path(__file__).resolve().parent.parent.parent / "finetune/gpu_window.py"
@@ -882,6 +883,8 @@ def _run_ft_benchmark(base_url: str, variant: str) -> tuple[int, str, str]:
     if variant == "qlora_no_exemplars":
         args += ["--prompt-variant", "no_exemplars"]
     env = {**os.environ, "LLM_BASE_URL": base_url}
+    if variant.startswith("qlora"):
+        env["LLM_MODEL"] = FT_MERGED_SERVED_NAME  # phase [3] serves under this name
     proc = subprocess.run(  # noqa: S603 — our own entrypoint, controlled args
         args, env=env, capture_output=True, text=True, timeout=3600
     )
@@ -997,6 +1000,7 @@ def finetune_session(
         # RESUME (2026-07-04 lesson): a relay prefix holding a finished adapter — the
         # window skips training entirely and goes straight to merge/captures.
         "resume_from": os.environ.get("FT_RESUME_FROM", ""),
+        "merged_served_name": FT_MERGED_SERVED_NAME,
     }
     deps.log(f"[gpu-finetune] window {run_id}: uploading relay payload …")
     for name, path in payload.items():
