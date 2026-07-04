@@ -1,0 +1,8 @@
+{
+  "tokenizer_class": "PreTrainedTokenizerFast",
+  "bos_token": "<bos>",
+  "eos_token": "<eos>",
+  "pad_token": "<pad>",
+  "chat_template": "{{ '<bos>' }}{%- for message in messages -%}\n{%- if message['role'] == 'system' -%}\n<start_of_turn>system\n{{ message['content'] }}<end_of_turn>\n{%- elif message['role'] == 'user' -%}\n<start_of_turn>user\n{{ message['content'] }}<end_of_turn>\n{%- elif message['role'] == 'assistant' -%}\n<start_of_turn>model\n{% generation %}{%- if message.get('tool_calls') -%}\n{%- for call in message['tool_calls'] -%}\n[tool_call]{{ call['function']['name'] }} {{ call['function']['arguments'] | tojson }}[/tool_call]\n{%- endfor -%}\n{%- else -%}\n{{ message['content'] }}\n{%- endif -%}<end_of_turn>{% endgeneration %}\n{%- elif message['role'] == 'tool' -%}\n<start_of_turn>tool\n{{ message['content'] }}<end_of_turn>\n{%- endif -%}\n{%- endfor -%}",
+  "model_max_length": 8192
+}
