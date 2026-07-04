@@ -314,8 +314,14 @@ def load_generation_run(
     runs_dir: Path = GENERATION_RUNS_DIR,
     run_id: str | None = None,
 ) -> GenerationRunArtifact:
-    """The pinned committed generation run: ``run_id`` (GENERATION_RUN env) or the latest
-    committed artifact — the Tier-1 gate source between GPU windows (DEC-P2-6 posture)."""
+    """The pinned committed generation run — the Tier-1 gate source between GPU windows
+    (DEC-P2-6 posture). Resolution: ``run_id`` (GENERATION_RUN env) > the committed
+    ``PINNED_RUN`` file (the P4 headline column; supplementary columns — no-exemplar,
+    diagnostics — live beside it and must never win a latest-glob) > latest artifact."""
+    if not run_id:
+        pin_file = runs_dir / "PINNED_RUN"
+        if pin_file.exists():
+            run_id = pin_file.read_text(encoding="utf-8").strip() or None
     if run_id:
         path = runs_dir / f"{run_id}.json"
         if not path.exists():
