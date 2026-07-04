@@ -122,6 +122,13 @@ def test_refine_local_matches_live_refine_filter(session: Session) -> None:
                 session, version_set, repository.RefineBy.model_validate(by)
             ).model_dump(mode="json")
             local = refine_local(entries, by)
-            assert local == live, f"{work.work_key}: refine_local diverges for {by}"
+
+            def _sorted(payload: dict) -> list:
+                return sorted(payload["versions"], key=lambda v: str(v["version_id"]))
+
+            # Order-insensitive: the live tool's SQL `IN` carries no ORDER BY, so row
+            # order follows Postgres physical order (changed by the 2026-07-04 restart);
+            # the v0 contract promises set semantics, not order.
+            assert _sorted(local) == _sorted(live), f"{work.work_key}: diverges for {by}"
             checked += 1
     assert checked >= 20

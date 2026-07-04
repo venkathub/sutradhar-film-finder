@@ -1,6 +1,13 @@
 # P4 Spec — QLoRA fine-tune on the rented GPU (the one-time job)
 
-> **Status: APPROVED (2026-07-03, Rev 3).** Grooming complete — all §3 recommendations
+> **Status: EXECUTED COMPLETE (2026-07-04). VERDICT: CUT** — the frozen D8 rule, applied
+> untouched to window `ftwin-ce6b6930`: 1/3 primaries improved (slot F1 +0.236), intent +
+> coherence regressed, GS-02 failed on both columns. Table 2 published
+> (`docs/BENCHMARKS.md`), verdict + execution amendments in DEC-P4-9, adapter public as a
+> negative result, dataset private per D7, conditional follow-up scoped as ROADMAP P4.1.
+> Cost: ≈ $13–14 actual vs the ≈ $10 Q6 cap (chronicle in DEC-P4-9).
+>
+> **Status at approval: APPROVED (2026-07-03, Rev 3).** Grooming complete — all §3 recommendations
 > user-confirmed (§7 Q1–Q6 resolved 2026-07-03); decisions logged as **DEC-P4-1..8** in
 > `docs/DECISIONS.md`. The §5 task list executes in order on the execution go-ahead; the D8
 > verdict rule (incl. the ≥ +0.05 margin clause frozen under the Q3 delegation) is committed

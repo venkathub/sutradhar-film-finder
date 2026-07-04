@@ -123,6 +123,12 @@ Backs: GS-08 ("the one with Ajay Devgn" → "no, the original one" → "is there
   is injected keyword-only infrastructure, invisible to the tool surface. All five v0 tools are
   now implemented; conformance is CI-enforced (signature + result round-trip + every recorded
   eval result payload). `abstain` is live per DEC-P2-5 (θ = 0.151747, calibrated).
+- **Status note (P4, 2026-07-04 — wording only, no version bump):** v0 targeted **unchanged**
+  by the P4 synthetic dataset and the before/after benchmark: scaffold tool sequences are
+  GENERATED from `tool_schema.v0.json` (never hand-written), every training-data call is
+  Tier-1-validated by the DEC-P1-8 validator (`tests/test_ft_*`), and every model-emitted call
+  in both Table 2 columns went through the live P3 validation path. The v0 sha256 is recorded
+  in the `sutradhar-ft-v1` dataset card and in both benchmark run stamps.
 - **Status note (P3, 2026-07-03 — wording only, no version bump):** v0 is **consumed unchanged
   by the P3 generation harness** in both directions: *outbound*, the OpenAI `tools` array is
   **generated from `tool_schema.v0.json`** (never hand-written — drift impossible, P3_SPEC §2.8);

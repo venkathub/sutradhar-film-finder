@@ -1,7 +1,7 @@
 # Licensing & attribution
 
 > Every data source and model Sutradhar uses, its license, how we use it, and the attribution we
-> owe. **Status: FINAL for P1 (2026-07-02)** — updated whenever a source/model is added. This is
+> owe. **Status: updated for P4 (2026-07-04)** — updated whenever a source/model is added. This is
 > a deliberate maturity signal (CLAUDE.md): license hygiene is part of the product.
 
 ## Data sources
@@ -17,12 +17,20 @@
 
 | Model | License | Our usage |
 |---|---|---|
-| Gemma 4 E4B | Apache 2.0 | FT base + P1 candidate-edge extraction (GPU session) |
+| Gemma 4 E4B-it (`@ fee6332c…`, DEC-P4-9 pin correction) | Apache 2.0 | FT base + benchmark base column + P1 candidate-edge extraction (GPU sessions) |
 | Qwen3-4B-Instruct-2507 | Apache 2.0 | Fallback base |
 | BGE-M3 / bge-reranker-v2-m3 | MIT / Apache 2.0 | P2 embeddings / reranking |
-| Sarvam-M 24B | Apache 2.0 | Optional P4 synthetic-data teacher + live showcase |
+| Sarvam-M 24B (`@ 01534a53…`) | Apache 2.0 | **P4 synthetic-data teacher (executed 2026-07-03)** — outputs unencumbered, folded into `sutradhar-ft-v1`; optional live showcase |
 | ~~Sarvam-1 (2B)~~ | **non-commercial — AVOIDED** | not used (CLAUDE.md rule) |
 | AI4Bharat IndicXlit | **CC BY-SA 4.0** | **Contingency only** (DEC-P1-5); if ever invoked, add share-alike attribution here |
+
+## P4 derived artifacts (2026-07-04)
+
+| Artifact | License / terms | Notes |
+|---|---|---|
+| **`sutradhar-ft-v1` dataset** (HF `venkat2393/sutradhar-ft-v1`) | Mixed — see the dataset card | **PRIVATE-first (DEC-P4-7)**: contains IMDb-derived AKA titles (non-commercial terms) and Wikipedia-plot-derived excerpts (CC BY-SA 4.0, revision-pinned); teacher surfaces are Apache-2.0 Sarvam-M outputs; graph facts CC0/TMDB-attributed. Stays private until a redaction pass removes the IMDb-derived rows. |
+| **`finetune/scaffold_snapshot.json`** (committed) | CC BY-SA 4.0 applies to the plot excerpts inside | Same posture as the committed P2 retrieval artifacts: per-row provenance lives in `plot_texts` (page URL + revision id). |
+| **QLoRA adapter** (HF `venkat2393/sutradhar-gemma4-e4b-qlora-v1`, PUBLIC) | Apache 2.0 | Trained on `sutradhar-ft-v1` from an Apache-2.0 base with an Apache-2.0 teacher; published as a documented negative result (DEC-P4-9). Weights contain no verbatim source text. |
 
 ## Code
 
