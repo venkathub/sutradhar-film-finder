@@ -373,7 +373,7 @@ def seal(
     # Committed Tier-1 sample: stratified slice of TRAIN (never val — CI sees no held-out
     # row), deterministic under split_seed.
     per_behaviour = max(1, sample_size // len(by_behaviour))
-    sample: list = []
+    sample: list[Any] = []
     for behaviour in sorted(by_behaviour):
         bucket = [c for c in train if c.behaviour == behaviour]
         sample.extend(bucket[:per_behaviour])
@@ -457,6 +457,41 @@ def push(
         repo_type="dataset",
     )
     typer.echo(f"pushed {card.dataset_id} (private) to {repo}: full/train/val/card/README")
+
+
+@app.command("export-trl")
+def export_trl(
+    sealed_dir: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/sealed"), "--sealed-dir"
+    ),
+    out_dir: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/trl")
+    ),
+) -> None:
+    """Export sealed train/val splits as TRL SFT rows + the hashed TrainConfig (task 9).
+
+    The relay payload for the GPU window: train_rows.jsonl / val_rows.jsonl (messages +
+    tools generated from frozen tool_schema.v0.json) + train_config.json (hash embedded).
+    """
+    from sutradhar.config import get_settings
+    from sutradhar.evals.driver import load_tool_schema, openai_tools
+    from sutradhar.finetune.dataset import read_jsonl
+    from sutradhar.finetune.render import to_trl_rows
+    from sutradhar.finetune.train import TrainConfig
+
+    tools = openai_tools(load_tool_schema(TOOL_SCHEMA_PATH))
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for split in ("train", "val"):
+        conversations = read_jsonl(sealed_dir / f"{split}.jsonl")
+        rows = to_trl_rows(conversations, tools)
+        (out_dir / f"{split}_rows.jsonl").write_text(
+            "".join(json.dumps(r, ensure_ascii=False, sort_keys=True) + "\n" for r in rows),
+            encoding="utf-8",
+        )
+        typer.echo(f"{split}: {len(rows)} rows")
+    config = TrainConfig(base_model=get_settings().llm_model)
+    (out_dir / "train_config.json").write_text(config.to_json(), encoding="utf-8")
+    typer.echo(f"train_config.json hash={config.config_hash()}\nout: {out_dir}")
 
 
 if __name__ == "__main__":
