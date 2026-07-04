@@ -81,8 +81,38 @@ well-prompted base model here, it is cut and the reason documented (DEC-0001).
 
 | Model | Tool-call accuracy | Code-mixed intent acc | Slot-extraction acc | Backtracking coherence | Faithfulness (1 − hallucinated-movie rate) | Answer relevancy | GPU latency p50/p95 | Throughput (tok/s) |
 |-------|-------------------:|----------------------:|--------------------:|-----------------------:|-------------------------------------------:|-----------------:|--------------------:|-------------------:|
-| Base (Gemma-4-E4B, prompted) | _—_ | _—_ | _—_ | _—_ | _—_ | _—_ | _—_ | _—_ | _captured at the top of the P4 GPU window by this harness_ |
-| QLoRA (Gemma-4-E4B + adapter) | _—_ | _—_ | _—_ | _—_ | _—_ | _—_ | _—_ | _—_ | _populated in P4_ |
+| Base (Gemma-4-E4B-it, prompted) | **0.083** (1/12) | **0.400** (2/5) | **0.550** | **0.667** | **0.933** (28/30; **GS-02 = 1** ⚠) | — ¹ | 798 / 5853 ms | **78.7** |
+| QLoRA (merged adapter) — **CUT** | **0.417** (5/12) | **0.200** (1/5) | **0.486** | **0.333** | **0.952** (20/21; **GS-02 = 1** ⚠) | — ¹ | 688 / 6938 ms | **74.3** |
+
+**Captured 2026-07-04, window `ftwin-ce6b6930`** — ONE A100 40 GB instance, both columns, byte-
+identical serving (vLLM, `--enable-auto-tool-choice --tool-call-parser gemma4 --reasoning-parser
+gemma4`; QLoRA column = **merged** model per P4_SPEC §2.4, tokens/sec divergence 5.7% < the 10%
+drift bar). Artifacts: base `20260704T093206Z-e9598564` (MLflow `2155e09f10c54946b1b11f0cf25c1566`) ·
+QLoRA `20260704T093942Z-f6ce2af8` (MLflow `b834bb01602b4633adcdde292af706f7`), experiment
+`sutradhar/generation`. Base model `google/gemma-4-E4B-it @ fee6332c1abaafb77f6f9624236c63aa2f1d0187`;
+adapter = `sutradhar-ft-v1` × TrainConfig `0d011802…` (best val loss 0.0502); judge + retrieval
+replay per the frozen stamp below.
+
+**VERDICT (frozen DEC-P4-8 rule, computed by `make ft-verdict`): CUT.** 1/3 primary metrics
+improved (GS-07 slot F1 0.364 → 0.600 on the GS-07 slice), intent accuracy and coherence
+regressed, and three guards failed (schema validity 1.00 → 0.94; GS-02 = 1 on **both** columns —
+base invented "Pushpa", QLoRA fuzzy-attached "Salaar"). What the adapter DID learn is real and
+measured: tool-call sequence accuracy **0.083 → 0.417** and call-level 0.25 → 0.65 — form
+improved, judgment regressed (root cause = three training-data defects, transcript-diagnosed;
+see the DEC-P4 verdict entry and the conditional ROADMAP P4.1). Honesty notes: `fixtures_completed`
+= 12/12 base vs **6/12 QLoRA** (missing final answers — defect #3); n = 5 GS-07 / 3 GS-08
+fixtures, exact fractions throughout, no significance theater.
+
+**Supplementary — QLoRA under the no-exemplar prompt (DEC-P4-6 footnote):** artifact
+`20260704T094052Z-36dd6f68` (MLflow `53d55afdc5844885a5d29986e0f7d62e`), prompt_hash explicitly
+suffixed `…:no_exemplars`, never a headline row. Code-mixed intent **0.600** (3/5) — better than
+either headline column, at ~1.1k fewer prompt tokens per turn — evidence the adapter partially
+internalized the exemplars; coherence 0.22 and schema validity 0.82 still fail the rule, so the
+CUT stands. Recorded as the P5 production-prompt data point IF a future P4.1 KEEP occurs.
+
+¹ RAGAS answer_relevancy did not compute in the window's re-judge pass (embedding-backed
+relevancy returned null for all fixtures; RAGAS *faithfulness* computed fine: 0.11 base / 0.46
+QLoRA, supplementary only). Recorded as a known evidence gap, owned by P5's dashboard work.
 
 **Frozen stamp fields (P3):** prompt bundle `prompt_hash 78215ccc…` (system + exemplars +
 intent taxonomy, `evals/prompts/prompts.lock.json`) · TOOL_SCHEMA **v0** (sha256 recorded per

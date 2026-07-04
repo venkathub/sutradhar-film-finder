@@ -1151,3 +1151,50 @@ Rejected: strict improvement on every Table 2 metric (relevancy/latency aren't F
 near-ties at small n would cut a genuinely better adapter); any-single-metric (keeps adapters on
 noise). `make ft-verdict` computes the verdict as a pure function over the two committed
 generation-run artifacts — the 30-second demo path.
+
+## DEC-P4-9 — P4 execution record + THE VERDICT: adapter CUT under the frozen rule (2026-07-04)
+
+**Status:** Accepted (P4 tasks 12–13 execution; verdict computed by `make ft-verdict` over the
+committed window artifacts — the DEC-P4-8 rule as frozen on 2026-07-03, applied untouched).
+
+**Verdict: CUT.** Window `ftwin-ce6b6930` (one A100, both columns, byte-identical serving):
+clause (i) 1/3 primaries improved — GS-07 slot F1 0.364→0.600 (+0.236, margin met); clause (iii)
+2 regressions — GS-07 intent 0.400→0.200, GS-08 coherence 0.667→0.333; clause (iv) 3 guard
+failures — schema validity 1.00→0.94, GS-02 = 1 on BOTH columns (base invented "Pushpa", QLoRA
+fuzzy-attached "Salaar"). Meanwhile tool-call sequence accuracy rose 0.083→0.417: the adapter
+learned FORM (slots, tool discipline) and lost JUDGMENT (intent, coherence). Per the DEC-0001
+pre-commitment, **P5 proceeds on the well-prompted base**; a conditional, budget-gated second
+iteration is scoped as ROADMAP P4.1 (transcript-diagnosed data defects: unconditional
+ask-back-on-ambiguity teaching, missing title-abstention class, no loop-termination examples —
+with a pre-registered guard amendment because the base's own GS-02 failure makes a KEEP
+unreachable under the original wording).
+
+**Execution amendments (recorded, dated):**
+- **Model pin corrected:** `google/gemma-4-E4B` → **`google/gemma-4-E4B-it`**
+  (`@ fee6332c1abaafb…`). The bare base ships no chat template; the -it template natively renders
+  TOOL_SCHEMA tools + the gemma4 call format. Train-time derivative template
+  (`finetune/gemma4_train_template.jinja`) adds `{% generation %}` markers only — proven
+  byte-identical over all 96 sealed samples, 0 mask violations. (DEC-0001 follow-up discharged.)
+- **`VLLM_SERVE_FLAGS` env** (default `--enable-auto-tool-choice --tool-call-parser gemma4
+  --reasoning-parser gemma4`): tool-bearing requests 400 without the family parser — found live;
+  guarded thereafter by an ON-BOX tools self-test before any capture marker, plus a laptop
+  rc-guard (0 completed fixtures = abort, not a benchmark).
+- **Resumable window** (the load-bearing lesson): the adapter is checkpointed to the HF relay
+  immediately after training; `FT_RESUME_FROM` lets a fresh window skip training entirely. The
+  first window died at merged-serving AFTER a successful train (val loss 0.0502) — the adapter
+  was hand-rescued over SSH, and the publishing window resumed from it for ~$1.5 instead of a
+  full retrain. Also fixed en route: training pins resolved as a set (`uv pip compile`), isolated
+  train venv, LoRA targets resolved against the real module tree (Gemma4ClippableLinear → inner
+  `.linear`, multimodal towers excluded), multimodal merge (AutoModelForMultimodalLM +
+  KV-sharing tensor graft + processor packaging), `--served-model-name` for the merged column.
+- **Tier-1 pin + gate (user-confirmed):** committed `evals/generation_runs/PINNED_RUN` → the live
+  base column (env override intact); the GS-02 CI gate became RELATIVE (recomputed inventions ==
+  the pinned artifact's recorded value — no NEW hallucinations between windows) because the =0
+  target is unmet by both live columns; =0 remains a hard clause in `make ft-verdict` and the
+  absolute CI assertion returns when a pinned column achieves it.
+
+**Cost accounting (honest):** teacher session ≈ $7 (est. $2 — think-mode latency + disk/proxy
+failures) + window attempts ≈ $6.2 (8 serving/packaging failures incl. a duplicate-loop leak
+≈ $0.4, one clean resume window ≈ $1.5) ≈ **$13–14 total vs the ≈ $10 Q6 cap**. Every failure
+mode is now a committed fix + test; the resume design caps any future window failure at the
+cost of the phase it died in.
