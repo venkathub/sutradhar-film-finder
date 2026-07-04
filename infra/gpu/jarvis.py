@@ -15,6 +15,8 @@ invoked only — never on a PR.
 
 from __future__ import annotations
 
+import json
+import os
 import sys
 import time
 from collections.abc import Callable
@@ -812,6 +814,302 @@ def teacher_session(
         deps.close_client(client)
 
 
+# --- P4 finetune window (task 10; P4_SPEC §2.4 — the ONE-TIME training + benchmark
+# window). Laptop half of the marker protocol driven by finetune/gpu_window.py (on-box
+# half, relay-shipped). Strict order: base capture -> train -> merged capture(s) ->
+# judge/RAGAS both columns -> pull -> DESTROY (teardown in finally, as always).
+
+FT_TRL_DIR = Path("data/artifacts/finetune/trl")
+FT_WINDOW_ARTIFACTS = Path("data/artifacts/finetune/window")
+FT_WINDOW_SCRIPT = Path(__file__).resolve().parent.parent.parent / "finetune/gpu_window.py"
+FT_TRAIN_SCRIPT = Path(__file__).resolve().parent.parent.parent / "finetune/train_qlora.py"
+DEFAULT_WINDOW_TIMEOUT_S = 8 * 3600  # spec budget: ~4-8 h total
+DEFAULT_MARKER_TIMEOUT_S = 5400
+
+
+def build_window_startup_script(token: str, repo: str, run_id: str) -> str:
+    """Download + run the on-box window driver; job.log + EXIT uploaded even on crash."""
+    return (
+        "#!/bin/bash\n"
+        "set -euo pipefail\n"  # no -x: the token must never echo into instance logs
+        f"export HF_TOKEN={token}\n"
+        "export HF_HOME=/home/hf_cache\n"
+        "mkdir -p /home/hf_cache\n"
+        "pip install -q -U huggingface_hub >/root/pip.log 2>&1 || true\n"
+        "python - <<'PY'\n"
+        "import subprocess, sys\n"
+        "from pathlib import Path\n"
+        "from huggingface_hub import HfApi, hf_hub_download\n"
+        f"repo, run_id = {repo!r}, {run_id!r}\n"
+        "kw = dict(repo_id=repo, repo_type='dataset')\n"
+        "api = HfApi()\n"
+        "log = Path('/root/job.log')\n"
+        "try:\n"
+        "    driver = hf_hub_download(filename=f'runs/{run_id}/gpu_window.py', **kw)\n"
+        "    with log.open('wb') as fh:\n"
+        "        rc = subprocess.call([sys.executable, driver, '--repo', repo,\n"
+        "                              '--run-id', run_id],\n"
+        "                             stdout=fh, stderr=subprocess.STDOUT)\n"
+        "except Exception as exc:\n"
+        "    log.write_text(f'driver exception: {exc!r}')\n"
+        "    rc = 98\n"
+        "try:\n"
+        "    api.upload_file(path_or_fileobj=str(log),\n"
+        "                    path_in_repo=f'runs/{run_id}/job.log', **kw)\n"
+        "except Exception:\n"
+        "    pass\n"
+        "api.upload_file(path_or_fileobj=str(rc).encode(),\n"
+        "                path_in_repo=f'runs/{run_id}/EXIT', **kw)\n"
+        "PY\n"
+    )
+
+
+def _run_ft_benchmark(base_url: str, variant: str) -> tuple[int, str, str]:
+    """Default capture runner: the P3 harness live against the window endpoint."""
+    import os
+    import subprocess
+
+    args = [
+        sys.executable,
+        "evals/run_generation_eval.py",
+        "--mode",
+        "live",
+        "--serving-json",
+        json.dumps({"window_column": variant}),
+    ]
+    if variant == "qlora_no_exemplars":
+        args += ["--prompt-variant", "no_exemplars"]
+    env = {**os.environ, "LLM_BASE_URL": base_url}
+    proc = subprocess.run(  # noqa: S603 — our own entrypoint, controlled args
+        args, env=env, capture_output=True, text=True, timeout=3600
+    )
+    return proc.returncode, proc.stdout, proc.stderr
+
+
+def _run_ft_judge(base_url: str, run_ids: list[str]) -> tuple[int, str, str]:
+    """Default judge runner: re-judge + RAGAS every captured column artifact."""
+    import os
+    import subprocess
+
+    settings = get_settings()
+    env = {
+        **os.environ,
+        "JUDGE_BASE_URL": base_url,
+        "JUDGE_MODEL": settings.require("judge_model"),
+        "EMBED_BASE_URL": base_url.replace(f":{SERVE_PORT}", f":{EMBED_SERVE_PORT}"),
+    }
+    out, err = "", ""
+    for run_id in run_ids:
+        proc = subprocess.run(  # noqa: S603 — our own entrypoint, controlled args
+            [
+                sys.executable,
+                "evals/rejudge_run.py",
+                "--run",
+                run_id,
+                "--with-ragas",
+            ],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=3600,
+        )
+        out += proc.stdout
+        err += proc.stderr
+        if proc.returncode != 0:
+            return proc.returncode, out, err
+    return 0, out, err
+
+
+def _latest_run_id(runs_dir: Path = Path("evals/generation_runs")) -> str:
+    runs = sorted(p.stem for p in runs_dir.glob("*.json"))
+    if not runs:
+        raise RuntimeError("no generation-run artifact found after capture")
+    return runs[-1]
+
+
+def finetune_session(
+    settings: Settings | None = None,
+    deps: Deps | None = None,
+    hub: HubRelay | None = None,
+    *,
+    run_benchmark: Callable[[str, str], tuple[int, str, str]] = _run_ft_benchmark,
+    run_judge_pass: Callable[[str, list[str]], tuple[int, str, str]] = _run_ft_judge,
+    latest_run_id: Callable[[], str] = _latest_run_id,
+    window_timeout_s: float = DEFAULT_WINDOW_TIMEOUT_S,
+    marker_timeout_s: float = DEFAULT_MARKER_TIMEOUT_S,
+    health_timeout_s: float = TEACHER_HEALTH_TIMEOUT_S,
+    poll_interval_s: float = DEFAULT_POLL_INTERVAL_S,
+    trl_dir: Path = FT_TRL_DIR,
+    artifacts_root: Path = FT_WINDOW_ARTIFACTS,
+) -> Evidence:
+    """THE one-time window (§2.4): base capture -> train -> QLoRA capture(s) -> judge ->
+    pull -> destroy. Every phase failure still tears the instance down."""
+    from sutradhar.finetune.train import TRAINING_PIPS
+
+    settings = settings or get_settings()
+    deps = deps or _default_deps()
+    hub = hub or _default_hub(settings)
+    base_model = settings.llm_model
+    judge_model = settings.require("judge_model")
+    settings = settings.model_copy(update={"gpu_storage_gb": max(settings.gpu_storage_gb, 150)})
+    ev = Evidence(requested_model=base_model, gpu_type=settings.gpu_type)
+    run_id = f"ftwin-{os.urandom(4).hex()}"
+
+    payload = {
+        "train_config.json": trl_dir / "train_config.json",
+        "train_rows.jsonl": trl_dir / "train_rows.jsonl",
+        "val_rows.jsonl": trl_dir / "val_rows.jsonl",
+        "train_qlora.py": FT_TRAIN_SCRIPT,
+        "gpu_window.py": FT_WINDOW_SCRIPT,
+    }
+    missing = [name for name, path in payload.items() if not path.exists()]
+    if missing:
+        ev.status = "error"
+        ev.detail = f"relay payload missing: {missing} — run `make build-ft-scaffold`/export-trl"
+        return ev
+    window_config = {
+        "base_model": base_model,
+        "judge_model": judge_model,
+        "embed_model": settings.embed_model,
+        "serve_flags": [],
+        "training_pips": list(TRAINING_PIPS),
+        "marker_timeout_s": marker_timeout_s,
+    }
+    deps.log(f"[gpu-finetune] window {run_id}: uploading relay payload …")
+    for name, path in payload.items():
+        hub.upload_file(path, f"runs/{run_id}/{name}")
+    config_path = trl_dir / "window_config.json"
+    config_path.write_text(json.dumps(window_config, indent=2) + "\n", encoding="utf-8")
+    hub.upload_file(config_path, f"runs/{run_id}/window_config.json")
+
+    def wait_marker(name: str, timeout_s: float) -> bool:
+        deadline = deps.monotonic() + timeout_s
+        while deps.monotonic() < deadline:
+            if hub.exists(f"runs/{run_id}/{name}"):
+                return True
+            if hub.exists(f"runs/{run_id}/EXIT"):  # box died early
+                return False
+            deps.sleep(poll_interval_s)
+        return False
+
+    def put_marker(name: str) -> None:
+        marker = trl_dir / f".marker_{name}"
+        marker.write_bytes(b"1")
+        hub.upload_file(marker, f"runs/{run_id}/{name}")
+
+    captured_runs: list[str] = []
+    client = deps.create_client(settings)
+    instance: Any = None
+    try:
+        deps.log(f"  creating {settings.gpu_type} for the finetune window …")
+        t0 = deps.monotonic()
+        script = build_window_startup_script(
+            settings.require("hf_token"), settings.require("hf_artifact_repo"), run_id
+        )
+        instance = deps.create_instance(client, settings, script)
+        ev.machine_id = getattr(instance, "machine_id", None)
+
+        # [1] base column
+        deps.log("  waiting for BASE_UP …")
+        if not wait_marker("BASE_UP", health_timeout_s + marker_timeout_s):
+            ev.status = "error"
+            ev.detail = "BASE_UP never appeared" + (
+                f" — job.log tail:\n{hub.fetch_log(run_id)}" if hub.fetch_log(run_id) else ""
+            )
+            return ev
+        base_url = _wait_for_endpoint(
+            instance, deps, timeout_s=health_timeout_s, poll_interval_s=poll_interval_s
+        )
+        if base_url is None:
+            ev.status = "error"
+            ev.detail = "BASE_UP marker present but endpoint unreachable from the laptop"
+            return ev
+        ev.booted = True
+        ev.create_to_up_s = round(deps.monotonic() - t0, 1)
+        deps.log(f"  [1] capturing BASE column against {base_url} …")
+        rc, out, err = run_benchmark(base_url, "base")
+        deps.log(out)
+        if rc != 0:
+            ev.status = "error"
+            ev.detail = f"base capture failed rc={rc}: {err.strip()[-300:]}"
+            return ev
+        captured_runs.append(latest_run_id())
+        put_marker("BASE_CAPTURED")
+
+        # [2]+[3] train happens on-box; wait for the merged model to come up.
+        deps.log("  [2] training on-box; waiting for MERGED_UP …")
+        if not wait_marker("MERGED_UP", window_timeout_s):
+            ev.status = "error"
+            ev.detail = "MERGED_UP never appeared (training failed?)" + (
+                f" — job.log tail:\n{hub.fetch_log(run_id)}" if hub.fetch_log(run_id) else ""
+            )
+            return ev
+        deps.log("  [3] capturing QLORA column (headline, frozen prompt) …")
+        rc, out, err = run_benchmark(base_url, "qlora")
+        deps.log(out)
+        if rc != 0:
+            ev.status = "error"
+            ev.detail = f"qlora capture failed rc={rc}: {err.strip()[-300:]}"
+            return ev
+        captured_runs.append(latest_run_id())
+        deps.log("  [4] capturing QLORA no-exemplar supplementary (DEC-P4-6) …")
+        rc, out, err = run_benchmark(base_url, "qlora_no_exemplars")
+        deps.log(out)
+        if rc != 0:
+            ev.status = "error"
+            ev.detail = f"no-exemplar capture failed rc={rc}: {err.strip()[-300:]}"
+            return ev
+        captured_runs.append(latest_run_id())
+        put_marker("QLORA_CAPTURED")
+
+        # [5] judge + RAGAS over all captured columns, same session.
+        deps.log("  [5] waiting for JUDGE_UP …")
+        if not wait_marker("JUDGE_UP", marker_timeout_s):
+            ev.status = "error"
+            ev.detail = "JUDGE_UP never appeared"
+            return ev
+        rc, out, err = run_judge_pass(base_url, captured_runs)
+        deps.log(out)
+        if rc != 0:
+            ev.status = "error"
+            ev.detail = f"judge pass failed rc={rc}: {err.strip()[-300:]}"
+            return ev
+        put_marker("JUDGE_DONE")
+
+        # [6] EXIT + pull the on-box outputs (training metrics; adapter went to HF Hub).
+        if not wait_marker("EXIT", marker_timeout_s):
+            ev.status = "error"
+            ev.detail = "EXIT never appeared after JUDGE_DONE"
+            return ev
+        dest = artifacts_root / run_id
+        dest.mkdir(parents=True, exist_ok=True)
+        if hub.exists(f"runs/{run_id}/out/training_metrics.json"):
+            hub.download_dir(f"runs/{run_id}/out", dest)
+        ev.status = "up"
+        ev.detail = (
+            f"window complete: columns {captured_runs} captured + judged; "
+            f"on-box outputs pulled to {dest}"
+        )
+        return ev
+    except Exception as exc:  # noqa: BLE001 — record, then guarantee teardown in finally
+        ev.status = "error"
+        ev.detail = f"{type(exc).__name__}: {exc}"
+        return ev
+    finally:
+        if instance is not None and ev.machine_id is not None:
+            try:
+                ev.destroyed = deps.destroy_instance(client, ev.machine_id)
+                deps.log(f"  destroyed instance {ev.machine_id}: {ev.destroyed}")
+            except Exception as exc:  # noqa: BLE001
+                ev.detail += f" | TEARDOWN FAILED: {exc} — run `make gpu-nuke`"
+                deps.log(f"  TEARDOWN FAILED for {ev.machine_id}: {exc}")
+        try:  # script-quota hygiene + the embedded token dies with the script slot
+            deps.remove_scripts(client)
+        except Exception as exc:  # noqa: BLE001
+            deps.log(f"  script cleanup failed (non-fatal): {exc}")
+        deps.close_client(client)
+
+
 def nuke(settings: Settings | None = None, deps: Deps | None = None) -> list[int]:
     """Destroy any stray instance carrying our tag — a leaked billing GPU is a defect."""
     settings = settings or get_settings()
@@ -862,10 +1160,14 @@ def main(argv: list[str] | None = None) -> int:
         ev = teacher_session()
         _write_evidence(ev)
         return 0 if ev.status == "up" and ev.destroyed else 1
+    if cmd == "finetune":
+        ev = finetune_session()
+        _write_evidence(ev)
+        return 0 if ev.status == "up" and ev.destroyed else 1
     if cmd == "nuke":
         nuke()
         return 0
-    print(f"usage: jarvis.py [validate|extract|embed|judge|teacher|nuke]  (got {cmd!r})")
+    print(f"usage: jarvis.py [validate|extract|embed|judge|teacher|finetune|nuke]  (got {cmd!r})")
     return 2
 
 

@@ -8,7 +8,7 @@
 COMPOSE ?= docker compose -f infra/docker-compose.yml
 
 .DEFAULT_GOAL := help
-.PHONY: help setup fmt lint typecheck test test-int check up down down-v mlflow-up mlflow-down db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ingest-training resolve-conflicts export-training-entities ft-snapshot build-ft-scaffold validate-dataset teach-dataset gpu-teacher extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
+.PHONY: help setup fmt lint typecheck test test-int check up down down-v mlflow-up mlflow-down db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ingest-training resolve-conflicts export-training-entities ft-snapshot build-ft-scaffold validate-dataset teach-dataset gpu-teacher ft-dryrun gpu-finetune extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
         smoke hf-check gpu-validate gpu-nuke
 
 help: ## List available targets
@@ -123,6 +123,12 @@ teach-dataset: ## P4: teacher surface pass against TEACHER_BASE_URL (blank => cl
 
 gpu-teacher: ## P4: ephemeral Sarvam-M session -> surface pass -> destroy (DEC-P4-1)
 	uv run python infra/gpu/jarvis.py teacher
+
+ft-dryrun: ## P4: NO-GPU rehearsal — scaffold -> mock teach -> validate -> render/mask -> config
+	uv run python finetune/ft_dryrun.py
+
+gpu-finetune: ## P4: THE one-time window — base capture -> QLoRA train -> after capture(s) -> judge -> destroy
+	uv run python infra/gpu/jarvis.py finetune
 
 smoke: ## LLM connectivity smoke test (green whether the GPU endpoint is up or off)
 	uv run python -m sutradhar.serving.smoke

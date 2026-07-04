@@ -1,0 +1,34 @@
+{
+  "steps": [
+    {
+      "step": "scaffold",
+      "conversations": 60,
+      "behaviours": 6
+    },
+    {
+      "step": "mock_teach",
+      "rewrites": 198,
+      "rejection_rate": 0.0,
+      "escalation": false
+    },
+    {
+      "step": "validate",
+      "issues": 0,
+      "decon_violations": 0,
+      "ok": true
+    },
+    {
+      "step": "render_mask",
+      "samples": 60,
+      "mask_violations": 0,
+      "token_p50": 1297,
+      "token_p95": 2492,
+      "tools": 5
+    },
+    {
+      "step": "train_config",
+      "config_hash": "3aa604952ce064b8287b54837673c88b90d626c32a30ed3a4a1ac23f7d30ab88"
+    }
+  ],
+  "ok": true
+}
