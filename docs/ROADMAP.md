@@ -103,7 +103,7 @@ end-to-end without building all of Sutradhar — application **and** MLOps.
 
 ---
 
-## 2. Phase plan (P0 → P6)
+## 2. Phase plan (P0 → P6, + conditional P4.1)
 
 Phases run in strict dependency order, one subsystem per session. A phase is not "done" until its
 Definition of Done (exit criteria) is met **and** recorded per the DoD checklist in `CLAUDE.md`.
@@ -287,6 +287,54 @@ two-tier CI) live in **§6** and apply to every phase.
     it does not, record the finding and decide explicitly whether to keep the adapter.
   - (Optional) GGUF quantization **only** if a portable CPU fallback is wanted — not a deploy req.
 
+### P4.1 — FT second iteration: data-bug fixes + amended gate (conditional, budget-gated)
+
+> **Status: PROPOSED (2026-07-04)** — queued after the P4 verdict came back **CUT** under the
+> frozen DEC-P4-8 rule. The live-window diagnosis showed the loss was dominated by **training-data
+> defects, not model capacity**: (1) scaffolds taught "ambiguous resolve ⇒ ask-back"
+> unconditionally, so the adapter ask-backs on franchise-internal ambiguity (Drishyam/Drishyam 2)
+> where golden semantics say *list the versions* — this alone flipped GS-07c/d and all three GS-08
+> coherence scores; (2) `out_of_catalog` training covered only plot-decoys, never
+> `resolve_title → [] → NO_MATCH`, the exact GS-02d/g title-abstention shape; (3) no
+> loop-termination examples → five fixtures ended with no final answer. Meanwhile the adapter DID
+> learn tool discipline (sequence accuracy 8.3% → 41.7%, slot F1 +0.24) — the headroom is real.
+> **Runs only on explicit user approval of its own budget; P5 does NOT wait for it.**
+
+- **Goal:** Fix the three identified dataset defects, retrain once in a single resume-hardened
+  window, and re-run the frozen benchmark — **beat the base on the primary metrics or close the
+  fine-tuning question for good** (two-strike rule: a second CUT ends FT work; the negative result
+  stands as the documented finding and P5/P6 proceed on the well-prompted base permanently).
+- **Subsystems touched:** Finetune (`/finetune` — scaffold generator, dataset v2, one teacher
+  top-up, training), Evals (same frozen harness/judge/fixtures — nothing re-scored), Serving
+  (transient window plumbing only).
+- **Skills demonstrated:** Failure analysis from transcripts to root cause, contrastive-pair data
+  design, behaviour-level (not loss-level) checkpoint selection, pre-registered gate amendment
+  discipline, iterating on a negative result without moving goalposts.
+- **Entry criteria:** P4 EXECUTED (CUT verdict published in `docs/BENCHMARKS.md` + DECISIONS);
+  explicit user approval of the ~$6 budget; the DEC-P4-8 **guard amendment logged BEFORE any v2
+  number exists** (GS-02 guard → "QLoRA inventions = 0 **and** ≤ base" — the original wording lets
+  the base's own hallucination veto any adapter forever; primaries/margins unchanged).
+- **Exit criteria (DoD):**
+  - **Dataset v2 (`sutradhar-ft-v2`)**, same validators/decontamination, three targeted changes:
+    disambiguate fires **only on cross-franchise collisions** + contrastive pairs
+    (franchise-internal ambiguity → `list_versions`); a **title-decoy abstention class**
+    (`resolve_title → [] → NO_MATCH`; fabricated decoy titles radius-checked like decoy themes —
+    one-line DEC-P4-3 amendment); **loop-termination variants** (odd/partial tool results still end
+    in prose). Teacher top-up only for new/changed conversations (~$1–2, Sarvam-M session).
+  - **Checkpoint selection by behaviour, not val loss:** each epoch scored on a training-slice
+    proxy fixture set with the existing intent/slot scorers (the v1 best-val-loss checkpoint was
+    behaviourally overfit); LR 2e-4 → 1e-4.
+  - **One resume-hardened window** (all eight v1 failure modes already fixed in code): base
+    recapture + train + captures + judge, ~2.5–3 h ≈ $4; adapter checkpointed to the relay before
+    any serving step, as in v1.
+  - **Verdict under the amended rule** computed by `make ft-verdict` and logged either way;
+    Table 2 gains the v2 column beside v1 (v1 kept — the CUT is part of the story).
+  - **P5 handoff decided by the verdict:** KEEP → P5 serves the merged v2 model; CUT → FT is
+    closed, P5 serves the well-prompted base, and the FT rows in PORTFOLIO/BENCHMARKS document the
+    negative result as the senior signal it is.
+- **Budget:** ≈ **$6** (teacher top-up $1–2 + window $4), on top of P4's actual ~$13–14; requires
+  its own approval — this phase never auto-runs.
+
 ### P5 — Serving, API & conversational backtracking
 
 - **Goal:** The orchestration API and on-demand vLLM serving that answer the gating story end-to-end,
@@ -295,7 +343,9 @@ two-tier CI) live in **§6** and apply to every phase.
   (backtracking), Observability dashboards.
 - **Skills demonstrated:** FastAPI orchestration, tool-calling wiring, multi-turn state/backtracking,
   vLLM serving, token/cost/latency dashboards, graceful degradation as a feature.
-- **Entry criteria:** P4 done; fine-tuned model + adapter on HF Hub; benchmark evidence recorded.
+- **Entry criteria:** P4 done (benchmark evidence + verdict recorded; adapter on HF Hub). The
+  served model follows the standing FT verdict: merged QLoRA if a KEEP exists (P4 or P4.1),
+  otherwise the well-prompted base — P5 never waits on P4.1.
 - **Exit criteria (DoD):**
   - FastAPI orchestration: query normalization → retrieval → grounding → LLM tool-calling →
     cited answer with the version set + original flag; guardrails (prompt-injection, no-hallucination).
@@ -305,7 +355,8 @@ two-tier CI) live in **§6** and apply to every phase.
     retrieved context** (BIPIA-style). Recorded as a guardrail metric, not just query-side GS-02.
   - **Multi-turn backtracking** works end-to-end (GS-08): "no, the newer one" refines within the
     version set without losing context.
-  - vLLM serves the fine-tuned Gemma 4 E4B via `LLM_BASE_URL` (env, never hardcoded), **on-demand**.
+  - vLLM serves the verdict-selected model (merged QLoRA on a KEEP, else the well-prompted base
+  Gemma 4 E4B-it) via `LLM_BASE_URL`/`LLM_MODEL` (env, never hardcoded), **on-demand**.
   - Token/cost/latency dashboards live.
   - **Graceful degradation:** with the GPU endpoint OFF (default), the live query path is unavailable
     (query embedding, reranking, and generation all require the on-demand GPU per §2), so the app
@@ -404,6 +455,7 @@ edges) and **P4** (first-time QLoRA + synthetic-data generation).
 | **P2** | Hybrid RAG + embedding A/B + abstention calibration + retrieval eval to Recall@10 ≥ 0.90 | 2–3 weeks |
 | **P3** | RAGAS + Langfuse + MLflow, judge governance, two-tier CI gate, harness dry-run | 1–2 weeks |
 | **P4** | Synthetic data + QLoRA FT + base+after benchmark in one GPU window + publish | 2–3 weeks (GPU time itself is hours) |
+| **P4.1** | *(conditional)* dataset-defect fixes + one retrain window under the amended gate | 0.5–1 week (≈ $6 GPU; needs its own approval) |
 | **P5** | FastAPI + vLLM on-demand + backtracking + injection defense + dashboards + degradation | 1.5–2.5 weeks |
 | **P6** | UI + containerization + static surface + RUNBOOK | 1–1.5 weeks |
 | | **Total** | **~11–18 weeks part-time** |
