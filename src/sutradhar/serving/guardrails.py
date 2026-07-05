@@ -152,26 +152,76 @@ def spotlight(payload: dict[str, Any]) -> tuple[str, list[str]]:
     return content, warnings
 
 
+def _flag_occurrences(text: str, invention: str) -> tuple[str, bool]:
+    """Append the unverified flag after every surface form of ``invention`` (bold,
+    quoted, bare, or title-with-(year)). Returns ``(text, rewritten?)``.
+
+    Robustness matters: the invention string comes from ``extract_asserted_titles``
+    (trimmed of trailing ``(year)`` etc.), so a naive ``f'**{inv}**' in text`` check
+    misses forms like ``**Zzyzx Road (2006)**`` — the 2026-07-05 live-window gap where
+    two context attacks were *warned* but not *neutralized*, so the answer still asserted
+    the ungrounded title. We match the title token-run case-insensitively and wrap it,
+    optionally absorbing an immediately-following ``(year)`` and surrounding ``**``/quotes
+    so the flag lands OUTSIDE the emphasis."""
+    if UNVERIFIED_FLAG in text and invention in text:
+        pass  # fall through; re-flagging is idempotent via the already-flagged guard below
+    # Escape the title; allow flexible internal whitespace (the answer may re-spacing it).
+    core = re.escape(invention).replace(r"\ ", r"\s+")
+    # Optional wrappers: bold **…**, single/double quotes; optional trailing (year).
+    pattern = re.compile(
+        r'(?P<open>\*\*|["\'“”]|)'
+        rf"(?P<title>{core})"
+        r"(?P<year>\s*\((?:19|20)\d{2}\))?"
+        r'(?P<close>\*\*|["\'“”]|)',
+        re.IGNORECASE,
+    )
+    handled = False  # True if every occurrence is now flagged (rewritten OR already was)
+
+    def repl(m: re.Match[str]) -> str:
+        nonlocal handled
+        # Don't double-flag an occurrence already carrying the marker right after it
+        # (idempotent: gating an already-gated answer is a no-op for that occurrence).
+        tail = text[m.end() : m.end() + len(UNVERIFIED_FLAG) + 2].lstrip()
+        if tail.startswith(UNVERIFIED_FLAG):
+            handled = True
+            return m.group(0)
+        handled = True
+        body = f"{m.group('open')}{m.group('title')}{m.group('year') or ''}{m.group('close')}"
+        return f"{body} {UNVERIFIED_FLAG}"
+
+    return pattern.sub(repl, text), handled
+
+
 def output_gate(answer: str, tool_titles: list[str]) -> tuple[str, list[str]]:
     """The no-hallucinated-movie detector as a response gate (§2.5 layer 3/6).
 
-    Every asserted title must fuzzy-ground to a tool result of this conversation;
-    an invention is downgraded to ``[unverified …]`` inline + a warning — the recorded
-    Table 2 GS-02 ⚠ becomes a 0-invention user surface. The model never emits the
+    Every asserted title must fuzzy-ground to a tool result of this conversation; an
+    invention is downgraded to ``[unverified …]`` + a warning — the recorded Table 2
+    GS-02 ⚠ becomes a 0-invention user surface. **Postcondition (enforced):** after
+    gating, no ungrounded title is asserted bare — every invention is either wrapped
+    inline (all surface forms) or, if that somehow fails, surfaced in a leading
+    disclaimer banner so it is never presented as fact. The model never emits the
     datamark (appendix rule), but strip any leak defensively before gating."""
     answer = answer.replace(DATAMARK, " ")
     report = detect_hallucinated_movies(answer, set(tool_titles))
     warnings: list[str] = []
     gated = answer
-    flag = f" {UNVERIFIED_FLAG}"
+    unrewritten: list[str] = []
     for invention in report.inventions:
-        bolded = f"**{invention}**"
-        if bolded in gated:
-            gated = gated.replace(bolded, bolded + flag)
-        elif invention in gated:  # unbolded "Title (year)" assertions
-            gated = gated.replace(invention, invention + flag, 1)
+        gated, rewritten = _flag_occurrences(gated, invention)
+        if not rewritten:
+            unrewritten.append(invention)
         warnings.append(
             f'unverified title "{invention}" flagged (not grounded in this '
             "conversation's tool results)"
         )
+    if unrewritten:
+        # Fallback guarantee: a title we could not wrap inline is disclaimed up front, so
+        # the served answer never *asserts* it as fact even if the prose still names it.
+        banner = (
+            "⚠ Unverified — not found in this conversation's tool results: "
+            + ", ".join(unrewritten)
+            + f" {UNVERIFIED_FLAG}\n"
+        )
+        gated = banner + gated
     return gated, warnings
