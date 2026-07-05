@@ -124,7 +124,10 @@ against any OpenAI-compatible endpoint (`LLMClient.chat()`; mock in dry-run, vLL
 P4 GPU window):
 
 - **Outbound tools are generated from `tool_schema.v0.json`** — never hand-written, so
-  drift from the frozen schema is impossible (P3_SPEC §2.8).
+  drift from the frozen schema is impossible (P3_SPEC §2.8). *(P5 task 1: this plumbing —
+  `load_tool_schema` / `params_subschema` / `openai_tools` / `validate_emitted_call` — now
+  lives in `sutradhar.toolcalls`, shared with the serving orchestrator; the driver
+  re-exports it, so all existing import sites are unchanged.)*
 - **Every emitted call is validated BEFORE execution** (the DEC-P1-8 jsonschema validator
   applied to model output): hallucinated tools, hallucinated parameters and wrong-typed
   arguments are recorded as scored verdicts, the error is fed back as the tool result, and
