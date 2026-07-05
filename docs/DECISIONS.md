@@ -1320,6 +1320,32 @@ check, injection ASR on/off, e2e latency/tokens + `/metrics` snapshot, relevancy
 within the DEC-0003 envelope. This session is the building block P6's RUNBOOK warm-resume demo
 wraps.
 
+**Execution notes (2026-07-05, task 13 — three live-window fixes, ~$3–4 total spend, teardown
+`nuke`-clean every time; all recorded because they are the interview-grade "what broke live"
+story):**
+1. **Endpoint disambiguation.** vLLM *and* the FlagEmbedding sidecar both answer `/health`, and
+   JarvisLabs `notebooksn` proxy URLs **carry no port** — so the port-swap heuristic was a no-op
+   and smokes/embeddings hit the wrong service. Replaced by `_resolve_serve_endpoints`: the LLM
+   is the candidate whose **chat smoke** passes; the sidecar is the other healthy candidate,
+   awaited with instance-refresh (the `:8001` proxy registers *after* creation). This was the
+   true root cause of the **P4 footnote-¹ null relevancy** (RAGAS had been embedding against the
+   judge, not BGE-M3).
+2. **`vllm serve --task embed` is rejected by current vLLM** (`unrecognized arguments`, found
+   on-box). The judge session now serves BGE-M3 via the **same FlagEmbedding sidecar**
+   (`build_judge_sidecar_startup_script`), not the old P3/P4 vLLM embed task.
+3. **Sidecar OpenAI-compat.** RAGAS's `OpenAIEmbeddings` sends `input` as a bare string +
+   `encoding_format=base64`; the sidecar's `extra="forbid"` 422'd every call. `/v1/embeddings`
+   now accepts string|list and tolerates standard extra fields (rerank keeps `extra="forbid"`).
+
+Two-session topology (user-confirmed 2026-07-05): the serve window (Gemma + sidecar) runs
+parity/injection/latency; a **separate brief judge session** (gpt-oss-20b + BGE-M3 sidecar) runs
+the answer-relevancy backfill — the judge does **not** co-reside with the serve stack on one
+A100-40GB. `phase=serve|relevancy` + `merge_run` re-run a single leg and merge into the sealed
+artifact (cost discipline while iterating). Sealed run **`servewin-25c029d3`**: parity
+Recall@10 = 1.0 / VSR-01/06 = 1.0; injection ASR **0.0 on / 0.273 off**, FP 0.0; latency p50/p95
+4535/5395 ms, 76 tok/s; answer_relevancy 0.571 (12/12). MLflow `sutradhar/serving`
+run `d453c73e`.
+
 ## DEC-P5-5 — Redis caching scope: minimal — endpoint-status cache + session store only (2026-07-05)
 
 **Status:** Accepted (P5 grooming; user-approved — spec §3 D5).

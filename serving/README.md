@@ -56,7 +56,26 @@ curl -s localhost:8080/api/replay/GS-08a
 
 Tests: `tests/test_api.py` (HTTP surface, GPU-off + scripted GS-08a over HTTP),
 `tests/test_orchestrator.py`, `tests/test_guardrails.py`, `tests/test_sessions.py`,
-`tests/test_live_executor.py`, `tests/test_providers_http.py`.
+`tests/test_live_executor.py`, `tests/test_providers_http.py`; the six named golden regressions
+through the API path in `tests/integration/test_api_golden_regressions.py`.
+
+### Results — live serving-benchmark window (2026-07-05, `servewin-25c029d3`)
+
+One `make serving-benchmark` run on an on-demand A100 (two ephemeral sessions, both destroyed;
+sealed to `evals/serving_runs/`, logged to MLflow `sutradhar/serving`). Full numbers +
+reproducibility stamp in `docs/BENCHMARKS.md` §"Serving & guardrails":
+
+- **Injection ASR = 0.000 defenses-on** (vs 0.273 off), false-positive rate 0.000, utility-under-
+  attack 0.727 — indirect prompt-injection defense (DEC-P5-3) holds against the live model.
+- **API e2e latency p50/p95 = 4535 / 5395 ms**, **76 tok/s** through the full turn (+ a vLLM
+  `/metrics` snapshot).
+- **Live-path parity:** the winner retrieval cell re-validated through the live GPU providers —
+  Recall@10 = 1.0, VSR GS-01/06 = 1.0 (identical to the committed P2 run; "swaps providers, not
+  code").
+- **answer_relevancy backfill = 0.571** (12/12 scored) over the pinned base run — discharges the
+  P4 footnote-¹ gap.
+- **Graceful degradation:** with the GPU off, `/api/chat` returns a structured HTTP 200 and
+  `/api/replay/GS-08a` serves the recorded story — demonstrable with zero GPU.
 
 ## Chat with tool-calling (P3)
 

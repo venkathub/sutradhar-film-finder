@@ -137,6 +137,14 @@ Backs: GS-08 ("the one with Ajay Devgn" → "no, the original one" → "is there
   all caught and scored; 3/3 seeded fault classes proven by `test_emitted_tool_calls_validate`),
   and every executed call in the committed generation run re-validates in Tier-1 CI. The v0
   sha256 is recorded in every generation-run reproducibility stamp.
+- **Status note (P5, 2026-07-05 — wording only, no version bump):** v0 **serves the P5 live API
+  path unchanged** — no new tool, no signature change, no v0.1. *Outbound*, the served `tools`
+  array is generated via the promoted `sutradhar.toolcalls.openai_tools` (hand-written arrays
+  remain impossible); *inbound*, every model-emitted call on the live orchestrator path passes
+  `validate_emitted_call` before execution (violations fed back, scored, traced). The injection
+  suite's wrapper executor decorates result *content* only — result *shapes* still round-trip the
+  frozen schema (asserted by `test_injection_suite`). The v0 sha256 (`4c10ea97…`) is recorded in
+  the serving-run reproducibility stamp (`evals/serving_runs/servewin-25c029d3.json`).
 - Any signature/label change increments the version and is logged in `DECISIONS.md`; P4 synthetic data
   and P5 orchestration always target a single pinned version, recorded in the benchmark reproducibility
   stamp (`ROADMAP.md` §6.1).

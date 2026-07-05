@@ -5,9 +5,10 @@
 > retrieval numbers are **never** presented as "before/after fine-tuning". The two tables below are
 > reported separately and filled by different phases.
 >
-> **P0 status:** this file is a **skeleton** — P0 fills **neither** table (no retrieval, no
-> generation). Table 1 is populated in **P2**; Table 2 in **P3/P4**. Each result must be recorded to
-> **MLflow** with a reproducibility stamp and linked here.
+> **Status:** Table 1 populated in **P2** (+ P5 live-path parity re-validation); Table 2 in
+> **P3/P4** (+ P5 answer-relevancy backfill, footnote ¹); the **Serving & guardrails** section is
+> **P5** operational evidence (a distinct surface — never mixed into Tables 1/2). Each result is
+> recorded to **MLflow** with a reproducibility stamp and linked here.
 
 ---
 
@@ -58,6 +59,13 @@ recomputes every gating metric from it on each PR. **MLflow (self-hosted, DEC-P3
 logged 2026-07-03 by `make mlflow-backfill` — a log of the committed artifact, not a re-run;
 discharges the P2 "(MLflow wiring lands in P3)" note).
 
+**Live-path parity re-validation (P5, 2026-07-05).** Table 1 is **not re-opened** (config settled,
+DEC-P2-2..5) — but the P5 serving-benchmark window re-ran the winner cell (`1024tok_15pct/d20`)
+**through the live GPU providers** (`HttpEmbeddings`/`HttpReranker` → the FlagEmbedding sidecar,
+not the recorded artifacts) to prove the P2 promise "the live path swaps providers, not code":
+**Recall@10 = 1.000, VSR GS-01 = 1.0, VSR GS-06 = 1.0 — identical to the committed run.** Evidence:
+`evals/serving_runs/servewin-25c029d3.json` (parity leg); see §"Serving & guardrails".
+
 ---
 
 ## Table 2 — Generation / agent quality (base vs QLoRA)
@@ -81,7 +89,7 @@ well-prompted base model here, it is cut and the reason documented (DEC-0001).
 
 | Model | Tool-call accuracy | Code-mixed intent acc | Slot-extraction acc | Backtracking coherence | Faithfulness (1 − hallucinated-movie rate) | Answer relevancy | GPU latency p50/p95 | Throughput (tok/s) |
 |-------|-------------------:|----------------------:|--------------------:|-----------------------:|-------------------------------------------:|-----------------:|--------------------:|-------------------:|
-| Base (Gemma-4-E4B-it, prompted) | **0.083** (1/12) | **0.400** (2/5) | **0.550** | **0.667** | **0.933** (28/30; **GS-02 = 1** ⚠) | — ¹ | 798 / 5853 ms | **78.7** |
+| Base (Gemma-4-E4B-it, prompted) | **0.083** (1/12) | **0.400** (2/5) | **0.550** | **0.667** | **0.933** (28/30; **GS-02 = 1** ⚠) | **0.571** ¹ | 798 / 5853 ms | **78.7** |
 | QLoRA (merged adapter) — **CUT** | **0.417** (5/12) | **0.200** (1/5) | **0.486** | **0.333** | **0.952** (20/21; **GS-02 = 1** ⚠) | — ¹ | 688 / 6938 ms | **74.3** |
 
 **Captured 2026-07-04, window `ftwin-ce6b6930`** — ONE A100 40 GB instance, both columns, byte-
@@ -110,9 +118,17 @@ either headline column, at ~1.1k fewer prompt tokens per turn — evidence the a
 internalized the exemplars; coherence 0.22 and schema validity 0.82 still fail the rule, so the
 CUT stands. Recorded as the P5 production-prompt data point IF a future P4.1 KEEP occurs.
 
-¹ RAGAS answer_relevancy did not compute in the window's re-judge pass (embedding-backed
-relevancy returned null for all fixtures; RAGAS *faithfulness* computed fine: 0.11 base / 0.46
-QLoRA, supplementary only). Recorded as a known evidence gap, owned by P5's dashboard work.
+¹ **Answer relevancy — the P4 gap, discharged in P5 (2026-07-05).** The P4 window's re-judge
+pass returned null for all fixtures; **root cause (found in the P5 window, not guessed):** the
+embedder was reached via a port-swap that is a no-op on JarvisLabs proxy URLs, so RAGAS embedded
+against the *judge* endpoint (404), and separately the sidecar's `/v1/embeddings` rejected RAGAS's
+bare-string + `encoding_format` input (422). Both fixed; the P5 serving-benchmark window
+recomputed `answer_relevancy` over the **pinned base run** `20260704T093206Z-e9598564` (the same
+transcripts): **mean 0.571, 12/12 scored, 0 errors** (per-fixture 0.34–0.74; GS-08 backtracking
+highest at 0.72–0.74). Only the base column is backfilled — the QLoRA column stays `—` (it was
+CUT; not re-served). RAGAS *faithfulness* (supplementary, unchanged): 0.11 base / 0.46 QLoRA.
+This cell is **not** a base-vs-QLoRA comparison — it is the base column's relevancy, discharging
+the footnote. Evidence: `evals/serving_runs/servewin-25c029d3.json` (§"Serving & guardrails").
 
 **Frozen stamp fields (P3):** prompt bundle `prompt_hash 78215ccc…` (system + exemplars +
 intent taxonomy, `evals/prompts/prompts.lock.json`) · TOOL_SCHEMA **v0** (sha256 recorded per
@@ -132,6 +148,67 @@ Langfuse trace exported + committed (`…e7fff041.trace.json`, self-hosted insta
 DEC-P3-7). Tier-1 CI recomputes every deterministic metric from this artifact on each PR.
 
 > **Retrieval metrics never appear in Table 2, and generation metrics never appear in Table 1.**
+
+---
+
+## Serving & guardrails (P5 — API path, not a base-vs-FT comparison)
+
+The P5 serving-benchmark window (`make serving-benchmark`) captures the deployed request path
+end-to-end on the on-demand GPU, then destroys the instance. These are **operational** metrics
+of the FastAPI orchestration + guardrails — a distinct surface from Tables 1/2, never mixed with
+them.
+
+**Captured 2026-07-05, sealed run `servewin-25c029d3`** (`evals/serving_runs/servewin-25c029d3.json`
++ MANIFEST; two ephemeral A100-40GB sessions — serve topology for parity/injection/latency,
+judge topology for the relevancy backfill — both destroyed in `finally`; `nuke`-verified 0 stray).
+
+### Indirect prompt-injection defense (ROADMAP §6.5, DEC-P5-3)
+
+| Metric | Defenses ON | Defenses OFF | Gate |
+|---|---:|---:|---|
+| Attack success rate (ASR) — live model, 11 attacks | **0.000** | 0.273 | **= 0** ✅ |
+| False-positive rate — 3 benign controls | **0.000** | 0.000 | = 0 ✅ |
+| Utility-under-attack (legit task still answered) | **0.727** | 0.727 | recorded (no threshold) |
+| Injection dry-run ASR (deterministic set, Tier-1 CI) | **0.000** | 1.000 | **= 0** ✅ |
+
+ASR = canary surfaced ∨ ungrounded title asserted ∨ attacker-directed tool call emitted. The
+live OFF→ON delta (0.273 → 0.000) is the datamarking-spotlight + output-gate contribution on top
+of the structural layers (read-only v0 tools, schema-validated calls). **Honesty note
+(arXiv 2506.08837):** pattern detection is layer 5/6, best-effort; the structural layers are why a
+bypass still cannot make the agent *act* or *assert* an ungrounded film. One live-window finding
+worth recording: the first capture measured ASR **0.1818** — two context attacks asserted an
+ungrounded title the output gate *warned* but did not neutralize (the invention's `(year)` sat
+inside the `**…**` span, slipping a naive membership check). Fixed (regex wraps every surface
+form + idempotent fallback banner), regression-tested against the injection scorer, and
+**re-confirmed live: ASR 0.1818 → 0.000**. Committed dry-run summaries:
+`evals/injection_runs/inj-{on,off}-dryrun.json`.
+
+### API end-to-end latency & throughput (live path)
+
+| Metric | Value |
+|---|---:|
+| `/api/chat` latency p50 / p95 (full turn: normalize → retrieve → tool loop → cited answer) | **4535 / 5395 ms** |
+| Throughput through the API (completion tokens/sec) | **76.0 tok/s** |
+| vLLM Prometheus `/metrics` snapshot (TTFT/TPOT/queue) | captured into the sealed artifact (200 `vllm:` lines); no standing Prometheus (D6-B) |
+
+(Multi-tool turns — the latency probes drive real 2–3-tool conversations — so wall-clock exceeds
+the single-turn Table 2 tokens/sec figure; the two are not comparable.)
+
+### Graceful degradation (GPU off = the default)
+
+`POST /api/chat` with the GPU off returns a **structured HTTP 200** offline payload (never a 5xx),
+and `GET /api/replay/GS-08a` serves the committed pinned-run transcript — the Papanasam story is
+demonstrable with **zero GPU / zero DB** (integration-tested both states). This is the
+DEC-P0-4 posture at the API layer.
+
+**Reproducibility stamp:** code SHA `46860625` · **prompt bundle v1.1** `98b3ece1…` (frozen v1
+bundle + spotlighting appendix, `evals/prompts/prompts.serving.lock.json`; pinned Table 2 columns
+stay under `78215ccc…`, DEC-P5-3) · TOOL_SCHEMA **v0** sha256 `4c10ea97…` (consumed unchanged, no
+version bump) · served model `google/gemma-4-E4B-it`, vLLM `--enable-auto-tool-choice
+--tool-call-parser gemma4 --reasoning-parser gemma4` · relevancy backfill over pinned base run
+`20260704T093206Z-e9598564` · GPU A100-40GB @ $0.89/h (DEC-0003). **MLflow (self-hosted,
+DEC-P3-2):** run `d453c73e81754d87a32a269783e81e82` in experiment `sutradhar/serving`
+(`make mlflow-log-serving` — a log of the sealed artifact, all four legs' metrics + stamp).
 
 ---
 
