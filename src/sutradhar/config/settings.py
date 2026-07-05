@@ -156,6 +156,19 @@ class Settings(BaseSettings):
     # 4B-class serve/train sessions.
     gpu_storage_gb: int = Field(default=80, validation_alias="GPU_STORAGE_GB")
 
+    # --- P5 serving (P5_SPEC §2.2) ---
+    # Live reranker endpoint (/rerank on the GPU sidecar). Mirrors EMBED_BASE_URL exactly:
+    # unset = GPU off = first-class degraded state, never an error (DEC-P0-4 posture).
+    rerank_base_url: str | None = Field(default=None, validation_alias="RERANK_BASE_URL")
+    # FastAPI orchestration service port (make api-up).
+    api_port: int = Field(default=8080, validation_alias="API_PORT")
+    # Conversation-state TTL in Redis (DEC-P5-2); natural session expiry.
+    session_ttl_s: int = Field(default=3600, validation_alias="SESSION_TTL_S")
+    # A100 40GB hourly rate (DEC-0003) — cost accounting: tokens/sec + amortized $/request.
+    gpu_hourly_usd: float = Field(default=0.89, validation_alias="GPU_HOURLY_USD")
+    # serve-session hold TTL (DEC-P5-4): bounded live window, then destroy-in-finally.
+    serve_hold_minutes: int = Field(default=60, validation_alias="SERVE_HOLD_MINUTES")
+
     def require(self, field: str) -> str:
         """Return ``field``'s value or raise a clear, var-named :class:`ConfigError`.
 
