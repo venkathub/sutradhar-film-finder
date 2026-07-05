@@ -9,7 +9,7 @@ COMPOSE ?= docker compose -f infra/docker-compose.yml
 
 .DEFAULT_GOAL := help
 .PHONY: help setup fmt lint typecheck test test-int check up down down-v mlflow-up mlflow-down db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ingest-training resolve-conflicts export-training-entities ft-snapshot build-ft-scaffold validate-dataset teach-dataset gpu-teacher ft-dryrun gpu-finetune ft-verdict extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
-        smoke hf-check gpu-validate gpu-serve gpu-stop gpu-nuke api-up
+        smoke hf-check gpu-validate gpu-serve gpu-stop gpu-nuke api-up serving-benchmark injection-eval
 
 help: ## List available targets
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -147,6 +147,9 @@ gpu-validate: ## One-time ephemeral JarvisLabs create->serve->smoke->destroy val
 
 gpu-serve: ## P5: on-demand serve window — vLLM + embed/rerank sidecar, hold SERVE_HOLD_MINUTES, destroy
 	uv run python infra/gpu/jarvis.py serve
+
+serving-benchmark: ## P5: THE capture window — parity + injection ASR on/off + latency + relevancy -> sealed artifact
+	uv run python infra/gpu/jarvis.py serving-benchmark
 
 gpu-stop: ## P5: end the serve window from another terminal (destroys the tagged instance)
 	uv run python infra/gpu/jarvis.py nuke

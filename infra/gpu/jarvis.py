@@ -1296,6 +1296,171 @@ def serve_session(
         deps.close_client(client)
 
 
+# --- P5 serving-benchmark window (task 13, P5_SPEC §5.13, DEC-P5-4/Q4) ----------------
+# Two ephemeral sessions, one sealed artifact:
+#   Session A (serve topology): vLLM Gemma :8000 + embed/rerank sidecar :8001 —
+#     parity check + injection ASR on/off + e2e latency/tokens + vLLM /metrics snapshot.
+#   Session B (judge topology, user-confirmed 2026-07-05): JUDGE_MODEL :8000 + BGE-M3
+#     :8001 — the answer_relevancy backfill. gpt-oss-20b does NOT co-reside with the
+#     serve stack on one A100 40GB; the proven judge-session path is reused instead.
+# Both destroy in `finally`; the artifact seals whatever evidence was gathered.
+
+
+def _default_serve_captures(llm_url: str, embed_url: str, rerank_url: str) -> dict[str, Any]:
+    from sutradhar.serving.benchmark import run_serve_captures
+
+    return dict(run_serve_captures(llm_url, embed_url, rerank_url))
+
+
+def _default_relevancy_capture(judge_url: str, embed_url: str) -> Any:
+    from sutradhar.serving.benchmark import run_relevancy_capture
+
+    return run_relevancy_capture(judge_url, embed_url)
+
+
+def serving_benchmark_session(
+    settings: Settings | None = None,
+    deps: Deps | None = None,
+    *,
+    run_captures: Callable[[str, str, str], dict[str, Any]] = _default_serve_captures,
+    run_relevancy: Callable[[str, str], Any] = _default_relevancy_capture,
+    health_timeout_s: float = DEFAULT_HEALTH_TIMEOUT_S,
+    poll_interval_s: float = DEFAULT_POLL_INTERVAL_S,
+    sidecar_path: Path = SIDECAR_SCRIPT,
+    out_dir: Path = Path("evals/serving_runs"),
+) -> Evidence:
+    """create(serve) → captures → destroy → create(judge) → relevancy → destroy → seal."""
+    from sutradhar.serving.benchmark import StepResult, build_artifact, seal
+
+    settings = settings or get_settings()
+    deps = deps or _default_deps()
+    ev = Evidence(requested_model=settings.llm_model, gpu_type=settings.gpu_type)
+    run_id = f"servewin-{os.urandom(4).hex()}"
+    steps: dict[str, Any] = {}
+    endpoints: dict[str, str] = {}
+    served_model: str | None = None
+
+    if not sidecar_path.exists():
+        ev.status = "error"
+        ev.detail = f"sidecar script missing: {sidecar_path}"
+        return ev
+
+    client = deps.create_client(settings)
+
+    def _teardown(instance: Any, label: str) -> None:
+        machine_id = getattr(instance, "machine_id", None)
+        if machine_id is None:
+            return
+        try:
+            ev.destroyed = deps.destroy_instance(client, machine_id)
+            deps.log(f"  destroyed {label} instance {machine_id}: {ev.destroyed}")
+        except Exception as exc:  # noqa: BLE001
+            ev.detail += f" | TEARDOWN FAILED ({label}): {exc} — run `make gpu-nuke`"
+            deps.log(f"  TEARDOWN FAILED for {machine_id}: {exc}")
+
+    try:
+        # --- Session A: the serve topology (Gemma + sidecar) ---
+        deps.log(f"[serving-benchmark] {run_id}: session A — serve topology …")
+        instance: Any = None
+        try:
+            t0 = deps.monotonic()
+            script = build_serve_startup_script(
+                settings.require("hf_token"),
+                settings.llm_model,
+                settings.vllm_serve_flags,
+                settings.embed_model,
+                settings.rerank_model,
+                sidecar_path.read_text(encoding="utf-8"),
+            )
+            instance = deps.create_instance(client, settings, script)
+            ev.machine_id = getattr(instance, "machine_id", None)
+            base_url = _wait_for_endpoint(
+                instance, deps, timeout_s=health_timeout_s, poll_interval_s=poll_interval_s
+            )
+            if base_url is None:
+                raise RuntimeError(f"vLLM not healthy within {health_timeout_s}s")
+            embed_url = _embed_base_url(instance, base_url)
+            deadline = deps.monotonic() + health_timeout_s
+            while not deps.probe_health(embed_url, 10.0):
+                if deps.monotonic() >= deadline:
+                    raise RuntimeError(f"sidecar not healthy on {embed_url}")
+                deps.sleep(poll_interval_s)
+            status = deps.run_smoke(base_url, settings)
+            if status.status != "up":
+                raise RuntimeError(f"smoke returned {status.status}: {status.detail}")
+            ev.booted = True
+            ev.create_to_up_s = round(deps.monotonic() - t0, 1)
+            served_model = status.model
+            endpoints = {"llm": base_url, "embed": embed_url, "rerank": embed_url}
+            deps.log(f"  serve window UP ({base_url}); running captures …")
+            steps.update(run_captures(base_url, embed_url, embed_url))
+            for name in ("parity", "injection", "latency"):
+                result = steps.get(name)
+                deps.log(f"  [{name}] ok={getattr(result, 'ok', None)}")
+        except Exception as exc:  # noqa: BLE001 — record as step evidence, keep going
+            deps.log(f"  session A failed: {exc}")
+            for name in ("parity", "injection", "latency"):
+                steps.setdefault(
+                    name, StepResult(ok=False, error=f"session A: {type(exc).__name__}: {exc}")
+                )
+        finally:
+            _teardown(instance, "serve")
+            try:
+                deps.remove_scripts(client)
+            except Exception as exc:  # noqa: BLE001
+                deps.log(f"  script cleanup failed (non-fatal): {exc}")
+
+        # --- Session B: the judge topology (relevancy backfill) ---
+        deps.log(f"[serving-benchmark] {run_id}: session B — judge topology …")
+        instance = None
+        try:
+            judge_model = settings.require("judge_model")
+            script = build_judge_startup_script(judge_model, settings.embed_model)
+            instance = deps.create_instance(client, settings, script)
+            judge_url = _wait_for_endpoint(
+                instance, deps, timeout_s=health_timeout_s, poll_interval_s=poll_interval_s
+            )
+            if judge_url is None:
+                raise RuntimeError(f"judge not healthy within {health_timeout_s}s")
+            judge_embed_url = _embed_base_url(instance, judge_url)
+            deps.log(f"  judge window UP ({judge_url}); running relevancy backfill …")
+            steps["relevancy"] = run_relevancy(judge_url, judge_embed_url)
+            deps.log(f"  [relevancy] ok={getattr(steps['relevancy'], 'ok', None)}")
+        except Exception as exc:  # noqa: BLE001
+            deps.log(f"  session B failed: {exc}")
+            steps.setdefault(
+                "relevancy", StepResult(ok=False, error=f"session B: {type(exc).__name__}: {exc}")
+            )
+        finally:
+            _teardown(instance, "judge")
+            try:
+                deps.remove_scripts(client)
+            except Exception as exc:  # noqa: BLE001
+                deps.log(f"  script cleanup failed (non-fatal): {exc}")
+
+        # --- Seal (always: partial evidence beats no evidence) ---
+        artifact = build_artifact(
+            run_id,
+            settings,
+            parity=steps["parity"],
+            injection=steps["injection"],
+            latency=steps["latency"],
+            relevancy=steps["relevancy"],
+            served_model=served_model,
+            endpoints=endpoints,
+        )
+        path = seal(artifact, out_dir)
+        ev.status = "up" if artifact.all_ok else "error"
+        ev.detail = (
+            f"serving benchmark sealed: {path} "
+            f"(parity={steps['parity'].ok} injection={steps['injection'].ok} "
+            f"latency={steps['latency'].ok} relevancy={steps['relevancy'].ok})"
+        )
+        return ev
+    finally:
+        deps.close_client(client)
+
+
 def nuke(settings: Settings | None = None, deps: Deps | None = None) -> list[int]:
     """Destroy any stray instance carrying our tag — a leaked billing GPU is a defect."""
     settings = settings or get_settings()
@@ -1354,12 +1519,16 @@ def main(argv: list[str] | None = None) -> int:
         ev = serve_session()
         _write_evidence(ev)
         return 0 if ev.status == "up" and ev.destroyed else 1
+    if cmd == "serving-benchmark":
+        ev = serving_benchmark_session()
+        _write_evidence(ev)
+        return 0 if ev.status == "up" and ev.destroyed else 1
     if cmd == "nuke":
         nuke()
         return 0
     print(
-        f"usage: jarvis.py [validate|extract|embed|judge|teacher|finetune|serve|nuke]"
-        f"  (got {cmd!r})"
+        "usage: jarvis.py [validate|extract|embed|judge|teacher|finetune|serve"
+        f"|serving-benchmark|nuke]  (got {cmd!r})"
     )
     return 2
 

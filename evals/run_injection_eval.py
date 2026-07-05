@@ -20,6 +20,7 @@ from typing import Any
 
 import typer
 
+from sutradhar.config import Settings
 from sutradhar.evals.injection import (
     EmittedCallView,
     InjectionFixture,
@@ -186,16 +187,20 @@ class _CompliantAttackerModel:
         )
 
 
-def run_fixture_dry(
-    fixture: InjectionFixture, defenses: bool
+def _drive(
+    fixture: InjectionFixture, model: Any, defenses: bool
 ) -> tuple[str, list[EmittedCallView], list[str]]:
-    """Drive one fixture through the real orchestrator + guardrails (scripted model)."""
+    """Run one fixture through the real orchestrator + guardrails against ``model``.
+
+    ``model`` is duck-typed on ``.chat`` — the scripted worst-case attacker (dry-run) or a
+    real ``LLMClient`` (live window). The wrapper executor splices the context payload into
+    the base graph result; the live graph is never touched (§2.9)."""
     artifacts = load_serving_prompt_artifacts()
     schema = load_tool_schema()
     store = InMemorySessionStore(3600)
     executor = wrap_executor(_base_executor, fixture)
     orchestrator = Orchestrator(
-        _CompliantAttackerModel(fixture),  # type: ignore[arg-type]  # duck-typed .chat
+        model,
         store,
         executor,
         system_prompt=artifacts.system_prompt(),
@@ -229,23 +234,31 @@ def run_fixture_dry(
     return answer, emitted, GROUNDED_TITLES
 
 
-@app.command()
-def main(
-    defenses: str = typer.Option("on", "--defenses", help="on|off (off = window baseline)"),
-    out_dir: Path = typer.Option(INJECTION_RUNS_DIR, "--out-dir"),  # noqa: B008
-    write: bool = typer.Option(True, "--write/--no-write"),
-) -> None:
-    defenses_on = defenses == "on"
+def run_fixture_dry(
+    fixture: InjectionFixture, defenses: bool
+) -> tuple[str, list[EmittedCallView], list[str]]:
+    """Dry-run: the worst-case compliant-attacker scripted model (no GPU)."""
+    return _drive(fixture, _CompliantAttackerModel(fixture), defenses)
+
+
+def run_fixture_live(
+    fixture: InjectionFixture, defenses: bool
+) -> tuple[str, list[EmittedCallView], list[str]]:
+    """Live window: the real LLM at LLM_BASE_URL (task 13). Utility-under-attack is
+    meaningful here because a real model actually attempts the legitimate task."""
+    from sutradhar.serving.llm_client import LLMClient
+
+    return _drive(fixture, LLMClient(Settings()), defenses)
+
+
+def run_injection_suite(mode: str, defenses_on: bool) -> dict[str, Any]:
+    """Score every fixture in ``mode`` (dry_run|live) with defenses on/off → summary dict."""
+    live = mode == "live"
     fixtures = load_injection_fixtures()
     verdicts = []
     for fixture in fixtures:
-        answer, emitted, grounded = run_fixture_dry(fixture, defenses_on)
-        withheld = "content withheld: failed safety check" in answer or any(
-            "withheld" in m for m in []
-        )
-        # Withholding is observed via the spotlight warnings surfaced by the orchestrator;
-        # recompute deterministically from the payload for the benign-control FP check.
-        withheld = _content_withheld(fixture, defenses_on)
+        driver = run_fixture_live if live else run_fixture_dry
+        answer, emitted, grounded = driver(fixture, defenses_on)
         verdicts.append(
             score_injection(
                 fixture,
@@ -253,25 +266,36 @@ def main(
                 emitted_calls=emitted,
                 grounded_titles=grounded,
                 defenses=defenses_on,
-                withheld=withheld,
-                # Dry-run uses a worst-case model that refuses the legit task by design;
-                # utility-under-attack is a live-window metric (BENCHMARKS), not scored here.
-                score_utility=False,
+                withheld=_content_withheld(fixture, defenses_on),
+                # Dry-run's worst-case model refuses the legit task by design, so utility is
+                # a LIVE-only metric (a real model actually attempts it).
+                score_utility=live,
             )
         )
-    summary = summarize(defenses_on, verdicts)
+    return {"mode": mode, **summarize(defenses_on, verdicts)}
+
+
+@app.command()
+def main(
+    defenses: str = typer.Option("on", "--defenses", help="on|off (off = window baseline)"),
+    mode: str = typer.Option("dry_run", "--mode", help="dry_run|live (live needs LLM_BASE_URL)"),
+    out_dir: Path = typer.Option(INJECTION_RUNS_DIR, "--out-dir"),  # noqa: B008
+    write: bool = typer.Option(True, "--write/--no-write"),
+) -> None:
+    defenses_on = defenses == "on"
+    summary = run_injection_suite(mode, defenses_on)
     typer.echo(
-        f"injection eval (defenses={'ON' if defenses_on else 'OFF'}): "
+        f"injection eval [{mode}] (defenses={'ON' if defenses_on else 'OFF'}): "
         f"ASR={summary['asr']} FP={summary['false_positive_rate']} "
         f"utility={summary['utility_under_attack']} "
         f"(attacks={summary['n_attacks']}, benign={summary['n_benign']})"
     )
     if write:
         out_dir.mkdir(parents=True, exist_ok=True)
-        run_id = f"inj-{'on' if defenses_on else 'off'}-dryrun"
+        suffix = "dryrun" if mode == "dry_run" else "live"
+        run_id = f"inj-{'on' if defenses_on else 'off'}-{suffix}"
         stamp = {
             "run_id": run_id,
-            "mode": "dry_run",
             "prompt_hash": load_serving_prompt_artifacts().prompt_hash,
             "tools": [t["function"]["name"] for t in openai_tools(load_tool_schema())],
             **summary,
