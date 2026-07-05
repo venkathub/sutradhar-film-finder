@@ -9,7 +9,7 @@ COMPOSE ?= docker compose -f infra/docker-compose.yml
 
 .DEFAULT_GOAL := help
 .PHONY: help setup fmt lint typecheck test test-int check up down down-v mlflow-up mlflow-down db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ingest-training resolve-conflicts export-training-entities ft-snapshot build-ft-scaffold validate-dataset teach-dataset gpu-teacher ft-dryrun gpu-finetune ft-verdict extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
-        smoke hf-check gpu-validate gpu-nuke
+        smoke hf-check gpu-validate gpu-serve gpu-stop gpu-nuke
 
 help: ## List available targets
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -141,6 +141,12 @@ hf-check: ## Verify Hugging Face Hub auth (whoami via HF_TOKEN)
 
 gpu-validate: ## One-time ephemeral JarvisLabs create->serve->smoke->destroy validation
 	uv run python infra/gpu/jarvis.py validate
+
+gpu-serve: ## P5: on-demand serve window — vLLM + embed/rerank sidecar, hold SERVE_HOLD_MINUTES, destroy
+	uv run python infra/gpu/jarvis.py serve
+
+gpu-stop: ## P5: end the serve window from another terminal (destroys the tagged instance)
+	uv run python infra/gpu/jarvis.py nuke
 
 gpu-nuke: ## Safety: destroy any stray tagged JarvisLabs instance (no leaked GPU)
 	uv run python infra/gpu/jarvis.py nuke

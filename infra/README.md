@@ -90,6 +90,19 @@ make mlflow-down    # stop the service; runs persist in Postgres + data/mlflow-a
 **destroys** the instance (teardown guaranteed in `try/finally`; `make gpu-nuke` destroys any stray
 `sutradhar-p0-validate` instance). Developer / `workflow_dispatch` invoked only — never on a PR.
 
+### Serve session (P5 task 5, P5_SPEC §2.6 / DEC-P5-4)
+
+`make gpu-serve` is the live-demo window: one ephemeral A100 running **vLLM** (`LLM_MODEL` +
+`VLLM_SERVE_FLAGS`, `:8000`) and the **embed/rerank sidecar** (`rag-engine/serve_embed_rerank.py`
+heredoc-embedded into the startup script — no repo clone, no HF relay; BGE-M3 dense+sparse
+`/v1/embeddings` + `bge-reranker-v2-m3` `/v1/rerank`, `:8001`, in its own venv because
+FlagEmbedding pins `transformers<5` while vLLM tracks latest). The session health-gates vLLM,
+the sidecar, and a chat smoke, then prints the three exports the API needs —
+`LLM_BASE_URL` / `EMBED_BASE_URL` / `RERANK_BASE_URL` — and **holds for `SERVE_HOLD_MINUTES`**
+(heartbeat log, Ctrl-C to end early), destroying the instance in `finally` either way.
+`make gpu-stop` force-tears-down from another terminal. Fake-Deps tests cover
+teardown-on-failure, the sidecar-health gate, and the Ctrl-C path.
+
 ### Evidence — first validation run (2026-07-01, discharges the DEC-0001 vLLM-on-GPU follow-up)
 
 | Field | Result |

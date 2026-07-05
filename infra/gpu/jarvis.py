@@ -1138,6 +1138,164 @@ def finetune_session(
         deps.close_client(client)
 
 
+# --- P5 serve session (task 5, P5_SPEC §2.6, DEC-P5-4): the live-demo window -----------
+# One A100, three endpoints: vLLM (LLM, :8000) + one sidecar process (BGE-M3 dense+sparse
+# /v1/embeddings AND bge-reranker-v2-m3 /v1/rerank, :8001). Health-gate everything, print
+# the env exports the API needs, hold for SERVE_HOLD_MINUTES, destroy in `finally`.
+
+SIDECAR_SCRIPT = Path("rag-engine/serve_embed_rerank.py")
+SERVE_HEARTBEAT_S = 60.0  # hold-loop heartbeat cadence
+
+
+def build_serve_startup_script(
+    token: str,
+    llm_model: str,
+    serve_flags: str,
+    embed_model: str,
+    rerank_model: str,
+    sidecar_source: str,
+) -> str:
+    """vLLM (:8000, foreground) + the embed/rerank sidecar (:8001, background).
+
+    The sidecar file is heredoc-embedded at build time (self-contained, DEC-P2-7: the box
+    never sees the repo; nothing needs to come back, so no HF relay either). It runs in
+    its OWN venv: FlagEmbedding needs ``transformers<5`` (its reranker calls
+    ``tokenizer.prepare_for_model``, removed in v5) while vLLM tracks latest — one shared
+    env would silently up/downgrade one of them. No ``-x``: the token must never echo."""
+    return (
+        "#!/bin/bash\n"
+        "set -euo pipefail\n"  # no -x: the token must never echo into instance logs
+        f"export HF_TOKEN={token}\n"
+        "export HF_HOME=/home/hf_cache\n"
+        "mkdir -p /home/hf_cache\n"
+        "cat > /root/serve_embed_rerank.py << 'SIDECAR_PY'\n"
+        f"{sidecar_source}\n"
+        "SIDECAR_PY\n"
+        # Sidecar venv: the DEC-P2-7 authoritative pins (same as build_embed_startup_script)
+        # + the serving deps; isolated from vLLM's transformers requirement.
+        "python -m venv /root/sidecar_venv\n"
+        "/root/sidecar_venv/bin/pip install -q numpy fastapi uvicorn huggingface_hub "
+        "'transformers<5' FlagEmbedding >/root/pip_sidecar.log 2>&1\n"
+        f"nohup /root/sidecar_venv/bin/python /root/serve_embed_rerank.py "
+        f"--host 0.0.0.0 --port {EMBED_SERVE_PORT} "
+        f"--embed-model {embed_model} --rerank-model {rerank_model} "
+        "> /root/sidecar.log 2>&1 &\n"
+        "pip install -U vllm >/root/pip_vllm.log 2>&1\n"
+        f"vllm serve {llm_model} --host 0.0.0.0 --port {SERVE_PORT} {serve_flags}\n"
+    )
+
+
+def serve_session(
+    settings: Settings | None = None,
+    deps: Deps | None = None,
+    *,
+    health_timeout_s: float = DEFAULT_HEALTH_TIMEOUT_S,
+    poll_interval_s: float = DEFAULT_POLL_INTERVAL_S,
+    heartbeat_s: float = SERVE_HEARTBEAT_S,
+    sidecar_path: Path = SIDECAR_SCRIPT,
+) -> Evidence:
+    """create → vLLM + sidecar → health-gate → print exports → hold (TTL) → destroy.
+
+    The hold is bounded by ``SERVE_HOLD_MINUTES``; Ctrl-C (or ``make gpu-stop`` from
+    another terminal) ends it early — teardown is guaranteed in ``finally`` either way."""
+    settings = settings or get_settings()
+    deps = deps or _default_deps()
+    ev = Evidence(requested_model=settings.llm_model, gpu_type=settings.gpu_type)
+
+    if not sidecar_path.exists():
+        ev.status = "error"
+        ev.detail = f"sidecar script missing: {sidecar_path} — fresh clone should have it"
+        return ev
+    script = build_serve_startup_script(
+        settings.require("hf_token"),
+        settings.llm_model,
+        settings.vllm_serve_flags,
+        settings.embed_model,
+        settings.rerank_model,
+        sidecar_path.read_text(encoding="utf-8"),
+    )
+
+    client = deps.create_client(settings)
+    instance: Any = None
+    try:
+        deps.log(
+            f"[gpu-serve] creating {settings.gpu_type} to serve {settings.llm_model} "
+            f"+ embed/rerank sidecar (hold {settings.serve_hold_minutes} min) …"
+        )
+        t0 = deps.monotonic()
+        instance = deps.create_instance(client, settings, script)
+        ev.machine_id = getattr(instance, "machine_id", None)
+        deps.log(f"  instance {ev.machine_id} running; waiting for vLLM /health …")
+
+        base_url = _wait_for_endpoint(
+            instance, deps, timeout_s=health_timeout_s, poll_interval_s=poll_interval_s
+        )
+        if base_url is None:
+            ev.status = "off"
+            ev.detail = f"vLLM did not become healthy within {health_timeout_s}s"
+            return ev
+
+        embed_url = _embed_base_url(instance, base_url)
+        deps.log(f"  vLLM healthy: {base_url}; waiting for sidecar /health …")
+        sidecar_deadline = deps.monotonic() + health_timeout_s
+        while not deps.probe_health(embed_url, 10.0):
+            if deps.monotonic() >= sidecar_deadline:
+                ev.status = "error"
+                ev.detail = (
+                    f"sidecar did not become healthy on {embed_url} within {health_timeout_s}s"
+                )
+                return ev
+            deps.sleep(poll_interval_s)
+
+        status = deps.run_smoke(base_url, settings)
+        ev.status = status.status
+        ev.served_model = status.model
+        ev.sample_token = status.sample_token
+        ev.latency_ms = status.latency_ms
+        ev.booted = status.status == "up"
+        if not ev.booted:
+            ev.detail = f"smoke returned {status.status}: {status.detail}"
+            return ev
+        ev.create_to_up_s = round(deps.monotonic() - t0, 1)
+
+        deps.log("  serve window UP — export these in the API shell:")
+        deps.log(f"    export LLM_BASE_URL={base_url}")
+        deps.log(f"    export EMBED_BASE_URL={embed_url}")
+        deps.log(f"    export RERANK_BASE_URL={embed_url}")
+
+        hold_deadline = deps.monotonic() + settings.serve_hold_minutes * 60.0
+        try:
+            while (remaining := hold_deadline - deps.monotonic()) > 0:
+                deps.log(
+                    f"  [gpu-serve] holding — {remaining / 60.0:.0f} min left "
+                    "(Ctrl-C or `make gpu-stop` to end early)"
+                )
+                deps.sleep(min(heartbeat_s, remaining))
+            ev.detail = (
+                f"serve window held {settings.serve_hold_minutes} min (TTL reached), destroyed"
+            )
+        except KeyboardInterrupt:
+            ev.detail = "serve window stopped early (Ctrl-C) — teardown as designed"
+        return ev
+    except Exception as exc:  # noqa: BLE001 — record, then guarantee teardown in finally
+        ev.status = "error"
+        ev.detail = f"{type(exc).__name__}: {exc}"
+        return ev
+    finally:
+        if instance is not None and ev.machine_id is not None:
+            try:
+                ev.destroyed = deps.destroy_instance(client, ev.machine_id)
+                deps.log(f"  destroyed instance {ev.machine_id}: {ev.destroyed}")
+            except Exception as exc:  # noqa: BLE001
+                ev.detail += f" | TEARDOWN FAILED: {exc} — run `make gpu-nuke`"
+                deps.log(f"  TEARDOWN FAILED for {ev.machine_id}: {exc}")
+        try:  # script-quota hygiene + the embedded token dies with the script slot
+            deps.remove_scripts(client)
+        except Exception as exc:  # noqa: BLE001
+            deps.log(f"  script cleanup failed (non-fatal): {exc}")
+        deps.close_client(client)
+
+
 def nuke(settings: Settings | None = None, deps: Deps | None = None) -> list[int]:
     """Destroy any stray instance carrying our tag — a leaked billing GPU is a defect."""
     settings = settings or get_settings()
@@ -1192,10 +1350,17 @@ def main(argv: list[str] | None = None) -> int:
         ev = finetune_session()
         _write_evidence(ev)
         return 0 if ev.status == "up" and ev.destroyed else 1
+    if cmd == "serve":
+        ev = serve_session()
+        _write_evidence(ev)
+        return 0 if ev.status == "up" and ev.destroyed else 1
     if cmd == "nuke":
         nuke()
         return 0
-    print(f"usage: jarvis.py [validate|extract|embed|judge|teacher|finetune|nuke]  (got {cmd!r})")
+    print(
+        f"usage: jarvis.py [validate|extract|embed|judge|teacher|finetune|serve|nuke]"
+        f"  (got {cmd!r})"
+    )
     return 2
 
 
