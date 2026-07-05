@@ -18,7 +18,45 @@ Config subsystem, LLM connectivity client, and (later) the FastAPI orchestration
 ## Status
 **P0 builds the config + LLM client + smoke CLI shell only.** API orchestration is **P5**.
 **P3 extends `LLMClient` with the tool-calling `chat()` path** used by the generation eval
-harness (see below).
+harness (see below). **P5 (in progress) adds the orchestration API** — see the next section.
+
+## FastAPI orchestration API (P5, DEC-P5-1)
+
+`make api-up` (→ `uvicorn --factory sutradhar.serving.app:create_app`, port `API_PORT`) serves
+the JSON chat surface (P5_SPEC §2.2). Pure FastAPI — the Spring Boot gateway was a deliberate
+cut (DEC-P5-1). **The GPU-off experience works on a fresh clone with zero GPU and zero DB.**
+
+| Route | Behaviour |
+|---|---|
+| `POST /api/chat` | GPU up → orchestrator turn (below). GPU off/error → the structured offline payload, **HTTP 200, never a 5xx** (DEC-P0-4 at the API layer) |
+| `GET /api/status` | cached degradation state (one health probe per ~30 s TTL, DEC-P5-5) |
+| `GET /api/health` | aggregate: api / db / redis / llm / embed / rerank (`EndpointStatus`-shaped) |
+| `GET /api/replay/{fixture}` | committed pinned-run transcript (e.g. `GS-08a`) — the zero-GPU Papanasam story; 404 lists available fixtures |
+| `GET /api/metrics` | token/cost/latency summary (P5 task 10) |
+
+**One turn** (`sutradhar.serving.orchestrator`, the P3 driver loop lifted to live traffic):
+session load (Redis, in-memory fallback — DEC-P5-2) → caps → agent loop (LLM ↔ the five v0
+tools; every emitted call schema-validated before execution, errors fed back, ≤6 rounds) →
+guardrails (datamarking spotlight on tool results, adversarial check, no-hallucinated-movie
+output gate — DEC-P5-3, prompt bundle v1.1) → response assembly (`versions[]` with
+`relationship`/`is_original`/`sources` passed through untouched; citations per version;
+INTENT preamble parsed) → state save. LLM off/error mid-turn → offline payload, state not
+persisted (clean retry). `search_by_plot` runs the real hybrid `Retriever` against the GPU
+sidecar when `EMBED_BASE_URL`/`RERANK_BASE_URL`/`RETRIEVAL_RUN` are set (`make gpu-serve`
+prints them); unconfigured → tool-error feedback while the graph tools keep answering.
+
+30-second demo (no GPU, no DB):
+
+```
+make api-up
+curl -s localhost:8080/api/chat -H 'content-type: application/json' \
+     -d '{"message": "wo film jisme baap evidence chhupa ke family ko bachata hai"}'
+curl -s localhost:8080/api/replay/GS-08a
+```
+
+Tests: `tests/test_api.py` (HTTP surface, GPU-off + scripted GS-08a over HTTP),
+`tests/test_orchestrator.py`, `tests/test_guardrails.py`, `tests/test_sessions.py`,
+`tests/test_live_executor.py`, `tests/test_providers_http.py`.
 
 ## Chat with tool-calling (P3)
 

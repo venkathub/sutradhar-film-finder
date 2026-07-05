@@ -9,7 +9,7 @@ COMPOSE ?= docker compose -f infra/docker-compose.yml
 
 .DEFAULT_GOAL := help
 .PHONY: help setup fmt lint typecheck test test-int check up down down-v mlflow-up mlflow-down db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ingest-training resolve-conflicts export-training-entities ft-snapshot build-ft-scaffold validate-dataset teach-dataset gpu-teacher ft-dryrun gpu-finetune ft-verdict extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
-        smoke hf-check gpu-validate gpu-serve gpu-stop gpu-nuke
+        smoke hf-check gpu-validate gpu-serve gpu-stop gpu-nuke api-up
 
 help: ## List available targets
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -135,6 +135,9 @@ ft-verdict: ## P4: 30-second demo — base-vs-QLoRA table + the frozen DEC-P4-8 
 
 smoke: ## LLM connectivity smoke test (green whether the GPU endpoint is up or off)
 	uv run python -m sutradhar.serving.smoke
+
+api-up: ## P5: serve the orchestration API (GPU-off experience works with zero GPU/DB)
+	uv run uvicorn --factory sutradhar.serving.app:create_app --host 0.0.0.0 --port $${API_PORT:-8080}
 
 hf-check: ## Verify Hugging Face Hub auth (whoami via HF_TOKEN)
 	uv run python -m sutradhar.serving.hf_check
