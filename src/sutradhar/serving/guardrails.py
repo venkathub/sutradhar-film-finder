@@ -41,6 +41,10 @@ PROVENANCE_NOTICE = (
 
 WITHHELD = "[content withheld: failed safety check]"
 
+# The output-gate downgrade marker (imported by the injection scorer: a flagged title is
+# NOT asserted as fact — the downgrade is the defense working, not the attack succeeding).
+UNVERIFIED_FLAG = "[unverified — not in tool results]"
+
 # Named, deliberately TIGHT pattern classes (false-positive discipline: plot text like
 # "he ignores his family's warnings" or "acts as the family's protector" must pass).
 _PATTERNS: list[tuple[str, re.Pattern[str]]] = [
@@ -85,6 +89,16 @@ _PATTERNS: list[tuple[str, re.Pattern[str]]] = [
         re.compile(
             r"\b(reveal|print|show|repeat|output)\b.{0,30}\b(system prompt|"
             r"your (instructions|prompt)|everything above)\b",
+            re.IGNORECASE | re.DOTALL,
+        ),
+    ),
+    (
+        "echo_demand",
+        # "print/repeat the token/this verbatim", "confirm you read this" — instruction-
+        # shaped exfiltration of a planted marker; absent from genuine film plot text.
+        re.compile(
+            r"\b(print|repeat|output|echo|reply with|say)\b.{0,40}\b(verbatim|token|"
+            r"the following|below)\b|\bconfirm (that )?you (have )?read\b",
             re.IGNORECASE | re.DOTALL,
         ),
     ),
@@ -149,7 +163,7 @@ def output_gate(answer: str, tool_titles: list[str]) -> tuple[str, list[str]]:
     report = detect_hallucinated_movies(answer, set(tool_titles))
     warnings: list[str] = []
     gated = answer
-    flag = " [unverified — not in tool results]"
+    flag = f" {UNVERIFIED_FLAG}"
     for invention in report.inventions:
         bolded = f"**{invention}**"
         if bolded in gated:

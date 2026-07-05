@@ -46,13 +46,12 @@ from sutradhar.serving.llm_client import LLMClient
 
 # Tool-call schema plumbing promoted to sutradhar.toolcalls (P5 task 1); re-exported here
 # so every existing import site (evals, finetune, tests) keeps working unchanged.
-from sutradhar.toolcalls import (  # noqa: F401  (re-exports)
-    TOOL_SCHEMA_PATH,
-    load_tool_schema,
-    openai_tools,
-    params_subschema,
-    validate_emitted_call,
-)
+# Explicit `as` aliasing = an explicit re-export under mypy strict (no_implicit_reexport).
+from sutradhar.toolcalls import TOOL_SCHEMA_PATH as TOOL_SCHEMA_PATH
+from sutradhar.toolcalls import load_tool_schema as load_tool_schema
+from sutradhar.toolcalls import openai_tools as openai_tools
+from sutradhar.toolcalls import params_subschema as params_subschema
+from sutradhar.toolcalls import validate_emitted_call as validate_emitted_call
 
 MAX_TOOL_ROUNDS = 6
 

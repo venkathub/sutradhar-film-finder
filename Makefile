@@ -166,6 +166,9 @@ gpu-judge: ## P3: ephemeral judge session (serve JUDGE_MODEL + BGE-M3 -> kappa r
 generation-dryrun: ## P3: 30-second demo — scripted mock endpoint -> scored transcripts -> committed artifact
 	uv run python evals/run_generation_eval.py --mode dry_run
 
+injection-eval: ## P5: injection suite dry-run (defenses ON) -> ASR/FP/utility -> committed summary
+	uv run python evals/run_injection_eval.py --defenses on
+
 benchmark-generation: ## P4 window: authoritative generation benchmark against LLM_BASE_URL (Table 2)
 	uv run python evals/run_generation_eval.py --mode live --with-judge --with-ragas
 
