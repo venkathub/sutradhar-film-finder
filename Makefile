@@ -8,7 +8,7 @@
 COMPOSE ?= docker compose -f infra/docker-compose.yml
 
 .DEFAULT_GOAL := help
-.PHONY: help setup fmt lint typecheck test test-int check up down down-v mlflow-up mlflow-down db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ingest-training resolve-conflicts export-training-entities ft-snapshot build-ft-scaffold validate-dataset teach-dataset gpu-teacher ft-dryrun gpu-finetune ft-verdict extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
+.PHONY: help setup fmt lint typecheck test test-int check up down down-v mlflow-up mlflow-down mlflow-backfill mlflow-log-serving db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ingest-training resolve-conflicts export-training-entities ft-snapshot build-ft-scaffold validate-dataset teach-dataset gpu-teacher ft-dryrun gpu-finetune ft-verdict extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
         smoke hf-check gpu-validate gpu-serve gpu-stop gpu-nuke api-up serving-benchmark injection-eval
 
 help: ## List available targets
@@ -55,6 +55,9 @@ mlflow-down: ## Stop the MLflow service (runs persist in Postgres + data/mlflow-
 
 mlflow-backfill: ## P3: log the committed P2 retrieval run (Table 1) to MLflow (needs mlflow-up)
 	uv run python -m sutradhar.obs.mlflow_log backfill-retrieval
+
+mlflow-log-serving: ## P5: log the committed serving-benchmark window to MLflow (needs mlflow-up)
+	uv run python -m sutradhar.obs.mlflow_log log-serving
 
 langfuse-up: ## P3: idempotent from-scratch Langfuse bootstrap on AIC Cloud (DEC-P3-7; needs AICCLOUD_API_KEY)
 	uv run python infra/langfuse/provision.py

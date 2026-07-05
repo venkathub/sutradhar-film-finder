@@ -1623,6 +1623,15 @@ def serving_benchmark_session(
             endpoints=endpoints,
         )
         path = seal(artifact, out_dir)
+        # Record eval thresholds to MLflow (§6 DoD), degrading if the server is off — a
+        # window never fails because MLflow is down (the log_generation_run posture).
+        try:
+            from sutradhar.obs.mlflow_log import log_serving_run
+
+            mlflow_run = log_serving_run(artifact, path, settings=settings)
+            deps.log(f"  logged to MLflow: {mlflow_run}")
+        except Exception as exc:  # noqa: BLE001
+            deps.log(f"  MLflow logging skipped ({type(exc).__name__}: {exc})")
         ev.status = "up" if artifact.all_ok else "error"
         ev.detail = (
             f"serving benchmark sealed: {path} "

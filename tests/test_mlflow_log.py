@@ -120,3 +120,37 @@ def test_retrieval_backfill_from_committed_p2_artifact(tracking_uri: str) -> Non
     assert run.data.metrics["version_set_recall_gs01"] == pytest.approx(
         winner_metrics["version_set_recall_gs01"]
     )
+
+
+def test_serving_run_logs_from_committed_window(tracking_uri: str) -> None:
+    """The P5 §6 DoD: the sealed serving-benchmark window is recorded to MLflow — params =
+    stamp, metrics = the four capture legs. Logs the REAL committed artifact (GPU-free)."""
+    import mlflow
+
+    from sutradhar.obs.mlflow_log import latest_serving_artifact, log_serving_run
+
+    artifact, path = latest_serving_artifact(Path("evals/serving_runs"))
+    run_id = log_serving_run(
+        artifact, path, settings=Settings(_env_file=None), tracking_uri=tracking_uri
+    )
+    mlflow.set_tracking_uri(tracking_uri)
+    run = mlflow.get_run(run_id)
+
+    params = run.data.params
+    assert params["run_id"] == artifact.run_id
+    assert params["prompt_hash"] == artifact.prompt_hash  # v1.1 serving bundle
+    assert params["tool_schema_version"] == "v0"
+    metrics = run.data.metrics
+    # All four legs logged; parity re-validated Table 1, relevancy backfilled.
+    assert metrics["parity.ok"] == 1.0
+    assert metrics["parity.recall_at_10"] == pytest.approx(1.0)
+    assert metrics["injection.ok"] == 1.0
+    assert "injection.defenses_on.asr" in metrics
+    assert "injection.defenses_off.asr" in metrics
+    assert metrics["latency.ok"] == 1.0
+    assert "latency.latency_p50_ms" in metrics
+    assert metrics["relevancy.ok"] == 1.0
+    assert metrics["relevancy.mean_answer_relevancy"] > 0.0  # footnote-¹ discharged
+    # The sealed artifact rides along.
+    artifacts = [f.path for f in mlflow.artifacts.list_artifacts(run_id=run_id)]
+    assert f"{artifact.run_id}.json" in artifacts
