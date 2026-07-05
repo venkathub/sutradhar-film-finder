@@ -13,6 +13,7 @@ import uuid
 from typing import Any
 
 import httpx
+import pytest
 from fastapi.testclient import TestClient
 
 from sutradhar.config import Settings
@@ -396,3 +397,33 @@ def test_unhandled_error_gets_envelope_not_traceback() -> None:
     assert resp.status_code == 500
     body = resp.json()
     assert body["error"] == "internal error" and "RuntimeError" in body["detail"]
+
+
+# --- /api/metrics (P5 task 10): chat-scoped counters + cost accounting ---
+
+
+def test_metrics_reflect_chat_traffic() -> None:
+    client = _client(llm_handler=_ScriptedModel(list(TURN1)))
+    baseline = client.get("/api/metrics").json()
+    assert baseline["requests"]["total"] == 0  # /api/metrics itself is not chat traffic
+
+    chat = client.post("/api/chat", json={"message": "papanasam?"}).json()
+    body = client.get("/api/metrics").json()
+
+    assert body["model"] and body["gpu_hourly_usd"] == 0.89  # self-describing evidence
+    assert body["requests"]["by_status"] == {"up": 1}
+    assert body["tokens"]["prompt"] == 30 and body["tokens"]["completion"] == 15  # 3 rounds
+    # The scripted transport still measures REAL wall time → cost is real (tiny), honest.
+    assert chat["usage"]["cost_usd"] is not None and 0 < chat["usage"]["cost_usd"] < 1e-4
+    assert body["cost_usd_total"] == pytest.approx(chat["usage"]["cost_usd"], abs=1e-8)
+    assert body["latency_ms"]["p50"] is not None and body["latency_ms"]["samples"] == 1
+
+
+def test_metrics_count_off_and_limit_requests() -> None:
+    client = _client(probe_status=OFF)
+    client.post("/api/chat", json={"message": "hi"})
+    client.post("/api/chat", json={"message": "hi again"})
+    body = client.get("/api/metrics").json()
+    assert body["requests"]["by_status"] == {"off": 2}
+    assert body["cost_usd_total"] == 0.0  # no model traffic, no cost
+    assert body["latency_ms"]["p50"] is None  # never fake numbers for non-turns

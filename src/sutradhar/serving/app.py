@@ -37,6 +37,7 @@ from sqlalchemy.orm import Session
 from sutradhar.config import Settings, get_settings
 from sutradhar.evals.driver import ToolExecutor
 from sutradhar.evals.prompts import PromptArtifacts, load_serving_prompt_artifacts
+from sutradhar.obs.cost import MetricsAccumulator, request_cost
 from sutradhar.obs.tracing import Tracer
 from sutradhar.rag.providers import (
     HttpEmbeddings,
@@ -166,6 +167,7 @@ def create_app(
     prompt_artifacts: PromptArtifacts | None = None,
     tracer: Tracer | None = None,
     runs_dir: Path | None = None,
+    metrics: MetricsAccumulator | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     llm = llm_client or LLMClient(settings)
@@ -176,10 +178,12 @@ def create_app(
     artifacts = prompt_artifacts or load_serving_prompt_artifacts()
     trace = tracer or Tracer(settings)  # no-op when LANGFUSE_* unset (DEC-P3-6)
     schema = load_tool_schema()
+    counters = metrics or MetricsAccumulator()
     replay_kwargs: dict[str, Any] = {"runs_dir": runs_dir} if runs_dir else {}
 
     app = FastAPI(title="Sutradhar API", docs_url=None, redoc_url=None)
     app.state.status_cache = cache
+    app.state.metrics = counters
 
     @app.middleware("http")
     async def trace_and_envelope(request: Request, call_next: Any) -> Response:
@@ -189,6 +193,7 @@ def create_app(
             kind="agent",
             input={"method": request.method, "path": request.url.path},
         ) as span:
+            request.state.trace_span = span  # routes attach cost metadata here
             try:
                 response: Response = await call_next(request)
             except Exception as exc:  # noqa: BLE001 — envelope, never a bare traceback
@@ -202,12 +207,13 @@ def create_app(
             return response
 
     @app.post("/api/chat")
-    def chat(request: ChatRequest) -> JSONResponse:
+    def chat(payload: ChatRequest, request: Request) -> JSONResponse:
         status = cache.current()
         if status.status != "up":
+            counters.record("off")
             return JSONResponse(
                 offline_payload(
-                    request.conversation_id, f"{OFFLINE_DETAIL} (endpoint {status.status})"
+                    payload.conversation_id, f"{OFFLINE_DETAIL} (endpoint {status.status})"
                 )
             )
         try:
@@ -224,23 +230,62 @@ def create_app(
                     output_gate=guardrails.output_gate,
                     tracer=trace,
                 )
-                outcome = orchestrator.run_turn(request.conversation_id, request.message)
+                outcome = orchestrator.run_turn(payload.conversation_id, payload.message)
             finally:
                 db.close()
         except SessionLimitError as exc:
+            counters.record("limit")
             return JSONResponse(
                 {"error": "limit", "detail": str(exc)},
                 status_code=400,
             )
         if isinstance(outcome, TurnAborted):
             cache.invalidate()  # the endpoint died mid-turn; re-probe on the next request
+            counters.record("aborted")
             return JSONResponse(
                 offline_payload(
                     outcome.conversation_id,
                     f"{OFFLINE_DETAIL} (turn aborted: {outcome.detail})",
                 )
             )
+        # Per-request accounting (P5_SPEC §2.7): amortized GPU cost + tokens/sec,
+        # on the response, the trace, and the /api/metrics accumulator.
+        cost = request_cost(
+            {
+                "prompt_tokens": outcome.usage.prompt_tokens,
+                "completion_tokens": outcome.usage.completion_tokens,
+            },
+            outcome.latency_ms,
+            settings.gpu_hourly_usd,
+        )
+        outcome.usage.cost_usd = cost.cost_usd
+        request.state.trace_span.update(
+            metadata={
+                "cost_usd": cost.cost_usd,
+                "tokens_per_sec": cost.tokens_per_sec,
+                "usd_per_1k_tokens": cost.usd_per_1k_tokens,
+                "gpu_hourly_usd": settings.gpu_hourly_usd,
+            }
+        )
+        counters.record(
+            "up",
+            latency_ms=outcome.latency_ms,
+            usage={
+                "prompt_tokens": outcome.usage.prompt_tokens,
+                "completion_tokens": outcome.usage.completion_tokens,
+            },
+            cost_usd=cost.cost_usd,
+        )
         return JSONResponse(outcome.model_dump(mode="json"))
+
+    @app.get("/api/metrics")
+    def api_metrics() -> dict[str, Any]:
+        """The §2.2 JSON summary (chat-scoped). Self-describing for committed evidence."""
+        return {
+            "model": settings.llm_model,
+            "gpu_hourly_usd": settings.gpu_hourly_usd,
+            **counters.snapshot(),
+        }
 
     @app.get("/api/status")
     def api_status() -> dict[str, Any]:
