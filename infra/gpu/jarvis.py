@@ -1444,9 +1444,9 @@ def serving_benchmark_session(
 ) -> Evidence:
     """create(serve) → captures → destroy → create(judge) → relevancy → destroy → seal.
 
-    ``phase="relevancy"`` + ``merge_run=<run_id>`` re-runs ONLY session B and merges the
-    result into the already-sealed artifact (cost discipline: session A's captures are
-    real evidence — don't re-pay for them while iterating the relevancy leg)."""
+    ``phase="relevancy"`` re-runs ONLY session B and ``phase="serve"`` ONLY session A;
+    with ``merge_run=<run_id>`` the phase's fresh steps merge into the already-sealed
+    artifact (cost discipline — don't re-pay for the leg that is already real evidence)."""
     from sutradhar.serving.benchmark import ServingRunArtifact, StepResult, build_artifact, seal
 
     settings = settings or get_settings()
@@ -1465,6 +1465,7 @@ def serving_benchmark_session(
             parity=base_artifact.parity,
             injection=base_artifact.injection,
             latency=base_artifact.latency,
+            relevancy=base_artifact.relevancy,
         )
         endpoints = dict(base_artifact.serving.get("endpoints", {}))
         served_model = base_artifact.model
@@ -1553,9 +1554,17 @@ def serving_benchmark_session(
                 deps.log(f"  script cleanup failed (non-fatal): {exc}")
 
         # --- Session B: the judge topology (relevancy backfill) ---
-        deps.log(f"[serving-benchmark] {run_id}: session B — judge topology …")
         instance = None
+        if phase == "serve":
+            # Cost discipline (mirror of phase=relevancy): reconfirm session A only, keep
+            # the already-sealed relevancy result from merge_run.
+            deps.log(f"[serving-benchmark] {run_id}: session B skipped (phase=serve)")
+            steps.setdefault("relevancy", StepResult(ok=False, error="skipped (phase=serve)"))
+        else:
+            deps.log(f"[serving-benchmark] {run_id}: session B — judge topology …")
         try:
+            if phase == "serve":
+                raise _SessionSkippedError()
             judge_model = settings.require("judge_model")
             # NOT build_judge_startup_script: its `vllm serve --task embed` is rejected by
             # current vLLM (found live 2026-07-05) — use the proven FlagEmbedding sidecar.
@@ -1588,6 +1597,8 @@ def serving_benchmark_session(
             deps.log(f"  judge window UP ({judge_url}); running relevancy backfill …")
             steps["relevancy"] = run_relevancy(judge_url, judge_embed_url)
             deps.log(f"  [relevancy] ok={getattr(steps['relevancy'], 'ok', None)}")
+        except _SessionSkippedError:
+            pass
         except Exception as exc:  # noqa: BLE001
             deps.log(f"  session B failed: {exc}")
             steps.setdefault(

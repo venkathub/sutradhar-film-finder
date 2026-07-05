@@ -272,3 +272,44 @@ def test_seal_writes_manifest(tmp_path: Path) -> None:
     )
     path = seal(artifact, tmp_path)
     assert path.exists() and (tmp_path / "servewin-seal.MANIFEST.sha256").exists()
+
+
+def test_phase_serve_reruns_only_session_a_and_merges(tmp_path: Path) -> None:
+    """phase=serve + merge_run: re-run session A only, keep the sealed relevancy result."""
+    # Seed a prior artifact with a good relevancy (session B evidence to preserve).
+    ok = StepResult(ok=True, data={"mean_answer_relevancy": 0.57})
+    stale = StepResult(ok=False, error="stale pre-fix")
+    prior = build_artifact(
+        "servewin-merge", _settings(), parity=stale, injection=stale, latency=stale, relevancy=ok
+    )
+    seal(prior, tmp_path)
+
+    client = _FakeClient()
+    calls = {"a": 0, "b": 0}
+
+    def captures(llm: str, embed: str, rerank: str) -> dict[str, Any]:
+        calls["a"] += 1
+        return _ok_captures(llm, embed, rerank)
+
+    def relevancy(judge: str, embed: str) -> StepResult:
+        calls["b"] += 1  # must NOT be called
+        return _ok_relevancy(judge, embed)
+
+    ev = jarvis.serving_benchmark_session(
+        _settings(),
+        _deps(client),
+        run_captures=captures,
+        run_relevancy=relevancy,
+        health_timeout_s=50,
+        poll_interval_s=1,
+        out_dir=tmp_path,
+        phase="serve",
+        merge_run="servewin-merge",
+    )
+    assert calls["a"] == 1 and calls["b"] == 0  # only session A ran
+    assert client.destroyed == [4001]  # only one instance (session A)
+    artifact = json.loads((tmp_path / "servewin-merge.json").read_text())
+    assert artifact["parity"]["ok"] is True  # refreshed by the re-run
+    assert artifact["relevancy"]["ok"] is True  # preserved from the merge base
+    assert artifact["relevancy"]["data"]["mean_answer_relevancy"] == 0.57
+    assert ev.status == "up"
