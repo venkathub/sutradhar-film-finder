@@ -1,11 +1,65 @@
 # P4 Spec — QLoRA fine-tune on the rented GPU (the one-time job)
 
-> **Status: EXECUTED COMPLETE (2026-07-04). VERDICT: CUT** — the frozen D8 rule, applied
-> untouched to window `ftwin-ce6b6930`: 1/3 primaries improved (slot F1 +0.236), intent +
-> coherence regressed, GS-02 failed on both columns. Table 2 published
-> (`docs/BENCHMARKS.md`), verdict + execution amendments in DEC-P4-9, adapter public as a
-> negative result, dataset private per D7, conditional follow-up scoped as ROADMAP P4.1.
-> Cost: ≈ $13–14 actual vs the ≈ $10 Q6 cap (chronicle in DEC-P4-9).
+> **Status: EXECUTED — PHASE COMPLETE (2026-07-04). VERDICT: CUT.** All 14 tasks delivered on
+> `feature/p4-qlora-finetune` (17 commits); §6 Definition of Done checked item by item below.
+> The frozen D8 rule (DEC-P4-8), applied untouched by `make ft-verdict` to window
+> `ftwin-ce6b6930` (ONE A100, both columns, byte-identical serving, tok/s divergence 5.7%):
+> **1/3 primaries improved** (GS-07 slot F1 0.364 → 0.600, margin met) · **2 primaries
+> regressed** (GS-07 intent 0.400 → 0.200, GS-08 coherence 0.667 → 0.333) · **3 guards failed**
+> (schema validity 1.00 → 0.94; GS-02 = 1 on BOTH columns — base invented "Pushpa", QLoRA
+> "Salaar") → **CUT**; P5 proceeds on the well-prompted base (the DEC-0001 pre-commitment),
+> conditional follow-up scoped as **ROADMAP P4.1**. What the adapter DID learn is recorded:
+> tool-call sequence accuracy **0.083 → 0.417**, call-level 0.25 → 0.65 — form improved,
+> judgment regressed (root causes transcript-diagnosed, all training-data defects).
+> Committed columns: base `20260704T093206Z-e9598564` (= `PINNED_RUN`) · QLoRA
+> `20260704T093942Z-f6ce2af8` · no-exemplar `20260704T094052Z-36dd6f68` (D6 footnote:
+> code-mixed intent 0.60 at ~1.1k fewer prompt tokens/turn). Dataset `sutradhar-ft-v1`
+> (2,000 convs, sha256 `d963ca7a…`, 0 decontamination violations) PRIVATE per D7; adapter
+> PUBLIC (`venkat2393/sutradhar-gemma4-e4b-qlora-v1`, negative-result card) + MLflow registry
+> v1; Langfuse traces exported + committed. **Cost: ≈ $13–14 actual vs the ≈ $10 Q6 cap**
+> (per-failure chronicle in DEC-P4-9).
+>
+> **Rev 4 (2026-07-04, execution close-out) — deviations discovered live, all logged (DEC-P4-9):**
+> - **Model pin corrected:** `google/gemma-4-E4B` → **`google/gemma-4-E4B-it @ fee6332c…`**
+>   (the bare base ships no chat template; the -it template natively renders v0 tools + the
+>   gemma4 call format). Train-time derivative `finetune/gemma4_train_template.jinja` adds
+>   `{% generation %}` markers only — proven byte-identical over all 96 sealed samples,
+>   0 mask violations. DEC-0001 revision follow-up discharged.
+> - **`VLLM_SERVE_FLAGS` env (new):** tools-bearing requests 400 without
+>   `--enable-auto-tool-choice --tool-call-parser gemma4`; guarded thereafter by an ON-BOX
+>   tools self-test before any capture marker + a laptop rc-guard (0 completed fixtures =
+>   abort, never a benchmark column) + `--served-model-name` for the merged column.
+> - **Resumable window (the load-bearing lesson):** the adapter is checkpointed to the HF relay
+>   the moment training ends; `FT_RESUME_FROM` skips training in a fresh window. The first
+>   window died at merged-serving AFTER a successful train (val loss 0.0502) — the adapter was
+>   SSH-rescued and the publishing window resumed for ~$1.5 instead of a retrain. Also fixed
+>   live: JarvisLabs persists only `/home` (HF_HOME redirected), training pins resolved as a
+>   SET (`uv pip compile`; peft↔transformers-v5 break), isolated train venv (vLLM owns its
+>   torch), LoRA targets resolved against the real module tree (`Gemma4ClippableLinear` →
+>   inner `.linear`, multimodal towers excluded, full paths), multimodal merge
+>   (`merge_adapter.py`: multimodal auto class + 54 KV-sharing checkpoint-only tensors grafted
+>   + processor packaged).
+> - **Teacher pass hardening (DEC-P4-1 trigger never fired: 28.0% final rejection < 30%, QC
+>   passed):** think mode ON (no-think translated answers to English), deterministic BPE-leak
+>   repair (vLLM 0.24.0), ASCII `[[Tn]]` sentinels (BPE mangles `⟦⟧`), INTENT preamble + list
+>   lines frozen structurally (never sent to the teacher), slot-value + bold-span locking,
+>   seven new deterministic verifier guards, Cloudflare-transient retry; 2 sanctioned prompt
+>   revisions; 9 detector-tripping taught answers reverted to scaffold surfaces (gate untouched).
+> - **Tier-1 pin + gate (user-confirmed):** committed `evals/generation_runs/PINNED_RUN` (env
+>   override intact); the CI GS-02 gate became **relative** (recomputed inventions == the
+>   pinned artifact's recorded value — no NEW hallucinations between windows) because the = 0
+>   target is unmet by both live columns; = 0 stays a hard `ft-verdict` clause and the absolute
+>   CI assertion returns when a pinned column achieves it.
+> - **`--prompt-variant no_exemplars`** added to the P3 runner for the D6 supplementary capture
+>   (prompt_hash explicitly suffixed `:no_exemplars` — can never masquerade as the frozen
+>   stamp); `evals/rejudge_run.py` added so the window's judge phase scores RECORDED
+>   transcripts after both captures (§2.4 step [5] as specified).
+> - **Same-language-remake upsert bug (P1 latent, D3 ingestion finding):** QID-less version
+>   upsert keyed `(work, language)` merged Don hi-1978→hi-2006 into a self-edge; re-keyed with
+>   `release_year` (regression-tested). First-ever conflict resolution executed
+>   (`resolve_conflicts.py`, Adithya Varma year, seed+TMDB > stale Wikidata).
+>
+> *(Grooming history: Rev 1–3 approval notes preserved below.)*
 >
 > **Status at approval: APPROVED (2026-07-03, Rev 3).** Grooming complete — all §3 recommendations
 > user-confirmed (§7 Q1–Q6 resolved 2026-07-03); decisions logged as **DEC-P4-1..8** in
@@ -542,7 +596,7 @@ pinned) — P4 adds no scorer code, so the before/after cannot drift by construc
 
 ---
 
-## 5. Task breakdown (ordered, independently committable)
+## 5. Task breakdown (ordered, independently committable) — ALL 14 EXECUTED (2026-07-03/04)
 
 1. **Log confirmed decisions** — DEC-P4-1..8 in `docs/DECISIONS.md` (after user confirmation);
    `.env.example` + settings gain `TEACHER_*`, `HF_ADAPTER_REPO`, `FT_DATASET_*`.
@@ -581,32 +635,45 @@ pinned) — P4 adds no scorer code, so the before/after cannot drift by construc
 
 ---
 
-## 6. Definition of Done (instantiates the CLAUDE.md generic DoD)
+## 6. Definition of Done (instantiates the CLAUDE.md generic DoD) — CHECKED 2026-07-04
 
-- [ ] Code complete and matching this approved spec (tasks 1–14).
-- [ ] Unit + integration tests written and passing (§4); Tier-1 fully green with the re-pinned
-      live `GENERATION_RUN`.
-- [ ] Eval thresholds met and recorded to MLflow: GS-02 = 0 inventions on both columns; schema
-      validity + sequence accuracy guards hold; the D8 verdict computed and logged — **either
-      outcome (keep or cut) satisfies the DoD if it is measured, evidenced, and logged**.
-- [ ] Benchmark tables: **Table 2 updated with BOTH columns** (base + QLoRA: tool-call accuracy,
-      code-mixed intent/slot accuracy, backtracking coherence, faithfulness, answer relevancy,
-      GPU latency p50/p95 + tokens/sec) captured in one live GPU window with evidence — MLflow
-      run links, exported Langfuse traces, screenshots, serving config + model revisions in the
-      stamp. **Table 1 untouched and asserted byte-identical** (the two-table honesty rule).
-- [ ] Adapter merged; adapter + dataset card + metrics + sealed run artifacts on **HF Hub**;
-      adapter registered in the MLflow registry; **GPU instance destroyed** (volume deletable —
+- [x] Code complete and matching this approved spec (tasks 1–14) — 17 commits on
+      `feature/p4-qlora-finetune`; every live deviation logged in the Rev-4 header + DEC-P4-9.
+- [x] Unit + integration tests written and passing (§4): **576 unit + 113 integration green**
+      (11 new `test_ft_*` suites); Tier-1 pinned to the live window via the committed
+      `evals/generation_runs/PINNED_RUN` (env override intact; GS-02 gate relative form,
+      user-confirmed — see Rev-4 note).
+- [x] Eval thresholds met and recorded to MLflow, **with one honest deviation stated loudly**:
+      the D8 verdict computed and logged (**CUT**, DEC-P4-9 — the "either outcome satisfies the
+      DoD if measured, evidenced, logged" clause); sequence-accuracy guard recorded (QLoRA ≥
+      base held: 0.417 vs 0.083); **GS-02 = 0 NOT met on either column** (base "Pushpa" / QLoRA
+      "Salaar" — recorded in Table 2 + DEC-P4-9; CI gates relatively; = 0 remains the hard
+      `ft-verdict` clause) and the schema-validity guard failed on the QLoRA column (part of
+      the CUT). MLflow runs `2155e09f…` (base) / `b834bb01…` (QLoRA) / `53d55afd…`
+      (no-exemplar), experiment `sutradhar/generation`.
+- [x] Benchmark tables: **Table 2 updated with BOTH columns** + the D6 no-exemplar footnote,
+      captured in one live window (`ftwin-ce6b6930`) with evidence — MLflow links, exported
+      Langfuse traces committed (`*.trace.json`), registry screenshots
+      (`docs/evidence/p4/`), serving config + `google/gemma-4-E4B-it @ fee6332c…` in the
+      stamp; RAGAS answer-relevancy gap admitted in a footnote. **Table 1 untouched and
+      asserted byte-identical** (retrieval suite green over the grown graph).
+- [x] Adapter merged (`merge_adapter.py`, multimodal-safe); adapter + dataset card + metrics +
+      sealed run artifacts on **HF Hub** (`sutradhar-gemma4-e4b-qlora-v1` public
+      negative-result card; `sutradhar-ft-v1` private per D7); **MLflow registry
+      `sutradhar-gemma4-e4b-qlora` v1**; **GPU instance destroyed** (`instances: []`,
       `make gpu-nuke` clean).
-- [ ] `finetune/README.md` + `docs/DECISIONS.md` (DEC-P4-1..8 + verdict) + `docs/LICENSING.md`
-      updated.
-- [ ] Runs cleanly from scratch: fresh clone + `.env` → `make ft-dryrun` (no GPU) reproduces the
-      rehearsal; the window itself reproducible via `make gpu-finetune` (documented, priced).
-- [ ] 30-second demo path: `make ft-verdict` — prints the base-vs-QLoRA per-metric table with
-      the keep/cut verdict from committed artifacts, GPU off.
-- [ ] Resume-ready quantified bullet drafted for `docs/PORTFOLIO.md` (e.g. "QLoRA-tuned a 4B
-      model on N synthetic record-grounded code-mixed conversations for $X of GPU time; +Y pts
-      intent accuracy / +Z pts slot F1 over a well-prompted base under identical serving,
-      zero hallucinated films across the benchmark").
+- [x] `finetune/README.md` (rewritten: architecture-as-executed, results, runbook, operational
+      chronicle) + `docs/DECISIONS.md` (DEC-P4-1..8 + the DEC-P4-9 verdict/execution record) +
+      `docs/LICENSING.md` (teacher-executed row, dataset/adapter/snapshot rows) updated.
+- [x] Runs cleanly from scratch: `make ft-dryrun` (no GPU) green — committed rehearsal evidence
+      `finetune/ft_dryrun_report.json`; the window reproducible via `make gpu-finetune`
+      (documented, priced, **resumable** via `FT_RESUME_FROM`).
+- [x] 30-second demo path: `make ft-verdict` — prints the base-vs-QLoRA per-metric table with
+      the CUT verdict from committed artifacts, GPU off.
+- [x] Resume-ready quantified bullets drafted in `docs/PORTFOLIO.md` (three: the
+      grounded-by-construction dataset, the resumable window protocol, the pre-committed
+      negative-result verdict) — deliberately framed as the senior signal the CLAUDE.md charter
+      names.
 
 ---
 
