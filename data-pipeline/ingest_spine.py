@@ -16,7 +16,7 @@ from pathlib import Path
 import typer
 
 from sutradhar.graph.db import create_graph_engine, create_session_factory
-from sutradhar.pipeline.seed import load_seed_slice
+from sutradhar.pipeline.seed import DEFAULT_SEED_PATH, load_seed_slice
 from sutradhar.pipeline.wikidata import (
     WikidataClient,
     ingest_spine,
@@ -38,8 +38,14 @@ def main(
     snapshot_root: Path = typer.Option(  # noqa: B008 — typer idiom
         SNAPSHOT_ROOT, help="Snapshot base directory."
     ),
+    slice_path: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path(DEFAULT_SEED_PATH),
+        "--slice",
+        help="Seed-slice YAML (default: golden slice; P4 training slice via "
+        "data-pipeline/training_slice.yaml — DEC-P4-3).",
+    ),
 ) -> None:
-    slice_ = load_seed_slice()
+    slice_ = load_seed_slice(slice_path)
     qids = sorted(
         {
             v.wikidata_qid

@@ -148,3 +148,28 @@ def test_qidless_dub_tracks_are_medium(
     assert len(medium) == 4
     for v in medium:
         assert v.sources and v.sources[0]["source"] == "human"
+
+
+def test_same_language_remake_pair_stays_two_versions(session: Session) -> None:
+    """P4 training-slice regression (Don hi-1978 -> hi-2006): the QID-less upsert fallback
+    keys on (work, language, release_year), so a same-language remake inside one work must
+    NOT merge into its original (the merge produced a self-edge CheckViolation on the
+    first live training-slice ingest, 2026-07-03)."""
+    training = load_seed_slice(REPO_ROOT / "data-pipeline" / "training_slice.yaml")
+    don = {"don_1978": training.works["don_1978"]}
+    slice_ = training.model_copy(update={"works": don})
+    entities = {
+        "Q1238847": WikidataEntity(qid="Q1238847", publication_years=(1978,)),
+        "Q662436": WikidataEntity(qid="Q662436", publication_years=(2006,), based_on=("Q1238847",)),
+    }
+    report = ingest_spine(session, slice_, entities)
+    session.flush()
+    versions = session.scalars(select(Version)).all()
+    assert {(v.language, v.release_year) for v in versions} == {("hi", 1978), ("hi", 2006)}
+    assert "Q662436 is_remake_of Q1238847" in set(report.edge_labels)
+    edge = session.scalars(select(Edge).where(Edge.edge_type == "is_remake_of")).one()
+    assert edge.src_id != edge.dst_id
+    # Idempotency holds under the new key: re-run adds nothing.
+    again = ingest_spine(session, slice_, entities)
+    assert again.edges_written == 0
+    assert len(session.scalars(select(Version)).all()) == 2

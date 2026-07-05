@@ -218,3 +218,88 @@ def test_judge_startup_script_serves_both_models_no_secret() -> None:
     assert f"--task embed --host 0.0.0.0 --port {jarvis.EMBED_SERVE_PORT}" in script
     assert "openai/gpt-oss-20b" in script and "BAAI/bge-m3" in script
     assert "hf_" not in script and "HF_TOKEN" not in script  # ungated models, no token
+
+
+# --- P4 teacher session (task 6; DEC-P4-1 Sarvam-M, DEC-P0-5 ephemeral pattern) ---
+
+
+def _teacher_settings() -> Settings:
+    return Settings(
+        _env_file=None,
+        LLM_MODEL="google/gemma-4-E4B",
+        GPU_TYPE="A100",
+        TEACHER_MODEL="sarvamai/sarvam-m",
+    )
+
+
+def test_teacher_session_runs_teach_and_destroys() -> None:
+    client = _FakeClient()
+    seen: dict[str, str] = {}
+
+    def fake_teach(base_url: str, teacher_model: str) -> tuple[int, str, str]:
+        seen["base_url"] = base_url
+        seen["model"] = teacher_model
+        return 0, "taught 2000 conversations (rate 4.00%)", ""
+
+    ev = jarvis.teacher_session(
+        _teacher_settings(),
+        _base_deps(client),
+        run_teach=fake_teach,
+        health_timeout_s=100,
+        poll_interval_s=1,
+    )
+    assert ev.status == "up" and ev.booted is True
+    assert seen["model"] == "sarvamai/sarvam-m"
+    assert seen["base_url"].endswith("/v1")
+    assert client.destroyed == [4242] and ev.destroyed is True
+
+
+def test_teacher_session_escalation_exit_still_destroys() -> None:
+    client = _FakeClient()
+    ev = jarvis.teacher_session(
+        _teacher_settings(),
+        _base_deps(client),
+        run_teach=lambda url, model: (2, "rate 42%", ""),
+        health_timeout_s=100,
+        poll_interval_s=1,
+    )
+    assert ev.status == "error"
+    assert "DEC-P4-1 escalation trigger" in ev.detail
+    assert client.destroyed == [4242]  # never leak a GPU on a failed gate
+
+
+def test_teacher_session_teach_crash_still_destroys() -> None:
+    client = _FakeClient()
+
+    def boom(url: str, model: str) -> tuple[int, str, str]:
+        raise RuntimeError("laptop lost network mid-pass")
+
+    ev = jarvis.teacher_session(
+        _teacher_settings(),
+        _base_deps(client),
+        run_teach=boom,
+        health_timeout_s=100,
+        poll_interval_s=1,
+    )
+    assert ev.status == "error"
+    assert client.destroyed == [4242]
+
+
+def test_teacher_session_requires_teacher_model() -> None:
+    from sutradhar.config import ConfigError
+
+    client = _FakeClient()
+    try:
+        jarvis.teacher_session(_settings(), _base_deps(client))
+    except ConfigError as exc:
+        assert "TEACHER_MODEL" in str(exc)
+    else:  # pragma: no cover
+        raise AssertionError("expected ConfigError for unset TEACHER_MODEL")
+
+
+def test_teacher_startup_script_quantized_no_secret() -> None:
+    script = jarvis.build_teacher_startup_script("sarvamai/sarvam-m")
+    assert "vllm serve sarvamai/sarvam-m" in script
+    assert "--quantization fp8" in script  # W8A16 weight-only on Ampere (P4_SPEC D1)
+    assert "HF_HOME=/home/hf_cache" in script  # persistent volume — root overlay is tiny
+    assert "hf_" not in script.replace("hf_cache", "")  # ungated model — no token embedded

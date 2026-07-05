@@ -91,3 +91,28 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   three compose env-derivation gaps — **five live findings, each folded back into code, tests,
   and the decision log**; benchmark-cited traces are exported and committed so evidence
   outlives the infrastructure.
+
+## P4 — QLoRA fine-tune: a rigorously measured negative result (the senior signal)
+
+- **Built a fully synthetic, record-grounded, code-mixed SFT dataset (2,000 multi-turn
+  tool-calling conversations, 6,426 teacher rewrites)** where hallucination is structurally
+  impossible: tool sequences are generated *from* the frozen JSON tool schema, every tool result
+  is a byte-recorded output of the live graph tools, entities are sentinel-locked through the
+  Sarvam-M 24B surface-realization pass (28% of rewrites machine-rejected back to scaffold
+  surfaces), and every training utterance is decontaminated (rapidfuzz < 0.80) against the eval
+  set, the prompt exemplars, AND all negative fixtures — the decontamination gate caught 3
+  scaffold templates reproducing protected eval phrasings before a single GPU minute was spent.
+- **Ran the one-time train+benchmark window as a resumable, phase-checkpointed protocol** over an
+  HF-Hub relay (no SSH dependency): base column, QLoRA train (r=16 all-linear NF4, assistant-only
+  loss asserted on token arrays — guarding a known TRL silent-mask-drop bug), adapter
+  checkpointed to the relay the moment training ended, merged-model captures, and a judge+RAGAS
+  pass — all in one A100 rental with byte-identical serving (tokens/sec divergence 5.7%). When
+  the first window died *after* training, the resume design replayed everything else for ~$1.5
+  instead of a retrain.
+- **Published the honest verdict: CUT, under a keep/cut rule frozen before any number existed**
+  (≥2-of-3 primary improvements, ≥ +0.05 margin, zero regressions, zero-hallucination guards).
+  The adapter improved tool-call sequence accuracy 0.083 → 0.417 and slot F1 +0.24 but regressed
+  intent accuracy and multi-turn coherence — and the transcript-level diagnosis traced every
+  regression to three specific training-data defects (documented, with a budget-gated fix phase
+  scoped). Negative result, positive evidence: benchmark tables, MLflow registry entry, exported
+  Langfuse traces, and a public adapter card all say so out loud.

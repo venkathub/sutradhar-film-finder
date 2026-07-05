@@ -1,0 +1,3224 @@
+{
+ "run_id": "20260704T093942Z-f6ce2af8",
+ "mode": "live",
+ "model": "sutradhar-qlora-merged",
+ "serving": {
+  "llm_base_url": "https://bae3b54393872.notebooksn.jarvislabs.net/v1",
+  "gpu_type": "A100",
+  "captured_by": "make benchmark-generation",
+  "prompt_variant": "full",
+  "window_column": "qlora"
+ },
+ "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+ "tool_schema_version": "v0",
+ "judge": {
+  "coherence": {
+   "model": "openai/gpt-oss-20b",
+   "base_url": "https://bae3b54393872.notebooksn.jarvislabs.net/v1",
+   "revision": null,
+   "prompt_file": "judge_coherence_v1.md",
+   "prompt_hash": "b08612f167a5a7c58818535a65c6e90a996dcbdcfec1460086a68f9ad44c7259",
+   "temperature": 0.0,
+   "reasoning_effort": "low",
+   "ragas_version": "0.4.3"
+  }
+ },
+ "retrieval_run": "20260702T135315Z-f6583183",
+ "fixtures": [
+  {
+   "fixture_id": "GS-02d",
+   "slice": "negative",
+   "transcript": {
+    "fixture_id": "GS-02d",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "yaar Salaar ke saare versions dikha do na"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-ad5a80f749331ffe",
+        "function": {
+         "arguments": "{\"title\": \"Salaar\"}",
+         "name": "resolve_title"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-ad5a80f749331ffe",
+      "content": "{\"candidates\": [], \"ambiguous\": false}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"out_of_catalog\", \"slots\": {\"title\": \"Salaar\"}}\n\nCatalog mein **Salaar** naam ki koi film nahi mili, main andaza nahi lagaunga. NO_MATCH.",
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "chatcmpl-tool-ad5a80f749331ffe",
+      "tool": "resolve_title",
+      "arguments_raw": "{\"title\": \"Salaar\"}",
+      "arguments": {
+       "title": "Salaar"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "candidates": [],
+       "ambiguous": false
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     "INTENT: {\"intent\": \"out_of_catalog\", \"slots\": {\"title\": \"Salaar\"}}\n\nCatalog mein **Salaar** naam ki koi film nahi mili, main andaza nahi lagaunga. NO_MATCH."
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 3182,
+      "completion_tokens": 16,
+      "total_tokens": 3198
+     },
+     {
+      "prompt_tokens": 3220,
+      "completion_tokens": 49,
+      "total_tokens": 3269
+     }
+    ],
+    "latencies_ms": [
+     1289.63,
+     631.6
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 1,
+    "call_matches": [
+     true
+    ],
+    "call_level": 1.0,
+    "sequence_match": true,
+    "invalid_emitted": 0,
+    "emitted_total": 1,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    true
+   ],
+   "slot_counts": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 0
+   },
+   "hallucination": [
+    {
+     "turn": 0,
+     "asserted": [
+      "Salaar"
+     ],
+     "inventions": [
+      "Salaar"
+     ]
+    }
+   ],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": {
+    "faithfulness": 0.5,
+    "answer_relevancy": null,
+    "faithfulness_error": null,
+    "answer_relevancy_error": "ragas_error: NotFoundError: Error code: 404 - {'detail': 'Not Found'}",
+    "ragas_version": "0.4.3"
+   }
+  },
+  {
+   "fixture_id": "GS-02e",
+   "slice": "negative",
+   "transcript": {
+    "fixture_id": "GS-02e",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "ek ladki time travel karke apne dadaji se milti hai, us movie ka naam kya hai"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-81c6ea3104a3ba0b",
+        "function": {
+         "arguments": "{\"description\": \"a girl who travels back in time and meets her grandfather\", \"top_k\": 10}",
+         "name": "search_by_plot"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-81c6ea3104a3ba0b",
+      "content": "{\"results\": [], \"abstain\": true}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"out_of_catalog\", \"slots\": {\"plot_description\": \"a girl who travels back in time and meets her grandfather\"}}\n\nCatalog mein story se check kiya, aisi koi film nahi mili — main andaza nahi lagaunga. NO_MATCH.",
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "chatcmpl-tool-81c6ea3104a3ba0b",
+      "tool": "search_by_plot",
+      "arguments_raw": "{\"description\": \"a girl who travels back in time and meets her grandfather\", \"top_k\": 10}",
+      "arguments": {
+       "description": "a girl who travels back in time and meets her grandfather",
+       "top_k": 10
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "results": [],
+       "abstain": true
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     "INTENT: {\"intent\": \"out_of_catalog\", \"slots\": {\"plot_description\": \"a girl who travels back in time and meets her grandfather\"}}\n\nCatalog mein story se check kiya, aisi koi film nahi mili — main andaza nahi lagaunga. NO_MATCH."
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 3193,
+      "completion_tokens": 34,
+      "total_tokens": 3227
+     },
+     {
+      "prompt_tokens": 3251,
+      "completion_tokens": 61,
+      "total_tokens": 3312
+     }
+    ],
+    "latencies_ms": [
+     549.24,
+     815.35
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 1,
+    "call_matches": [
+     true
+    ],
+    "call_level": 1.0,
+    "sequence_match": true,
+    "invalid_emitted": 0,
+    "emitted_total": 1,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    true
+   ],
+   "slot_counts": {
+    "tp": 0,
+    "fp": 1,
+    "fn": 1
+   },
+   "hallucination": [
+    {
+     "turn": 0,
+     "asserted": [],
+     "inventions": []
+    }
+   ],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": {
+    "faithfulness": 0.6,
+    "answer_relevancy": null,
+    "faithfulness_error": null,
+    "answer_relevancy_error": "ragas_error: NotFoundError: Error code: 404 - {'detail': 'Not Found'}",
+    "ragas_version": "0.4.3"
+   }
+  },
+  {
+   "fixture_id": "GS-02f",
+   "slice": "negative",
+   "transcript": {
+    "fixture_id": "GS-02f",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "oru vampire kadhal padam Malayalam la irukka?"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-9be4599fce6f924e",
+        "function": {
+         "arguments": "{\"title\": \"oru vampire kadhal\"}",
+         "name": "resolve_title"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-9be4599fce6f924e",
+      "content": "{\"candidates\": [], \"ambiguous\": false}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"out_of_catalog\", \"slots\": {\"title\": \"oru vampire kadhal\"}}\n\nCatalog all history catalog pannirukken, aanaa antha padam illana nu guess panna mudiyuma? NO_MATCH.",
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-829cbbc12f77856f",
+        "function": {
+         "arguments": "{\"description\": \"a romantic film about a vampire\", \"top_k\": 10}",
+         "name": "search_by_plot"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-829cbbc12f77856f",
+      "content": "{\"results\": [], \"abstain\": true}"
+     },
+     {
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "chatcmpl-tool-9be4599fce6f924e",
+      "tool": "resolve_title",
+      "arguments_raw": "{\"title\": \"oru vampire kadhal\"}",
+      "arguments": {
+       "title": "oru vampire kadhal"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "candidates": [],
+       "ambiguous": false
+      },
+      "error": null
+     },
+     {
+      "turn": 0,
+      "call_id": "chatcmpl-tool-829cbbc12f77856f",
+      "tool": "search_by_plot",
+      "arguments_raw": "{\"description\": \"a romantic film about a vampire\", \"top_k\": 10}",
+      "arguments": {
+       "description": "a romantic film about a vampire",
+       "top_k": 10
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "results": [],
+       "abstain": true
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     null
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 3181,
+      "completion_tokens": 18,
+      "total_tokens": 3199
+     },
+     {
+      "prompt_tokens": 3221,
+      "completion_tokens": 85,
+      "total_tokens": 3306
+     },
+     {
+      "prompt_tokens": 3330,
+      "completion_tokens": 1,
+      "total_tokens": 3331
+     }
+    ],
+    "latencies_ms": [
+     348.7,
+     1068.26,
+     90.58
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 1,
+    "call_matches": [
+     true
+    ],
+    "call_level": 1.0,
+    "sequence_match": true,
+    "invalid_emitted": 0,
+    "emitted_total": 2,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    false
+   ],
+   "slot_counts": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 2
+   },
+   "hallucination": [],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": null
+  },
+  {
+   "fixture_id": "GS-02g",
+   "slice": "negative",
+   "transcript": {
+    "fixture_id": "GS-02g",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "పుష్ప సినిమా అన్ని భాషల్లో ఉందా"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-be7e4781fac1c660",
+        "function": {
+         "arguments": "{\"title\": \"Pushpa\"}",
+         "name": "resolve_title"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-be7e4781fac1c660",
+      "content": "{\"candidates\": [], \"ambiguous\": false}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"out_of_catalog\", \"slots\": {\"title\": \"Pushpa\"}}\n\nCatalog lo \"Pushpa\" cinema ledu — nenu guess cheyalenu. NO_MATCH.",
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-85d46260b24b7efe",
+        "function": {
+         "arguments": "{\"description\": \"the film is about Pushpa, who leads a smuggling gang of red sandalwood\", \"top_k\": 10}",
+         "name": "search_by_plot"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-85d46260b24b7efe",
+      "content": "{\"results\": [], \"abstain\": true}"
+     },
+     {
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "chatcmpl-tool-be7e4781fac1c660",
+      "tool": "resolve_title",
+      "arguments_raw": "{\"title\": \"Pushpa\"}",
+      "arguments": {
+       "title": "Pushpa"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "candidates": [],
+       "ambiguous": false
+      },
+      "error": null
+     },
+     {
+      "turn": 0,
+      "call_id": "chatcmpl-tool-85d46260b24b7efe",
+      "tool": "search_by_plot",
+      "arguments_raw": "{\"description\": \"the film is about Pushpa, who leads a smuggling gang of red sandalwood\", \"top_k\": 10}",
+      "arguments": {
+       "description": "the film is about Pushpa, who leads a smuggling gang of red sandalwood",
+       "top_k": 10
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "results": [],
+       "abstain": true
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     null
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 3180,
+      "completion_tokens": 16,
+      "total_tokens": 3196
+     },
+     {
+      "prompt_tokens": 3218,
+      "completion_tokens": 85,
+      "total_tokens": 3303
+     },
+     {
+      "prompt_tokens": 3327,
+      "completion_tokens": 1,
+      "total_tokens": 3328
+     }
+    ],
+    "latencies_ms": [
+     253.45,
+     1082.21,
+     88.34
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 1,
+    "call_matches": [
+     true
+    ],
+    "call_level": 1.0,
+    "sequence_match": true,
+    "invalid_emitted": 0,
+    "emitted_total": 2,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    false
+   ],
+   "slot_counts": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 1
+   },
+   "hallucination": [],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": null
+  },
+  {
+   "fixture_id": "GS-07a",
+   "slice": "code_mixed",
+   "transcript": {
+    "fixture_id": "GS-07a",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "oru police officer-a paathi kudumbathukaaga case-a maathura padam"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-a36bd206493c7b85",
+        "function": {
+         "arguments": "{\"description\": \"a police officer refuses to help his family because of a case\", \"top_k\": 10}",
+         "name": "search_by_plot"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-a36bd206493c7b85",
+      "content": "{\"results\": [{\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"canonical_title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"score\": 0.000836}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"canonical_title\": \"Drishyam 2\", \"language\": \"ml\", \"year\": 2021, \"score\": 0.000205}, {\"work_id\": \"a887cfc2-9f10-4fc4-8356-a2de01f3abce\", \"canonical_title\": \"Anbe Sivam\", \"language\": \"ta\", \"year\": 2003, \"score\": 0.0002}, {\"work_id\": \"31707ddb-06ff-4e2e-8d13-6617ba18ce89\", \"canonical_title\": \"Manichitrathazhu\", \"language\": \"ml\", \"year\": 1993, \"score\": 0.000199}, {\"work_id\": \"1b422d39-1e5f-425d-b8f7-bcd21b7e68fd\", \"canonical_title\": \"Vikram\", \"language\": \"ta\", \"year\": 1986, \"score\": 8.3e-05}, {\"work_id\": \"35f70ea8-f848-4532-98b6-70a3fbd0c935\", \"canonical_title\": \"Lucifer\", \"language\": \"ml\", \"year\": 2019, \"score\": 8e-05}], \"abstain\": true}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"out_of_catalog\", \"slots\": {\"plot_description\": \"a police officer refuses to help his family because of a case\"}}\n\nCatalog mein story se check kiya, aisi koi film nahi mili — main andaza nahi lagaunga. NO_MATCH.",
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-96e5f44b2776c8e1",
+        "function": {
+         "arguments": "{\"title\": \"Drishyam\"}",
+         "name": "resolve_title"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-96e5f44b2776c8e1",
+      "content": "{\"candidates\": [{\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"matched_title\": \"Drishyam\", \"language\": \"hi\", \"year\": 2015, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q19824636\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"cdedb609-1559-4649-b495-7a6465a07164\", \"matched_title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q15401703\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"matched_title\": \"దృశ్యం\", \"language\": \"te\", \"year\": 2014, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q16248158\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"matched_title\": \"Drishya\", \"language\": \"kn\", \"year\": 2014, \"score\": 0.9333, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q17052094\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\", \"matched_title\": \"Drishyam 2\", \"language\": \"hi\", \"year\": 2022, \"score\": 0.8889, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q112665700\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"matched_title\": \"దృశ్యం 2\", \"language\": \"te\", \"year\": 2021, \"score\": 0.8889, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q105984608\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"matched_title\": \"ദൃശ്യം 2\", \"language\": \"ml\", \"year\": 2021, \"score\": 0.8889, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q102036246\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"matched_title\": \"ದೃಶ್ಯ 2\", \"language\": \"kn\", \"year\": 2021, \"score\": 0.8235, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q110555107\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}], \"ambiguous\": true}"
+     },
+     {
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "chatcmpl-tool-a36bd206493c7b85",
+      "tool": "search_by_plot",
+      "arguments_raw": "{\"description\": \"a police officer refuses to help his family because of a case\", \"top_k\": 10}",
+      "arguments": {
+       "description": "a police officer refuses to help his family because of a case",
+       "top_k": 10
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "results": [
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "canonical_title": "Drishyam",
+         "language": "ml",
+         "year": 2013,
+         "score": 0.000836
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "canonical_title": "Drishyam 2",
+         "language": "ml",
+         "year": 2021,
+         "score": 0.000205
+        },
+        {
+         "work_id": "a887cfc2-9f10-4fc4-8356-a2de01f3abce",
+         "canonical_title": "Anbe Sivam",
+         "language": "ta",
+         "year": 2003,
+         "score": 0.0002
+        },
+        {
+         "work_id": "31707ddb-06ff-4e2e-8d13-6617ba18ce89",
+         "canonical_title": "Manichitrathazhu",
+         "language": "ml",
+         "year": 1993,
+         "score": 0.000199
+        },
+        {
+         "work_id": "1b422d39-1e5f-425d-b8f7-bcd21b7e68fd",
+         "canonical_title": "Vikram",
+         "language": "ta",
+         "year": 1986,
+         "score": 0.000083
+        },
+        {
+         "work_id": "35f70ea8-f848-4532-98b6-70a3fbd0c935",
+         "canonical_title": "Lucifer",
+         "language": "ml",
+         "year": 2019,
+         "score": 0.00008
+        }
+       ],
+       "abstain": true
+      },
+      "error": null
+     },
+     {
+      "turn": 0,
+      "call_id": "chatcmpl-tool-96e5f44b2776c8e1",
+      "tool": "resolve_title",
+      "arguments_raw": "{\"title\": \"Drishyam\"}",
+      "arguments": {
+       "title": "Drishyam"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "candidates": [
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "dd45646d-6ebb-4efa-bcac-206863b584f3",
+         "matched_title": "Drishyam",
+         "language": "hi",
+         "year": 2015,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q19824636",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "cdedb609-1559-4649-b495-7a6465a07164",
+         "matched_title": "Drishyam",
+         "language": "ml",
+         "year": 2013,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q15401703",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+         "matched_title": "దృశ్యం",
+         "language": "te",
+         "year": 2014,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q16248158",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+         "matched_title": "Drishya",
+         "language": "kn",
+         "year": 2014,
+         "score": 0.9333,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q17052094",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "f73debb9-012c-42d0-b2a0-ccdda33d8ccc",
+         "matched_title": "Drishyam 2",
+         "language": "hi",
+         "year": 2022,
+         "score": 0.8889,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q112665700",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "81cc42b1-8ea7-41c1-8cd2-8a0e735de300",
+         "matched_title": "దృశ్యం 2",
+         "language": "te",
+         "year": 2021,
+         "score": 0.8889,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q105984608",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+         "matched_title": "ദൃശ്യം 2",
+         "language": "ml",
+         "year": 2021,
+         "score": 0.8889,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q102036246",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3",
+         "matched_title": "ದೃಶ್ಯ 2",
+         "language": "kn",
+         "year": 2021,
+         "score": 0.8235,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q110555107",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        }
+       ],
+       "ambiguous": true
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     null
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 3190,
+      "completion_tokens": 35,
+      "total_tokens": 3225
+     },
+     {
+      "prompt_tokens": 3710,
+      "completion_tokens": 80,
+      "total_tokens": 3790
+     },
+     {
+      "prompt_tokens": 5393,
+      "completion_tokens": 1,
+      "total_tokens": 5394
+     }
+    ],
+    "latencies_ms": [
+     524.03,
+     1123.28,
+     204.39
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 2,
+    "call_matches": [
+     true,
+     false
+    ],
+    "call_level": 0.5,
+    "sequence_match": false,
+    "invalid_emitted": 0,
+    "emitted_total": 2,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    false
+   ],
+   "slot_counts": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 1
+   },
+   "hallucination": [],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": null
+  },
+  {
+   "fixture_id": "GS-07b",
+   "slice": "code_mixed",
+   "transcript": {
+    "fixture_id": "GS-07b",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "wo film jisme baap evidence chhupa ke family ko bachata hai"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-9f5bf7c622db91ca",
+        "function": {
+         "arguments": "{\"description\": \"a father hides evidence to protect his family\", \"top_k\": 10}",
+         "name": "search_by_plot"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-9f5bf7c622db91ca",
+      "content": "{\"results\": [{\"work_id\": \"d4de0193-50d8-4bad-858a-9b707ebddb33\", \"canonical_title\": \"Baahubali: The Beginning\", \"language\": \"te\", \"year\": 2015, \"score\": 0.005843}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"canonical_title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"score\": 0.001965}, {\"work_id\": \"7dfe24ec-4c7c-43c3-99e5-d3a312163689\", \"canonical_title\": \"Sholay\", \"language\": \"hi\", \"year\": 1975, \"score\": 0.00161}, {\"work_id\": \"4e092306-ebd7-410c-9b8e-12c3f6cc9a29\", \"canonical_title\": \"Vikram\", \"language\": \"ta\", \"year\": 2022, \"score\": 0.001082}, {\"work_id\": \"e83e4ff4-de6d-4339-849f-1ca45bb94263\", \"canonical_title\": \"Devdas\", \"language\": \"hi\", \"year\": 1955, \"score\": 0.000933}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"canonical_title\": \"Drishyam 2\", \"language\": \"ml\", \"year\": 2021, \"score\": 0.000667}, {\"work_id\": \"579ce866-ba03-4141-93c6-80f33cbacef6\", \"canonical_title\": \"Devdas\", \"language\": \"hi\", \"year\": 2002, \"score\": 0.000115}], \"abstain\": true}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"find_by_plot\", \"slots\": {\"plot_description\": \"a father hides evidence to protect his family\"}}\n\nCatalog mein story se check kiya, aisi koi film nahi mili — main andaza nahi lagaunga. NO_MATCH.",
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-b4a7570fc8073410",
+        "function": {
+         "arguments": "{\"description\": \"a father hides evidence to protect his family\", \"top_k\": 10}",
+         "name": "search_by_plot"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-b4a7570fc8073410",
+      "content": "{\"results\": [{\"work_id\": \"d4de0193-50d8-4bad-858a-9b707ebddb33\", \"canonical_title\": \"Baahubali: The Beginning\", \"language\": \"te\", \"year\": 2015, \"score\": 0.005843}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"canonical_title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"score\": 0.001965}, {\"work_id\": \"7dfe24ec-4c7c-43c3-99e5-d3a312163689\", \"canonical_title\": \"Sholay\", \"language\": \"hi\", \"year\": 1975, \"score\": 0.00161}, {\"work_id\": \"4e092306-ebd7-410c-9b8e-12c3f6cc9a29\", \"canonical_title\": \"Vikram\", \"language\": \"ta\", \"year\": 2022, \"score\": 0.001082}, {\"work_id\": \"e83e4ff4-de6d-4339-849f-1ca45bb94263\", \"canonical_title\": \"Devdas\", \"language\": \"hi\", \"year\": 1955, \"score\": 0.000933}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"canonical_title\": \"Drishyam 2\", \"language\": \"ml\", \"year\": 2021, \"score\": 0.000667}, {\"work_id\": \"579ce866-ba03-4141-93c6-80f33cbacef6\", \"canonical_title\": \"Devdas\", \"language\": \"hi\", \"year\": 2002, \"score\": 0.000115}], \"abstain\": true}"
+     },
+     {
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "chatcmpl-tool-9f5bf7c622db91ca",
+      "tool": "search_by_plot",
+      "arguments_raw": "{\"description\": \"a father hides evidence to protect his family\", \"top_k\": 10}",
+      "arguments": {
+       "description": "a father hides evidence to protect his family",
+       "top_k": 10
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "results": [
+        {
+         "work_id": "d4de0193-50d8-4bad-858a-9b707ebddb33",
+         "canonical_title": "Baahubali: The Beginning",
+         "language": "te",
+         "year": 2015,
+         "score": 0.005843
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "canonical_title": "Drishyam",
+         "language": "ml",
+         "year": 2013,
+         "score": 0.001965
+        },
+        {
+         "work_id": "7dfe24ec-4c7c-43c3-99e5-d3a312163689",
+         "canonical_title": "Sholay",
+         "language": "hi",
+         "year": 1975,
+         "score": 0.00161
+        },
+        {
+         "work_id": "4e092306-ebd7-410c-9b8e-12c3f6cc9a29",
+         "canonical_title": "Vikram",
+         "language": "ta",
+         "year": 2022,
+         "score": 0.001082
+        },
+        {
+         "work_id": "e83e4ff4-de6d-4339-849f-1ca45bb94263",
+         "canonical_title": "Devdas",
+         "language": "hi",
+         "year": 1955,
+         "score": 0.000933
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "canonical_title": "Drishyam 2",
+         "language": "ml",
+         "year": 2021,
+         "score": 0.000667
+        },
+        {
+         "work_id": "579ce866-ba03-4141-93c6-80f33cbacef6",
+         "canonical_title": "Devdas",
+         "language": "hi",
+         "year": 2002,
+         "score": 0.000115
+        }
+       ],
+       "abstain": true
+      },
+      "error": null
+     },
+     {
+      "turn": 0,
+      "call_id": "chatcmpl-tool-b4a7570fc8073410",
+      "tool": "search_by_plot",
+      "arguments_raw": "{\"description\": \"a father hides evidence to protect his family\", \"top_k\": 10}",
+      "arguments": {
+       "description": "a father hides evidence to protect his family",
+       "top_k": 10
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "results": [
+        {
+         "work_id": "d4de0193-50d8-4bad-858a-9b707ebddb33",
+         "canonical_title": "Baahubali: The Beginning",
+         "language": "te",
+         "year": 2015,
+         "score": 0.005843
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "canonical_title": "Drishyam",
+         "language": "ml",
+         "year": 2013,
+         "score": 0.001965
+        },
+        {
+         "work_id": "7dfe24ec-4c7c-43c3-99e5-d3a312163689",
+         "canonical_title": "Sholay",
+         "language": "hi",
+         "year": 1975,
+         "score": 0.00161
+        },
+        {
+         "work_id": "4e092306-ebd7-410c-9b8e-12c3f6cc9a29",
+         "canonical_title": "Vikram",
+         "language": "ta",
+         "year": 2022,
+         "score": 0.001082
+        },
+        {
+         "work_id": "e83e4ff4-de6d-4339-849f-1ca45bb94263",
+         "canonical_title": "Devdas",
+         "language": "hi",
+         "year": 1955,
+         "score": 0.000933
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "canonical_title": "Drishyam 2",
+         "language": "ml",
+         "year": 2021,
+         "score": 0.000667
+        },
+        {
+         "work_id": "579ce866-ba03-4141-93c6-80f33cbacef6",
+         "canonical_title": "Devdas",
+         "language": "hi",
+         "year": 2002,
+         "score": 0.000115
+        }
+       ],
+       "abstain": true
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     null
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 3186,
+      "completion_tokens": 31,
+      "total_tokens": 3217
+     },
+     {
+      "prompt_tokens": 3781,
+      "completion_tokens": 90,
+      "total_tokens": 3871
+     },
+     {
+      "prompt_tokens": 4435,
+      "completion_tokens": 1,
+      "total_tokens": 4436
+     }
+    ],
+    "latencies_ms": [
+     488.69,
+     1145.58,
+     137.74
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 2,
+    "call_matches": [
+     true,
+     false
+    ],
+    "call_level": 0.5,
+    "sequence_match": false,
+    "invalid_emitted": 0,
+    "emitted_total": 2,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    false
+   ],
+   "slot_counts": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 1
+   },
+   "hallucination": [],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": null
+  },
+  {
+   "fixture_id": "GS-07c",
+   "slice": "code_mixed",
+   "transcript": {
+    "fixture_id": "GS-07c",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Drishya kannada film yavudara remake gottidya? full list kodi"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-91caea023d3e620e",
+        "function": {
+         "arguments": "{\"title\": \"Drishya\"}",
+         "name": "resolve_title"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-91caea023d3e620e",
+      "content": "{\"candidates\": [{\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"matched_title\": \"Drishya\", \"language\": \"kn\", \"year\": 2014, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q17052094\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"matched_title\": \"Drishyam\", \"language\": \"hi\", \"year\": 2015, \"score\": 0.9333, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q19824636\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"cdedb609-1559-4649-b495-7a6465a07164\", \"matched_title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"score\": 0.9333, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q15401703\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"matched_title\": \"దృశ్యం\", \"language\": \"te\", \"year\": 2014, \"score\": 0.9333, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q16248158\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"matched_title\": \"ದೃಶ್ಯ 2\", \"language\": \"kn\", \"year\": 2021, \"score\": 0.875, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q110555107\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\", \"matched_title\": \"Drishyam 2\", \"language\": \"hi\", \"year\": 2022, \"score\": 0.8235, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q112665700\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"matched_title\": \"దృశ్యం 2\", \"language\": \"te\", \"year\": 2021, \"score\": 0.8235, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q105984608\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"matched_title\": \"ദൃശ്യം 2\", \"language\": \"ml\", \"year\": 2021, \"score\": 0.8235, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q102036246\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}], \"ambiguous\": true}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"disambiguate\", \"slots\": {\"title\": \"Drishya\"}}\n\n\"Drishya\" naam ki movie se zyada films hain catalog mein — kaunsi wali: **Drishya** (2014, Kannada) or **Drishyam** (2015, Hindi) or **Drishyam** (2013, Malayalam) or **దృశ్యం** (2014, Telugu) or **ದೃಶ್ಯ 2** (2021, Kannada) or **Drishyam 2** (2022, Hindi) or **దృశ్యం 2** (2021, Telugu) or **ദൃശ്യം 2** (2021, Malayalam)? Please specify.",
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "chatcmpl-tool-91caea023d3e620e",
+      "tool": "resolve_title",
+      "arguments_raw": "{\"title\": \"Drishya\"}",
+      "arguments": {
+       "title": "Drishya"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "candidates": [
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+         "matched_title": "Drishya",
+         "language": "kn",
+         "year": 2014,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q17052094",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "dd45646d-6ebb-4efa-bcac-206863b584f3",
+         "matched_title": "Drishyam",
+         "language": "hi",
+         "year": 2015,
+         "score": 0.9333,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q19824636",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "cdedb609-1559-4649-b495-7a6465a07164",
+         "matched_title": "Drishyam",
+         "language": "ml",
+         "year": 2013,
+         "score": 0.9333,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q15401703",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+         "matched_title": "దృశ్యం",
+         "language": "te",
+         "year": 2014,
+         "score": 0.9333,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q16248158",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3",
+         "matched_title": "ದೃಶ್ಯ 2",
+         "language": "kn",
+         "year": 2021,
+         "score": 0.875,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q110555107",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "f73debb9-012c-42d0-b2a0-ccdda33d8ccc",
+         "matched_title": "Drishyam 2",
+         "language": "hi",
+         "year": 2022,
+         "score": 0.8235,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q112665700",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "81cc42b1-8ea7-41c1-8cd2-8a0e735de300",
+         "matched_title": "దృశ్యం 2",
+         "language": "te",
+         "year": 2021,
+         "score": 0.8235,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q105984608",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+         "matched_title": "ദൃശ്യം 2",
+         "language": "ml",
+         "year": 2021,
+         "score": 0.8235,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q102036246",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        }
+       ],
+       "ambiguous": true
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     "INTENT: {\"intent\": \"disambiguate\", \"slots\": {\"title\": \"Drishya\"}}\n\n\"Drishya\" naam ki movie se zyada films hain catalog mein — kaunsi wali: **Drishya** (2014, Kannada) or **Drishyam** (2015, Hindi) or **Drishyam** (2013, Malayalam) or **దృశ్యం** (2014, Telugu) or **ದೃಶ್ಯ 2** (2021, Kannada) or **Drishyam 2** (2022, Hindi) or **దృశ్యం 2** (2021, Telugu) or **ദൃശ്യം 2** (2021, Malayalam)? Please specify."
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 3188,
+      "completion_tokens": 17,
+      "total_tokens": 3205
+     },
+     {
+      "prompt_tokens": 4813,
+      "completion_tokens": 168,
+      "total_tokens": 4981
+     }
+    ],
+    "latencies_ms": [
+     260.9,
+     2216.09
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 2,
+    "call_matches": [
+     true,
+     false
+    ],
+    "call_level": 0.5,
+    "sequence_match": false,
+    "invalid_emitted": 0,
+    "emitted_total": 1,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    false
+   ],
+   "slot_counts": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 1
+   },
+   "hallucination": [
+    {
+     "turn": 0,
+     "asserted": [
+      "Drishya",
+      "Drishyam",
+      "ದೃಶ್ಯ 2",
+      "Drishyam 2"
+     ],
+     "inventions": []
+    }
+   ],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": {
+    "faithfulness": null,
+    "answer_relevancy": null,
+    "faithfulness_error": "ragas_error: IncompleteOutputException: The output is incomplete due to a max_tokens length limit.",
+    "answer_relevancy_error": "ragas_error: NotFoundError: Error code: 404 - {'detail': 'Not Found'}",
+    "ragas_version": "0.4.3"
+   }
+  },
+  {
+   "fixture_id": "GS-07d",
+   "slice": "code_mixed",
+   "transcript": {
+    "fixture_id": "GS-07d",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Venkatesh natinchina Drushyam cinema original edi? anni languages lo cheppu"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-a548e88fef6f40de",
+        "function": {
+         "arguments": "{\"title\": \"Drushyam\"}",
+         "name": "resolve_title"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-a548e88fef6f40de",
+      "content": "{\"candidates\": [{\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"matched_title\": \"Drushyam\", \"language\": \"te\", \"year\": 2014, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q16248158\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"matched_title\": \"Drushyam 2\", \"language\": \"te\", \"year\": 2021, \"score\": 0.8889, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q105984608\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"matched_title\": \"Drishyam\", \"language\": \"hi\", \"year\": 2015, \"score\": 0.875, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q19824636\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"cdedb609-1559-4649-b495-7a6465a07164\", \"matched_title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"score\": 0.875, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q15401703\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"matched_title\": \"Drishya\", \"language\": \"kn\", \"year\": 2014, \"score\": 0.8, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q17052094\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}], \"ambiguous\": true}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"disambiguate\", \"slots\": {\"title\": \"Drushyam\"}}\n\nHey, **Drushyam** naam ki ek se zyada films hain catalog mein — kaunsi wali: **Drushyam** (2014, Telugu) or **Drushyam 2** (2021, Telugu)?",
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "chatcmpl-tool-a548e88fef6f40de",
+      "tool": "resolve_title",
+      "arguments_raw": "{\"title\": \"Drushyam\"}",
+      "arguments": {
+       "title": "Drushyam"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "candidates": [
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+         "matched_title": "Drushyam",
+         "language": "te",
+         "year": 2014,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q16248158",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "81cc42b1-8ea7-41c1-8cd2-8a0e735de300",
+         "matched_title": "Drushyam 2",
+         "language": "te",
+         "year": 2021,
+         "score": 0.8889,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q105984608",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "dd45646d-6ebb-4efa-bcac-206863b584f3",
+         "matched_title": "Drishyam",
+         "language": "hi",
+         "year": 2015,
+         "score": 0.875,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q19824636",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "cdedb609-1559-4649-b495-7a6465a07164",
+         "matched_title": "Drishyam",
+         "language": "ml",
+         "year": 2013,
+         "score": 0.875,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q15401703",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+         "matched_title": "Drishya",
+         "language": "kn",
+         "year": 2014,
+         "score": 0.8,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q17052094",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        }
+       ],
+       "ambiguous": true
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     "INTENT: {\"intent\": \"disambiguate\", \"slots\": {\"title\": \"Drushyam\"}}\n\nHey, **Drushyam** naam ki ek se zyada films hain catalog mein — kaunsi wali: **Drushyam** (2014, Telugu) or **Drushyam 2** (2021, Telugu)?"
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 3190,
+      "completion_tokens": 17,
+      "total_tokens": 3207
+     },
+     {
+      "prompt_tokens": 4209,
+      "completion_tokens": 75,
+      "total_tokens": 4284
+     }
+    ],
+    "latencies_ms": [
+     335.92,
+     1084.19
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 2,
+    "call_matches": [
+     true,
+     false
+    ],
+    "call_level": 0.5,
+    "sequence_match": false,
+    "invalid_emitted": 0,
+    "emitted_total": 1,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    false
+   ],
+   "slot_counts": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 1
+   },
+   "hallucination": [
+    {
+     "turn": 0,
+     "asserted": [
+      "Drushyam",
+      "Drushyam 2"
+     ],
+     "inventions": []
+    }
+   ],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": {
+    "faithfulness": 0.75,
+    "answer_relevancy": null,
+    "faithfulness_error": null,
+    "answer_relevancy_error": "ragas_error: NotFoundError: Error code: 404 - {'detail': 'Not Found'}",
+    "ragas_version": "0.4.3"
+   }
+  },
+  {
+   "fixture_id": "GS-07e",
+   "slice": "code_mixed",
+   "transcript": {
+    "fixture_id": "GS-07e",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "ಅಪ್ತಮಿತ್ರ ಯಾವ ಚಿತ್ರದ ರಿಮೇಕ್?"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-abdefcb5fa6f4f3f",
+        "function": {
+         "arguments": "{\"title\": \"Aptamithra\"}",
+         "name": "resolve_title"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-abdefcb5fa6f4f3f",
+      "content": "{\"candidates\": [{\"work_id\": \"31707ddb-06ff-4e2e-8d13-6617ba18ce89\", \"version_id\": \"8a3ce222-bcf3-4597-b2fc-6b21567e7292\", \"matched_title\": \"ಆಪ್ತಮಿತ್ರ\", \"language\": \"kn\", \"year\": 2004, \"score\": 0.9474, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q4782241\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}], \"ambiguous\": false}"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-8189c5c7cbd2ce98",
+        "function": {
+         "arguments": "{\"work_id\": \"31707ddb-06ff-4e2e-8d13-6617ba18ce89\", \"scope\": \"indian\"}",
+         "name": "get_versions"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-8189c5c7cbd2ce98",
+      "content": "{\"original\": {\"version_id\": \"60c34bf9-4e56-4d28-942c-4617394df959\", \"title\": \"Manichitrathazhu\", \"language\": \"ml\", \"year\": 1993, \"cast_lead\": [\"Shobana\", \"Mohanlal\", \"Suresh Gopi\", \"Nedumudi Venu\", \"Vinaya Prasad\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q3530081\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, \"versions\": [{\"version_id\": \"60c34bf9-4e56-4d28-942c-4617394df959\", \"title\": \"Manichitrathazhu\", \"language\": \"ml\", \"year\": 1993, \"cast_lead\": [\"Shobana\", \"Mohanlal\", \"Suresh Gopi\", \"Nedumudi Venu\", \"Vinaya Prasad\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q3530081\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"8a3ce222-bcf3-4597-b2fc-6b21567e7292\", \"title\": \"Apthamitra\", \"language\": \"kn\", \"year\": 2004, \"cast_lead\": [\"Soundarya\", \"Vishnuvardhan\", \"Ramesh Aravind\", \"Dwarakish\", \"Prema\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q4782241\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"f490ce73-6ad0-40bc-9127-3699855528f7\", \"title\": \"Chandramukhi\", \"language\": \"ta\", \"year\": 2005, \"cast_lead\": [\"Jyothika\", \"Rajinikanth\", \"Prabhu\", \"Nassar\", \"Vadivelu\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q1193810\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"dee38237-6110-43f5-91e2-25bc49245dde\", \"title\": \"Rajmohol\", \"language\": \"bn\", \"year\": 2005, \"cast_lead\": [\"Prosenjit Chatterjee\", \"Abhishek Chatterjee\", \"Rachana Banerjee\", \"Biplab Chatterjee\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q7286314\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"98687a4e-3ef8-44dc-a45b-c3b07dc6ede5\", \"title\": \"Bhool Bhulaiyaa\", \"language\": \"hi\", \"year\": 2007, \"cast_lead\": [\"Akshay Kumar\", \"Shiney Ahuja\", \"Vidya Balan\", \"Paresh Rawal\", \"Ameesha Patel\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q3764588\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}]}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"find_by_title\", \"slots\": {\"title\": \"Aptamithra\"}}\n\nHey! **Aptamithra** movie is available in the catalog. There are 5 versions available:\n\n- **Manichitrathazhu (1993, Malayalam)** — Shobana — original (Wikidata Q3530081)\n- **Apthamitra (2004, Kannada)** — Soundarya — remake of the original (Wikidata Q4782241)\n- **Chandramukhi (2005, Tamil)** — Jyothika — remake of the original (Wikidata Q1193810)\n- **Rajmohol (2005, Bengali)** — Prosenjit Chatterjee — remake of the original (Wikidata Q7286314)\n- **Bhool Bhulaiyaa (2007, Hindi)** — Akshay Kumar — remake of the original (Wikidata Q3764588)\n\nCheck this out!\n(Note: The original film is Manichitrathazhu)",
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "chatcmpl-tool-abdefcb5fa6f4f3f",
+      "tool": "resolve_title",
+      "arguments_raw": "{\"title\": \"Aptamithra\"}",
+      "arguments": {
+       "title": "Aptamithra"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "candidates": [
+        {
+         "work_id": "31707ddb-06ff-4e2e-8d13-6617ba18ce89",
+         "version_id": "8a3ce222-bcf3-4597-b2fc-6b21567e7292",
+         "matched_title": "ಆಪ್ತಮಿತ್ರ",
+         "language": "kn",
+         "year": 2004,
+         "score": 0.9474,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q4782241",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        }
+       ],
+       "ambiguous": false
+      },
+      "error": null
+     },
+     {
+      "turn": 0,
+      "call_id": "chatcmpl-tool-8189c5c7cbd2ce98",
+      "tool": "get_versions",
+      "arguments_raw": "{\"work_id\": \"31707ddb-06ff-4e2e-8d13-6617ba18ce89\", \"scope\": \"indian\"}",
+      "arguments": {
+       "work_id": "31707ddb-06ff-4e2e-8d13-6617ba18ce89",
+       "scope": "indian"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "original": {
+        "version_id": "60c34bf9-4e56-4d28-942c-4617394df959",
+        "title": "Manichitrathazhu",
+        "language": "ml",
+        "year": 1993,
+        "cast_lead": [
+         "Shobana",
+         "Mohanlal",
+         "Suresh Gopi",
+         "Nedumudi Venu",
+         "Vinaya Prasad"
+        ],
+        "relationship": "is_original_of",
+        "is_original": true,
+        "sources": [
+         {
+          "ref": "seed_slice@2026-07-02",
+          "source": "human"
+         },
+         {
+          "ref": "Q3530081",
+          "source": "wikidata",
+          "retrieved_at": "2026-07-02T06:01:17.013558Z"
+         }
+        ],
+        "confidence": "HIGH"
+       },
+       "versions": [
+        {
+         "version_id": "60c34bf9-4e56-4d28-942c-4617394df959",
+         "title": "Manichitrathazhu",
+         "language": "ml",
+         "year": 1993,
+         "cast_lead": [
+          "Shobana",
+          "Mohanlal",
+          "Suresh Gopi",
+          "Nedumudi Venu",
+          "Vinaya Prasad"
+         ],
+         "relationship": "is_original_of",
+         "is_original": true,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q3530081",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "8a3ce222-bcf3-4597-b2fc-6b21567e7292",
+         "title": "Apthamitra",
+         "language": "kn",
+         "year": 2004,
+         "cast_lead": [
+          "Soundarya",
+          "Vishnuvardhan",
+          "Ramesh Aravind",
+          "Dwarakish",
+          "Prema"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q4782241",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "f490ce73-6ad0-40bc-9127-3699855528f7",
+         "title": "Chandramukhi",
+         "language": "ta",
+         "year": 2005,
+         "cast_lead": [
+          "Jyothika",
+          "Rajinikanth",
+          "Prabhu",
+          "Nassar",
+          "Vadivelu"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q1193810",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "dee38237-6110-43f5-91e2-25bc49245dde",
+         "title": "Rajmohol",
+         "language": "bn",
+         "year": 2005,
+         "cast_lead": [
+          "Prosenjit Chatterjee",
+          "Abhishek Chatterjee",
+          "Rachana Banerjee",
+          "Biplab Chatterjee"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q7286314",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "98687a4e-3ef8-44dc-a45b-c3b07dc6ede5",
+         "title": "Bhool Bhulaiyaa",
+         "language": "hi",
+         "year": 2007,
+         "cast_lead": [
+          "Akshay Kumar",
+          "Shiney Ahuja",
+          "Vidya Balan",
+          "Paresh Rawal",
+          "Ameesha Patel"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q3764588",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        }
+       ]
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     "INTENT: {\"intent\": \"find_by_title\", \"slots\": {\"title\": \"Aptamithra\"}}\n\nHey! **Aptamithra** movie is available in the catalog. There are 5 versions available:\n\n- **Manichitrathazhu (1993, Malayalam)** — Shobana — original (Wikidata Q3530081)\n- **Apthamitra (2004, Kannada)** — Soundarya — remake of the original (Wikidata Q4782241)\n- **Chandramukhi (2005, Tamil)** — Jyothika — remake of the original (Wikidata Q1193810)\n- **Rajmohol (2005, Bengali)** — Prosenjit Chatterjee — remake of the original (Wikidata Q7286314)\n- **Bhool Bhulaiyaa (2007, Hindi)** — Akshay Kumar — remake of the original (Wikidata Q3764588)\n\nCheck this out!\n(Note: The original film is Manichitrathazhu)"
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 3183,
+      "completion_tokens": 19,
+      "total_tokens": 3202
+     },
+     {
+      "prompt_tokens": 3424,
+      "completion_tokens": 54,
+      "total_tokens": 3478
+     },
+     {
+      "prompt_tokens": 4711,
+      "completion_tokens": 248,
+      "total_tokens": 4959
+     }
+    ],
+    "latencies_ms": [
+     289.84,
+     685.08,
+     3043.04
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 2,
+    "call_matches": [
+     true,
+     true
+    ],
+    "call_level": 1.0,
+    "sequence_match": true,
+    "invalid_emitted": 0,
+    "emitted_total": 2,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    true
+   ],
+   "slot_counts": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 0
+   },
+   "hallucination": [
+    {
+     "turn": 0,
+     "asserted": [
+      "Aptamithra",
+      "Manichitrathazhu",
+      "Apthamitra",
+      "Chandramukhi",
+      "Rajmohol",
+      "Bhool Bhulaiyaa"
+     ],
+     "inventions": []
+    }
+   ],
+   "judge_coherence": null,
+   "judge_error": null,
+   "ragas": {
+    "faithfulness": null,
+    "answer_relevancy": null,
+    "faithfulness_error": "ragas_error: IncompleteOutputException: The output is incomplete due to a max_tokens length limit.",
+    "answer_relevancy_error": "ragas_error: NotFoundError: Error code: 404 - {'detail': 'Not Found'}",
+    "ragas_version": "0.4.3"
+   }
+  },
+  {
+   "fixture_id": "GS-08a",
+   "slice": "backtracking",
+   "transcript": {
+    "fixture_id": "GS-08a",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "the Drishyam with Ajay Devgn"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-bd197a73130b602e",
+        "function": {
+         "arguments": "{\"title\": \"Drishyam\"}",
+         "name": "resolve_title"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-bd197a73130b602e",
+      "content": "{\"candidates\": [{\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"matched_title\": \"Drishyam\", \"language\": \"hi\", \"year\": 2015, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q19824636\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"cdedb609-1559-4649-b495-7a6465a07164\", \"matched_title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q15401703\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"matched_title\": \"దృశ్యం\", \"language\": \"te\", \"year\": 2014, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q16248158\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"matched_title\": \"Drishya\", \"language\": \"kn\", \"year\": 2014, \"score\": 0.9333, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q17052094\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\", \"matched_title\": \"Drishyam 2\", \"language\": \"hi\", \"year\": 2022, \"score\": 0.8889, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q112665700\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"matched_title\": \"దృశ్యం 2\", \"language\": \"te\", \"year\": 2021, \"score\": 0.8889, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q105984608\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"matched_title\": \"ദൃശ്യം 2\", \"language\": \"ml\", \"year\": 2021, \"score\": 0.8889, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q102036246\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"matched_title\": \"ದೃಶ್ಯ 2\", \"language\": \"kn\", \"year\": 2021, \"score\": 0.8235, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q110555107\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}], \"ambiguous\": true}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"disambiguate\", \"slots\": {\"title\": \"Drishyam\"}}\n\nHey, **Drishyam** naam ki movie mein multiple films hain — kaunsi wali: **Drishyam** (2015, Hindi) or **Drishyam** (2013, Malayalam) or **దృశ్యం** (2014, Telugu) or **Drishya** (2014, Kannada) or **Drishyam 2** (2022, Hindi) or **దృశ్యం 2** (2021, Telugu) or **ദൃശ്യം 2** (2021, Malayalam) or **ದೃಶ್ಯ 2** (2021, Kannada)? Please specify!",
+      "role": "assistant"
+     },
+     {
+      "role": "user",
+      "content": "no, the original one"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-a29001b6c9cb6c2d",
+        "function": {
+         "arguments": "{\"by\": {\"actor\": \"None\", \"era\": \"original\", \"language\": \"None\", \"year\": \"None\"}, \"version_set\": [\"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"cdedb609-1559-4649-b495-7a6465a07164\", \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\", \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\"]}",
+         "name": "refine_filter"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-a29001b6c9cb6c2d",
+      "content": "{\"error\": \"'None' is not of type 'integer'\"}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"refine\", \"slots\": {\"actor\": \"None\", \"era\": \"original\", \"language\": \"None\", \"year\": \"None\"}}\n\nYaar, filter karne mein thodi gadbad ho rahi hai, can you please specify the year instead of 'original'? Like 2015 or something? NO_MATCH.",
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-bb6b16429329700f",
+        "function": {
+         "arguments": "{\"by\": {\"actor\": \"None\", \"era\": \"None\", \"language\": \"None\", \"year\": 2015}, \"version_set\": [\"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"cdedb609-1559-4649-b495-7a6465a07164\", \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\", \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\"]}",
+         "name": "refine_filter"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-bb6b16429329700f",
+      "content": "{\"error\": \"'None' is not one of ['original', 'newer', 'older']\"}"
+     },
+     {
+      "role": "assistant"
+     },
+     {
+      "role": "user",
+      "content": "is there a Telugu one?"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-ab02c8f8b0a8bbf9",
+        "function": {
+         "arguments": "{\"by\": {\"actor\": \"None\", \"era\": \"None\", \"language\": \"te\", \"year\": \"None\"}, \"version_set\": [\"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"cdedb609-1559-4649-b495-7a6465a07164\", \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\", \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\"]}",
+         "name": "refine_filter"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-ab02c8f8b0a8bbf9",
+      "content": "{\"error\": \"'None' is not of type 'integer'; 'None' is not one of ['original', 'newer', 'older']\"}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"refine\", \"slots\": {\"actor\": \"None\", \"era\": \"None\", \"language\": \"te\", \"year\": \"None\"}}\n\nFilter karne ki koshish kar raha hoon, but the year filter is missing. Can you please provide a year? NO_MATCH.",
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "chatcmpl-tool-bd197a73130b602e",
+      "tool": "resolve_title",
+      "arguments_raw": "{\"title\": \"Drishyam\"}",
+      "arguments": {
+       "title": "Drishyam"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "candidates": [
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "dd45646d-6ebb-4efa-bcac-206863b584f3",
+         "matched_title": "Drishyam",
+         "language": "hi",
+         "year": 2015,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q19824636",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "cdedb609-1559-4649-b495-7a6465a07164",
+         "matched_title": "Drishyam",
+         "language": "ml",
+         "year": 2013,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q15401703",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+         "matched_title": "దృశ్యం",
+         "language": "te",
+         "year": 2014,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q16248158",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+         "matched_title": "Drishya",
+         "language": "kn",
+         "year": 2014,
+         "score": 0.9333,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q17052094",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "f73debb9-012c-42d0-b2a0-ccdda33d8ccc",
+         "matched_title": "Drishyam 2",
+         "language": "hi",
+         "year": 2022,
+         "score": 0.8889,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q112665700",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "81cc42b1-8ea7-41c1-8cd2-8a0e735de300",
+         "matched_title": "దృశ్యం 2",
+         "language": "te",
+         "year": 2021,
+         "score": 0.8889,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q105984608",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+         "matched_title": "ദൃശ്യം 2",
+         "language": "ml",
+         "year": 2021,
+         "score": 0.8889,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q102036246",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3",
+         "matched_title": "ದೃಶ್ಯ 2",
+         "language": "kn",
+         "year": 2021,
+         "score": 0.8235,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q110555107",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        }
+       ],
+       "ambiguous": true
+      },
+      "error": null
+     },
+     {
+      "turn": 1,
+      "call_id": "chatcmpl-tool-a29001b6c9cb6c2d",
+      "tool": "refine_filter",
+      "arguments_raw": "{\"by\": {\"actor\": \"None\", \"era\": \"original\", \"language\": \"None\", \"year\": \"None\"}, \"version_set\": [\"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"cdedb609-1559-4649-b495-7a6465a07164\", \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\", \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\"]}",
+      "arguments": {
+       "by": {
+        "actor": "None",
+        "era": "original",
+        "language": "None",
+        "year": "None"
+       },
+       "version_set": [
+        "dd45646d-6ebb-4efa-bcac-206863b584f3",
+        "cdedb609-1559-4649-b495-7a6465a07164",
+        "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+        "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+        "f73debb9-012c-42d0-b2a0-ccdda33d8ccc",
+        "81cc42b1-8ea7-41c1-8cd2-8a0e735de300",
+        "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+        "3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3"
+       ]
+      },
+      "schema_valid": false,
+      "validation_errors": [
+       "'None' is not of type 'integer'"
+      ],
+      "executed": false,
+      "result": null,
+      "error": null
+     },
+     {
+      "turn": 1,
+      "call_id": "chatcmpl-tool-bb6b16429329700f",
+      "tool": "refine_filter",
+      "arguments_raw": "{\"by\": {\"actor\": \"None\", \"era\": \"None\", \"language\": \"None\", \"year\": 2015}, \"version_set\": [\"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"cdedb609-1559-4649-b495-7a6465a07164\", \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\", \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\"]}",
+      "arguments": {
+       "by": {
+        "actor": "None",
+        "era": "None",
+        "language": "None",
+        "year": 2015
+       },
+       "version_set": [
+        "dd45646d-6ebb-4efa-bcac-206863b584f3",
+        "cdedb609-1559-4649-b495-7a6465a07164",
+        "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+        "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+        "f73debb9-012c-42d0-b2a0-ccdda33d8ccc",
+        "81cc42b1-8ea7-41c1-8cd2-8a0e735de300",
+        "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+        "3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3"
+       ]
+      },
+      "schema_valid": false,
+      "validation_errors": [
+       "'None' is not one of ['original', 'newer', 'older']"
+      ],
+      "executed": false,
+      "result": null,
+      "error": null
+     },
+     {
+      "turn": 2,
+      "call_id": "chatcmpl-tool-ab02c8f8b0a8bbf9",
+      "tool": "refine_filter",
+      "arguments_raw": "{\"by\": {\"actor\": \"None\", \"era\": \"None\", \"language\": \"te\", \"year\": \"None\"}, \"version_set\": [\"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"cdedb609-1559-4649-b495-7a6465a07164\", \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\", \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\"]}",
+      "arguments": {
+       "by": {
+        "actor": "None",
+        "era": "None",
+        "language": "te",
+        "year": "None"
+       },
+       "version_set": [
+        "dd45646d-6ebb-4efa-bcac-206863b584f3",
+        "cdedb609-1559-4649-b495-7a6465a07164",
+        "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+        "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+        "f73debb9-012c-42d0-b2a0-ccdda33d8ccc",
+        "81cc42b1-8ea7-41c1-8cd2-8a0e735de300",
+        "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+        "3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3"
+       ]
+      },
+      "schema_valid": false,
+      "validation_errors": [
+       "'None' is not of type 'integer'",
+       "'None' is not one of ['original', 'newer', 'older']"
+      ],
+      "executed": false,
+      "result": null,
+      "error": null
+     }
+    ],
+    "answers": [
+     "INTENT: {\"intent\": \"disambiguate\", \"slots\": {\"title\": \"Drishyam\"}}\n\nHey, **Drishyam** naam ki movie mein multiple films hain — kaunsi wali: **Drishyam** (2015, Hindi) or **Drishyam** (2013, Malayalam) or **దృశ్యం** (2014, Telugu) or **Drishya** (2014, Kannada) or **Drishyam 2** (2022, Hindi) or **దృశ్యం 2** (2021, Telugu) or **ദൃശ്യം 2** (2021, Malayalam) or **ದೃಶ್ಯ 2** (2021, Kannada)? Please specify!",
+     null,
+     "INTENT: {\"intent\": \"refine\", \"slots\": {\"actor\": \"None\", \"era\": \"None\", \"language\": \"te\", \"year\": \"None\"}}\n\nFilter karne ki koshish kar raha hoon, but the year filter is missing. Can you please provide a year? NO_MATCH."
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 3179,
+      "completion_tokens": 17,
+      "total_tokens": 3196
+     },
+     {
+      "prompt_tokens": 4799,
+      "completion_tokens": 167,
+      "total_tokens": 4966
+     },
+     {
+      "prompt_tokens": 4980,
+      "completion_tokens": 583,
+      "total_tokens": 5563
+     },
+     {
+      "prompt_tokens": 5319,
+      "completion_tokens": 391,
+      "total_tokens": 5710
+     },
+     {
+      "prompt_tokens": 5743,
+      "completion_tokens": 1,
+      "total_tokens": 5744
+     },
+     {
+      "prompt_tokens": 5759,
+      "completion_tokens": 310,
+      "total_tokens": 6069
+     },
+     {
+      "prompt_tokens": 6114,
+      "completion_tokens": 67,
+      "total_tokens": 6181
+     }
+    ],
+    "latencies_ms": [
+     353.18,
+     2125.56,
+     7176.49,
+     4780.95,
+     437.97,
+     3783.31,
+     1291.07
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 5,
+    "call_matches": [
+     true,
+     false,
+     false,
+     false,
+     false
+    ],
+    "call_level": 0.2,
+    "sequence_match": false,
+    "invalid_emitted": 3,
+    "emitted_total": 4,
+    "schema_validity": 0.25
+   },
+   "intent_matches": [
+    false,
+    false,
+    true
+   ],
+   "slot_counts": {
+    "tp": 2,
+    "fp": 3,
+    "fn": 2
+   },
+   "hallucination": [
+    {
+     "turn": 0,
+     "asserted": [
+      "Drishyam",
+      "Drishya",
+      "Drishyam 2",
+      "ದೃಶ್ಯ 2"
+     ],
+     "inventions": []
+    },
+    {
+     "turn": 2,
+     "asserted": [],
+     "inventions": []
+    }
+   ],
+   "judge_coherence": 0.0,
+   "judge_error": null,
+   "ragas": {
+    "faithfulness": 0.0,
+    "answer_relevancy": null,
+    "faithfulness_error": null,
+    "answer_relevancy_error": "ragas_error: NotFoundError: Error code: 404 - {'detail': 'Not Found'}",
+    "ragas_version": "0.4.3"
+   }
+  },
+  {
+   "fixture_id": "GS-08b",
+   "slice": "backtracking",
+   "transcript": {
+    "fixture_id": "GS-08b",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "off",
+    "messages": [
+     {
+      "role": "user",
+      "content": "which Manichitrathazhu remake has Rajinikanth in it?"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-8edd66cece8544dc",
+        "function": {
+         "arguments": "{\"title\": \"Manichitrathazhu\"}",
+         "name": "resolve_title"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-8edd66cece8544dc",
+      "content": "{\"candidates\": [{\"work_id\": \"31707ddb-06ff-4e2e-8d13-6617ba18ce89\", \"version_id\": \"60c34bf9-4e56-4d28-942c-4617394df959\", \"matched_title\": \"Manichitrathazhu\", \"language\": \"ml\", \"year\": 1993, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q3530081\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}], \"ambiguous\": false}"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-8544455fdb0feaac",
+        "function": {
+         "arguments": "{\"work_id\": \"31707ddb-06ff-4e2e-8d13-6617ba18ce89\", \"scope\": \"indian\"}",
+         "name": "get_versions"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-8544455fdb0feaac",
+      "content": "{\"original\": {\"version_id\": \"60c34bf9-4e56-4d28-942c-4617394df959\", \"title\": \"Manichitrathazhu\", \"language\": \"ml\", \"year\": 1993, \"cast_lead\": [\"Shobana\", \"Mohanlal\", \"Suresh Gopi\", \"Nedumudi Venu\", \"Vinaya Prasad\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q3530081\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, \"versions\": [{\"version_id\": \"60c34bf9-4e56-4d28-942c-4617394df959\", \"title\": \"Manichitrathazhu\", \"language\": \"ml\", \"year\": 1993, \"cast_lead\": [\"Shobana\", \"Mohanlal\", \"Suresh Gopi\", \"Nedumudi Venu\", \"Vinaya Prasad\"], \"relationship\": \"is_original_of\", \"is_original\": true, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q3530081\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"8a3ce222-bcf3-4597-b2fc-6b21567e7292\", \"title\": \"Apthamitra\", \"language\": \"kn\", \"year\": 2004, \"cast_lead\": [\"Soundarya\", \"Vishnuvardhan\", \"Ramesh Aravind\", \"Dwarakish\", \"Prema\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q4782241\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"f490ce73-6ad0-40bc-9127-3699855528f7\", \"title\": \"Chandramukhi\", \"language\": \"ta\", \"year\": 2005, \"cast_lead\": [\"Jyothika\", \"Rajinikanth\", \"Prabhu\", \"Nassar\", \"Vadivelu\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q1193810\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"dee38237-6110-43f5-91e2-25bc49245dde\", \"title\": \"Rajmohol\", \"language\": \"bn\", \"year\": 2005, \"cast_lead\": [\"Prosenjit Chatterjee\", \"Abhishek Chatterjee\", \"Rachana Banerjee\", \"Biplab Chatterjee\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q7286314\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}, {\"version_id\": \"98687a4e-3ef8-44dc-a45b-c3b07dc6ede5\", \"title\": \"Bhool Bhulaiyaa\", \"language\": \"hi\", \"year\": 2007, \"cast_lead\": [\"Akshay Kumar\", \"Shiney Ahuja\", \"Vidya Balan\", \"Paresh Rawal\", \"Ameesha Patel\"], \"relationship\": \"is_remake_of\", \"is_original\": false, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q3764588\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}], \"confidence\": \"HIGH\"}]}"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "chatcmpl-tool-8edd66cece8544dc",
+      "tool": "resolve_title",
+      "arguments_raw": "{\"title\": \"Manichitrathazhu\"}",
+      "arguments": {
+       "title": "Manichitrathazhu"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "candidates": [
+        {
+         "work_id": "31707ddb-06ff-4e2e-8d13-6617ba18ce89",
+         "version_id": "60c34bf9-4e56-4d28-942c-4617394df959",
+         "matched_title": "Manichitrathazhu",
+         "language": "ml",
+         "year": 1993,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q3530081",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        }
+       ],
+       "ambiguous": false
+      },
+      "error": null
+     },
+     {
+      "turn": 0,
+      "call_id": "chatcmpl-tool-8544455fdb0feaac",
+      "tool": "get_versions",
+      "arguments_raw": "{\"work_id\": \"31707ddb-06ff-4e2e-8d13-6617ba18ce89\", \"scope\": \"indian\"}",
+      "arguments": {
+       "work_id": "31707ddb-06ff-4e2e-8d13-6617ba18ce89",
+       "scope": "indian"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "original": {
+        "version_id": "60c34bf9-4e56-4d28-942c-4617394df959",
+        "title": "Manichitrathazhu",
+        "language": "ml",
+        "year": 1993,
+        "cast_lead": [
+         "Shobana",
+         "Mohanlal",
+         "Suresh Gopi",
+         "Nedumudi Venu",
+         "Vinaya Prasad"
+        ],
+        "relationship": "is_original_of",
+        "is_original": true,
+        "sources": [
+         {
+          "ref": "seed_slice@2026-07-02",
+          "source": "human"
+         },
+         {
+          "ref": "Q3530081",
+          "source": "wikidata",
+          "retrieved_at": "2026-07-02T06:01:17.013558Z"
+         }
+        ],
+        "confidence": "HIGH"
+       },
+       "versions": [
+        {
+         "version_id": "60c34bf9-4e56-4d28-942c-4617394df959",
+         "title": "Manichitrathazhu",
+         "language": "ml",
+         "year": 1993,
+         "cast_lead": [
+          "Shobana",
+          "Mohanlal",
+          "Suresh Gopi",
+          "Nedumudi Venu",
+          "Vinaya Prasad"
+         ],
+         "relationship": "is_original_of",
+         "is_original": true,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q3530081",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "8a3ce222-bcf3-4597-b2fc-6b21567e7292",
+         "title": "Apthamitra",
+         "language": "kn",
+         "year": 2004,
+         "cast_lead": [
+          "Soundarya",
+          "Vishnuvardhan",
+          "Ramesh Aravind",
+          "Dwarakish",
+          "Prema"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q4782241",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "f490ce73-6ad0-40bc-9127-3699855528f7",
+         "title": "Chandramukhi",
+         "language": "ta",
+         "year": 2005,
+         "cast_lead": [
+          "Jyothika",
+          "Rajinikanth",
+          "Prabhu",
+          "Nassar",
+          "Vadivelu"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q1193810",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "dee38237-6110-43f5-91e2-25bc49245dde",
+         "title": "Rajmohol",
+         "language": "bn",
+         "year": 2005,
+         "cast_lead": [
+          "Prosenjit Chatterjee",
+          "Abhishek Chatterjee",
+          "Rachana Banerjee",
+          "Biplab Chatterjee"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q7286314",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        },
+        {
+         "version_id": "98687a4e-3ef8-44dc-a45b-c3b07dc6ede5",
+         "title": "Bhool Bhulaiyaa",
+         "language": "hi",
+         "year": 2007,
+         "cast_lead": [
+          "Akshay Kumar",
+          "Shiney Ahuja",
+          "Vidya Balan",
+          "Paresh Rawal",
+          "Ameesha Patel"
+         ],
+         "relationship": "is_remake_of",
+         "is_original": false,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q3764588",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ],
+         "confidence": "HIGH"
+        }
+       ]
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     null
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 3187,
+      "completion_tokens": 20,
+      "total_tokens": 3207
+     },
+     {
+      "prompt_tokens": 3428,
+      "completion_tokens": 54,
+      "total_tokens": 3482
+     }
+    ],
+    "latencies_ms": [
+     342.67,
+     690.18
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 5,
+    "call_matches": [
+     true,
+     true,
+     false,
+     false,
+     false
+    ],
+    "call_level": 0.4,
+    "sequence_match": false,
+    "invalid_emitted": 0,
+    "emitted_total": 2,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    false,
+    false,
+    false
+   ],
+   "slot_counts": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 4
+   },
+   "hallucination": [],
+   "judge_coherence": 0.0,
+   "judge_error": null,
+   "ragas": null
+  },
+  {
+   "fixture_id": "GS-08c",
+   "slice": "backtracking",
+   "transcript": {
+    "fixture_id": "GS-08c",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "chat_status": "up",
+    "messages": [
+     {
+      "role": "user",
+      "content": "show me the Telugu version of Drishyam 2"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-b0d3113a6777cabd",
+        "function": {
+         "arguments": "{\"title\": \"Drishyam 2\"}",
+         "name": "resolve_title"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-b0d3113a6777cabd",
+      "content": "{\"candidates\": [{\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\", \"matched_title\": \"Drishyam 2\", \"language\": \"hi\", \"year\": 2022, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q112665700\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"matched_title\": \"దృశ్యం 2\", \"language\": \"te\", \"year\": 2021, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q105984608\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"matched_title\": \"ദൃശ്യം 2\", \"language\": \"ml\", \"year\": 2021, \"score\": 1.0, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q102036246\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"d0c7f9cb-8d26-4592-801d-5ab474fa97db\", \"version_id\": \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"matched_title\": \"ದೃಶ್ಯ 2\", \"language\": \"kn\", \"year\": 2021, \"score\": 0.9474, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q110555107\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"matched_title\": \"Drishyam\", \"language\": \"hi\", \"year\": 2015, \"score\": 0.8889, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q19824636\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"cdedb609-1559-4649-b495-7a6465a07164\", \"matched_title\": \"Drishyam\", \"language\": \"ml\", \"year\": 2013, \"score\": 0.8889, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q15401703\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"matched_title\": \"దృశ్యం\", \"language\": \"te\", \"year\": 2014, \"score\": 0.8889, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q16248158\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}, {\"work_id\": \"598214c9-b1f7-4cc7-8841-caffbd03b57a\", \"version_id\": \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"matched_title\": \"Drishya\", \"language\": \"kn\", \"year\": 2014, \"score\": 0.8235, \"sources\": [{\"ref\": \"seed_slice@2026-07-02\", \"source\": \"human\"}, {\"ref\": \"Q17052094\", \"source\": \"wikidata\", \"retrieved_at\": \"2026-07-02T06:01:17.013558Z\"}]}], \"ambiguous\": true}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"disambiguate\", \"slots\": {\"title\": \"Drishyam 2\"}}\n\nHey, **Drishyam 2** naam ki movie se zyada versions hain catalog mein — kaunsi wali chahiye?\n- **Drishyam 2 (2022, Hindi)** — original — (Wikidata Q112665700)\n- **దృశ్యం 2 (2021, Telugu)** — original — (Wikidata Q105984608)\n- **ദൃശ്യം 2 (2021, Malayalam)** — original — (Wikidata Q102036246)\n- **ದೃಶ್ಯ 2 (2021, Kannada)** — original — (Wikidata Q110555107)\n\nAgar aapko koi specific version chahiye toh bataiye!",
+      "role": "assistant"
+     },
+     {
+      "role": "user",
+      "content": "is there a Tamil version too?"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-8ce96a8e919cc376",
+        "function": {
+         "arguments": "{\"by\": {\"language\": \"ta\"}, \"version_set\": [\"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\", \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"cdedb609-1559-4649-b495-7a6465a07164\", \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\"]}",
+         "name": "refine_filter"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-8ce96a8e919cc376",
+      "content": "{\"versions\": []}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"refine\", \"slots\": {\"language\": \"ta\"}}\n\nIs set mein aisa koi version nahi mila. Filter thoda relax karun?",
+      "role": "assistant"
+     },
+     {
+      "role": "user",
+      "content": "ok then the Kannada one"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       {
+        "id": "chatcmpl-tool-9e0b35475ef9bff0",
+        "function": {
+         "arguments": "{\"by\": {\"language\": \"kn\"}, \"version_set\": [\"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\", \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"cdedb609-1559-4649-b495-7a6465a07164\", \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\"]}",
+         "name": "refine_filter"
+        },
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "chatcmpl-tool-9e0b35475ef9bff0",
+      "content": "{\"versions\": [{\"version_id\": \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"title\": \"Drishya 2\", \"language\": \"kn\", \"year\": 2021, \"relationship\": \"is_remake_of\", \"is_original\": false}, {\"version_id\": \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\", \"title\": \"Drishya\", \"language\": \"kn\", \"year\": 2014, \"relationship\": \"is_remake_of\", \"is_original\": false}]}"
+     },
+     {
+      "content": "INTENT: {\"intent\": \"refine\", \"slots\": {\"language\": \"kn\"}}\n\nFilter kar diya — 2 match(es) mil gaye:\n\n- **Drishya 2 (2021, Kannada)** — remake of the original (Wikidata Q110555107)\n- **Drishya (2014, Kannada)** — remake of the original (Wikidata Q17052094)",
+      "role": "assistant"
+     }
+    ],
+    "calls": [
+     {
+      "turn": 0,
+      "call_id": "chatcmpl-tool-b0d3113a6777cabd",
+      "tool": "resolve_title",
+      "arguments_raw": "{\"title\": \"Drishyam 2\"}",
+      "arguments": {
+       "title": "Drishyam 2"
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "candidates": [
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "f73debb9-012c-42d0-b2a0-ccdda33d8ccc",
+         "matched_title": "Drishyam 2",
+         "language": "hi",
+         "year": 2022,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q112665700",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "81cc42b1-8ea7-41c1-8cd2-8a0e735de300",
+         "matched_title": "దృశ్యం 2",
+         "language": "te",
+         "year": 2021,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q105984608",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+         "matched_title": "ദൃശ്യം 2",
+         "language": "ml",
+         "year": 2021,
+         "score": 1.0,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q102036246",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "d0c7f9cb-8d26-4592-801d-5ab474fa97db",
+         "version_id": "3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3",
+         "matched_title": "ದೃಶ್ಯ 2",
+         "language": "kn",
+         "year": 2021,
+         "score": 0.9474,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q110555107",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "dd45646d-6ebb-4efa-bcac-206863b584f3",
+         "matched_title": "Drishyam",
+         "language": "hi",
+         "year": 2015,
+         "score": 0.8889,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q19824636",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "cdedb609-1559-4649-b495-7a6465a07164",
+         "matched_title": "Drishyam",
+         "language": "ml",
+         "year": 2013,
+         "score": 0.8889,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q15401703",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+         "matched_title": "దృశ్యం",
+         "language": "te",
+         "year": 2014,
+         "score": 0.8889,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q16248158",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        },
+        {
+         "work_id": "598214c9-b1f7-4cc7-8841-caffbd03b57a",
+         "version_id": "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+         "matched_title": "Drishya",
+         "language": "kn",
+         "year": 2014,
+         "score": 0.8235,
+         "sources": [
+          {
+           "ref": "seed_slice@2026-07-02",
+           "source": "human"
+          },
+          {
+           "ref": "Q17052094",
+           "source": "wikidata",
+           "retrieved_at": "2026-07-02T06:01:17.013558Z"
+          }
+         ]
+        }
+       ],
+       "ambiguous": true
+      },
+      "error": null
+     },
+     {
+      "turn": 1,
+      "call_id": "chatcmpl-tool-8ce96a8e919cc376",
+      "tool": "refine_filter",
+      "arguments_raw": "{\"by\": {\"language\": \"ta\"}, \"version_set\": [\"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\", \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"cdedb609-1559-4649-b495-7a6465a07164\", \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\"]}",
+      "arguments": {
+       "by": {
+        "language": "ta"
+       },
+       "version_set": [
+        "f73debb9-012c-42d0-b2a0-ccdda33d8ccc",
+        "81cc42b1-8ea7-41c1-8cd2-8a0e735de300",
+        "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+        "3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3",
+        "dd45646d-6ebb-4efa-bcac-206863b584f3",
+        "cdedb609-1559-4649-b495-7a6465a07164",
+        "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+        "c56f8e85-db39-46ce-96f0-fa8964adb3ae"
+       ]
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "versions": []
+      },
+      "error": null
+     },
+     {
+      "turn": 2,
+      "call_id": "chatcmpl-tool-9e0b35475ef9bff0",
+      "tool": "refine_filter",
+      "arguments_raw": "{\"by\": {\"language\": \"kn\"}, \"version_set\": [\"f73debb9-012c-42d0-b2a0-ccdda33d8ccc\", \"81cc42b1-8ea7-41c1-8cd2-8a0e735de300\", \"4792a4ee-5e80-48a9-b4b8-6f8f1eabea44\", \"3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3\", \"dd45646d-6ebb-4efa-bcac-206863b584f3\", \"cdedb609-1559-4649-b495-7a6465a07164\", \"3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8\", \"c56f8e85-db39-46ce-96f0-fa8964adb3ae\"]}",
+      "arguments": {
+       "by": {
+        "language": "kn"
+       },
+       "version_set": [
+        "f73debb9-012c-42d0-b2a0-ccdda33d8ccc",
+        "81cc42b1-8ea7-41c1-8cd2-8a0e735de300",
+        "4792a4ee-5e80-48a9-b4b8-6f8f1eabea44",
+        "3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3",
+        "dd45646d-6ebb-4efa-bcac-206863b584f3",
+        "cdedb609-1559-4649-b495-7a6465a07164",
+        "3ec9a6bb-8bf9-4b42-85ea-ad041ed731e8",
+        "c56f8e85-db39-46ce-96f0-fa8964adb3ae"
+       ]
+      },
+      "schema_valid": true,
+      "validation_errors": [],
+      "executed": true,
+      "result": {
+       "versions": [
+        {
+         "version_id": "3bf8c7c7-5ee8-4ff3-9f88-2b082fc12eb3",
+         "title": "Drishya 2",
+         "language": "kn",
+         "year": 2021,
+         "relationship": "is_remake_of",
+         "is_original": false
+        },
+        {
+         "version_id": "c56f8e85-db39-46ce-96f0-fa8964adb3ae",
+         "title": "Drishya",
+         "language": "kn",
+         "year": 2014,
+         "relationship": "is_remake_of",
+         "is_original": false
+        }
+       ]
+      },
+      "error": null
+     }
+    ],
+    "answers": [
+     "INTENT: {\"intent\": \"disambiguate\", \"slots\": {\"title\": \"Drishyam 2\"}}\n\nHey, **Drishyam 2** naam ki movie se zyada versions hain catalog mein — kaunsi wali chahiye?\n- **Drishyam 2 (2022, Hindi)** — original — (Wikidata Q112665700)\n- **దృశ్యం 2 (2021, Telugu)** — original — (Wikidata Q105984608)\n- **ദൃശ്യം 2 (2021, Malayalam)** — original — (Wikidata Q102036246)\n- **ದೃಶ್ಯ 2 (2021, Kannada)** — original — (Wikidata Q110555107)\n\nAgar aapko koi specific version chahiye toh bataiye!",
+     "INTENT: {\"intent\": \"refine\", \"slots\": {\"language\": \"ta\"}}\n\nIs set mein aisa koi version nahi mila. Filter thoda relax karun?",
+     "INTENT: {\"intent\": \"refine\", \"slots\": {\"language\": \"kn\"}}\n\nFilter kar diya — 2 match(es) mil gaye:\n\n- **Drishya 2 (2021, Kannada)** — remake of the original (Wikidata Q110555107)\n- **Drishya (2014, Kannada)** — remake of the original (Wikidata Q17052094)"
+    ],
+    "usage": [
+     {
+      "prompt_tokens": 3182,
+      "completion_tokens": 19,
+      "total_tokens": 3201
+     },
+     {
+      "prompt_tokens": 4804,
+      "completion_tokens": 196,
+      "total_tokens": 5000
+     },
+     {
+      "prompt_tokens": 5016,
+      "completion_tokens": 571,
+      "total_tokens": 5587
+     },
+     {
+      "prompt_tokens": 5328,
+      "completion_tokens": 37,
+      "total_tokens": 5365
+     },
+     {
+      "prompt_tokens": 5379,
+      "completion_tokens": 294,
+      "total_tokens": 5673
+     },
+     {
+      "prompt_tokens": 5848,
+      "completion_tokens": 101,
+      "total_tokens": 5949
+     }
+    ],
+    "latencies_ms": [
+     400.33,
+     2506.86,
+     6925.77,
+     598.34,
+     3686.04,
+     1418.58
+    ],
+    "tool_rounds_exhausted": false
+   },
+   "tool_calls": {
+    "expected_total": 5,
+    "call_matches": [
+     true,
+     false,
+     false,
+     false,
+     false
+    ],
+    "call_level": 0.2,
+    "sequence_match": false,
+    "invalid_emitted": 0,
+    "emitted_total": 3,
+    "schema_validity": 1.0
+   },
+   "intent_matches": [
+    false,
+    false,
+    true
+   ],
+   "slot_counts": {
+    "tp": 3,
+    "fp": 0,
+    "fn": 1
+   },
+   "hallucination": [
+    {
+     "turn": 0,
+     "asserted": [
+      "Drishyam 2",
+      "ದೃಶ್ಯ 2"
+     ],
+     "inventions": []
+    },
+    {
+     "turn": 1,
+     "asserted": [],
+     "inventions": []
+    },
+    {
+     "turn": 2,
+     "asserted": [
+      "Drishya 2",
+      "Drishya"
+     ],
+     "inventions": []
+    }
+   ],
+   "judge_coherence": 1.0,
+   "judge_error": null,
+   "ragas": {
+    "faithfulness": null,
+    "answer_relevancy": null,
+    "faithfulness_error": "ragas_error: IncompleteOutputException: The output is incomplete due to a max_tokens length limit.",
+    "answer_relevancy_error": "ragas_error: NotFoundError: Error code: 404 - {'detail': 'Not Found'}",
+    "ragas_version": "0.4.3"
+   }
+  }
+ ],
+ "metrics": {
+  "fixtures_total": 12,
+  "fixtures_completed": 6,
+  "tool_call_sequence_accuracy": 0.4166666666666667,
+  "tool_call_call_level": 0.65,
+  "schema_validity": 0.9375,
+  "intent_accuracy": 0.2777777777777778,
+  "code_mixed_intent_accuracy": 0.2,
+  "slot_micro_f1": 0.4864864864864865,
+  "titles_asserted": 21,
+  "inventions": 1,
+  "hallucinated_movie_rate": 0.047619047619047616,
+  "faithfulness": 0.9523809523809523,
+  "gs02_inventions": 1,
+  "backtracking_coherence": 0.3333333333333333,
+  "ragas_faithfulness": 0.4625,
+  "answer_relevancy": null,
+  "latency_p50_ms": 687.63,
+  "latency_p95_ms": 6938.31,
+  "tokens_per_sec": 74.25,
+  "slices": {
+   "backtracking": {
+    "n": 3,
+    "tool_call_sequence_accuracy": 0.0,
+    "intent_accuracy": 0.2222222222222222,
+    "inventions": 0
+   },
+   "code_mixed": {
+    "n": 5,
+    "tool_call_sequence_accuracy": 0.2,
+    "intent_accuracy": 0.2,
+    "inventions": 0
+   },
+   "negative": {
+    "n": 4,
+    "tool_call_sequence_accuracy": 1.0,
+    "intent_accuracy": 0.5,
+    "inventions": 1
+   }
+  }
+ },
+ "stamp": {
+  "created_at": "2026-07-04T09:39:42+00:00",
+  "code_sha": "1f5fbd0da89687c10c231b9c77a35e13133c5879",
+  "golden_set_hash": "f8fd77a0a60354d949a5baca8ebcc600028bba1ff692e36b169e4c7a11017469",
+  "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+  "tool_schema_version": "v0",
+  "tool_schema_sha256": "4c10ea97f1283d3687103594f0deb0d50f7a383cb5df269d25a5042312f3aec5",
+  "retrieval_run": "20260702T135315Z-f6583183",
+  "ragas_version": "0.4.3"
+ }
+}

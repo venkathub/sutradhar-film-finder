@@ -1,0 +1,85 @@
+{
+  "counts": {
+    "disambiguate": {
+      "en": 43,
+      "hi-latin": 10,
+      "kn-latin": 2,
+      "ml-latin": 7,
+      "native": 19,
+      "ta-latin": 12,
+      "te-latin": 7
+    },
+    "find_by_plot": {
+      "en": 232,
+      "hi-latin": 49,
+      "kn-latin": 68,
+      "ml-latin": 55,
+      "native": 85,
+      "ta-latin": 54,
+      "te-latin": 57
+    },
+    "find_by_title": {
+      "en": 122,
+      "hi-latin": 24,
+      "kn-latin": 31,
+      "ml-latin": 25,
+      "native": 41,
+      "ta-latin": 28,
+      "te-latin": 29
+    },
+    "list_versions": {
+      "en": 87,
+      "hi-latin": 18,
+      "kn-latin": 15,
+      "ml-latin": 13,
+      "native": 32,
+      "ta-latin": 15,
+      "te-latin": 20
+    },
+    "out_of_catalog": {
+      "en": 109,
+      "hi-latin": 35,
+      "kn-latin": 29,
+      "ml-latin": 28,
+      "native": 39,
+      "ta-latin": 34,
+      "te-latin": 26
+    },
+    "refine": {
+      "en": 207,
+      "hi-latin": 44,
+      "kn-latin": 35,
+      "ml-latin": 52,
+      "native": 84,
+      "ta-latin": 37,
+      "te-latin": 41
+    }
+  },
+  "dataset_id": "sutradhar-ft-v1",
+  "decontamination": {
+    "max_similarity_exemplars": 0.7083,
+    "max_similarity_golden": 0.7547,
+    "max_similarity_negatives": 0.6286,
+    "threshold": 0.8,
+    "violations": []
+  },
+  "graph_snapshot": "c2b663e93eb50f7edebd77cc8cbddb7a055c25b99942b15420be5c6ad3f84a57",
+  "licenses": [
+    "Graph facts: Wikidata (CC0); TMDB (attribution; community-editable);",
+    "IMDb title.akas (personal/non-commercial ONLY -> dataset repo private-first, DEC-P4-7);",
+    "Plot excerpts: Wikipedia (CC BY-SA 4.0, revision-pinned via P1 plot_texts);",
+    "Teacher surfaces: sarvamai/sarvam-m outputs (Apache 2.0 - unencumbered, DEC-P4-1)."
+  ],
+  "seed": 42,
+  "sha256": "d963ca7a3168f3493ed1896308a32b50edc7aecc0f003616499723ebcf40e87e",
+  "split": {
+    "split_seed": 7,
+    "train": 1900,
+    "val": 100
+  },
+  "teacher": {
+    "model": "sarvamai/sarvam-m",
+    "prompt_sha256": "950c3c3cf3e584bc06a11ef38995766fc57abee0b9c734843102d2f74ac26061",
+    "revision": "01534a53c46f2788e392dbb3d994e0fa8f04d3fd"
+  }
+}

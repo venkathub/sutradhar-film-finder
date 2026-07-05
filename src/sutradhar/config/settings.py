@@ -43,8 +43,15 @@ class Settings(BaseSettings):
         default="http://localhost:8000/v1",
         validation_alias="LLM_BASE_URL",
     )
-    llm_model: str = Field(default="google/gemma-4-E4B", validation_alias="LLM_MODEL")
+    llm_model: str = Field(default="google/gemma-4-E4B-it", validation_alias="LLM_MODEL")
     llm_api_key: str = Field(default="EMPTY", validation_alias="LLM_API_KEY")
+    # vLLM serving flags for the model under test (P4 window finding, 2026-07-04: tool
+    # calling needs --enable-auto-tool-choice + a model-family parser or every tools
+    # request 400s). Model-family-specific => env-swappable, never hardcoded in sessions.
+    vllm_serve_flags: str = Field(
+        default="--enable-auto-tool-choice --tool-call-parser gemma4 --reasoning-parser gemma4",
+        validation_alias="VLLM_SERVE_FLAGS",
+    )
     llm_timeout_s: float = Field(default=10.0, validation_alias="LLM_TIMEOUT_S")
 
     # --- Retrieval models (env defaults = DEC-0002 pins; not loaded in P0) ---
@@ -126,8 +133,28 @@ class Settings(BaseSettings):
     # Tier-1 gates on between GPU windows (DEC-P2-6 posture, generation surface).
     generation_run: str | None = Field(default=None, validation_alias="GENERATION_RUN")
 
+    # --- Synthetic-data teacher endpoint (P4, DEC-P4-1: Sarvam-M 24B self-hosted on
+    # the ephemeral GPU; frontier-API escalation is the same client with different
+    # env values — A<->B is config, never code). Unset by default — teacher-dependent
+    # steps skip cleanly, never crash (same posture as the judge). ---
+    teacher_base_url: str | None = Field(default=None, validation_alias="TEACHER_BASE_URL")
+    teacher_model: str | None = Field(default=None, validation_alias="TEACHER_MODEL")
+    teacher_api_key: str | None = Field(default=None, validation_alias="TEACHER_API_KEY")
+
+    # --- Fine-tune artifacts (P4, DEC-P4-7: HF Hub hosting with cards) ---
+    # Adapter repo (public at publish time), e.g. <user>/sutradhar-gemma4-e4b-qlora-v1.
+    hf_adapter_repo: str | None = Field(default=None, validation_alias="HF_ADAPTER_REPO")
+    # Dataset repo (PRIVATE-first pending the LICENSING review), e.g. <user>/sutradhar-ft-v1.
+    ft_dataset_repo: str | None = Field(default=None, validation_alias="FT_DATASET_REPO")
+    # Dataset id stamped on the card + sealed JSONL (non-secret, defaultable).
+    ft_dataset_id: str = Field(default="sutradhar-ft-v1", validation_alias="FT_DATASET_ID")
+
     # --- On-demand GPU ---
     gpu_type: str = Field(default="A100", validation_alias="GPU_TYPE")
+    # Instance disk (GB). Sessions that download large bf16 checkpoints for on-the-fly
+    # quantization (P4 teacher: Sarvam-M ~48 GB) raise this themselves; 80 GB suits the
+    # 4B-class serve/train sessions.
+    gpu_storage_gb: int = Field(default=80, validation_alias="GPU_STORAGE_GB")
 
     def require(self, field: str) -> str:
         """Return ``field``'s value or raise a clear, var-named :class:`ConfigError`.

@@ -1,0 +1,498 @@
+"""P4 dataset-build CLI (P4_SPEC §2.9): scaffold → (teach → validate → seal, later tasks).
+
+Subcommands grow task by task:
+- ``snapshot``  (task 4) — export gate-view recordings to ``finetune/scaffold_snapshot.json``
+- ``scaffold``  (task 4) — pure generation from the committed snapshot (no DB needed)
+
+Compute placement: ``snapshot`` needs the local Postgres (gate views); ``scaffold`` is
+string math over the committed file — CI-safe, laptop-safe, model-free.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+import uuid
+from pathlib import Path
+from typing import Any
+
+import typer
+import yaml
+from sqlalchemy import select
+
+from sutradhar.finetune.dataset import write_jsonl
+from sutradhar.finetune.scaffold import ScaffoldConfig, generate, mix_stats
+from sutradhar.finetune.snapshot import (
+    SNAPSHOT_PATH,
+    DecoyTheme,
+    PlotExcerpt,
+    ScaffoldSnapshot,
+    WorkSnapshot,
+    load_scaffold_snapshot,
+    title_perturbations,
+    write_scaffold_snapshot,
+)
+from sutradhar.graph.db import create_graph_engine, create_session_factory
+from sutradhar.pipeline.seed import load_seed_slice
+
+app = typer.Typer(add_completion=False)
+
+TOOL_SCHEMA_PATH = Path("docs/phases/tool_schema.v0.json")
+DEFAULT_SLICE = Path("data-pipeline/training_slice.yaml")
+DEFAULT_DECOYS = Path("data-pipeline/training_decoys.yaml")
+_SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+|\n+")
+# Lead/reception metadata sentences are not plot prose — a user describing a story never
+# says "directed and co-written by Atlee" or quotes box-office records. The exporter scans
+# for the first run of consecutive narrative sentences (the article's Plot section).
+_META_SENTENCE_RE = re.compile(
+    r"directed|produced|co-written|written by|starring|distributed|box office"
+    r"|is a \d{4}|language film|film stars|screenplay|award|grossing|theatrical"
+    r"|soundtrack|principal photography|filming|remake|remade|released|collaboration"
+    r"|budget|sequel to|premiered|film adaptation|\bstars\b|\bcast\b|supporting role"
+    r"|guest appearance|lead role|ensemble|reboot|cinematography|editing|comeback"
+    r"|commercial cinema|status as a star|version had|conceived|based the film"
+    r"|homage|success|making of|shot at|shot in|\bfilmed\b|notable for",
+    re.IGNORECASE,
+)
+_PAREN_RE = re.compile(r"\s*\([^)]*\)")
+# Plot sections are written in the narrative present; production/reception prose is past.
+_PRESENT_TENSE_RE = re.compile(
+    r"\b(is|are|has|works|follows|revolves|lives|moves|meets|finds|discovers|decides"
+    r"|refuses|begins|tries|falls|helps|kills|saves|returns|realises|realizes|becomes"
+    r"|leads|joins|plans|escapes|hides|leaves|takes|goes|comes|sees|learns)\b"
+)
+
+
+def _name_listy(sentence: str) -> bool:
+    """Cast-list fragments: mostly-capitalized comma runs with no narrative content."""
+    words = [w for w in re.split(r"[\s,]+", sentence) if w]
+    caps = sum(1 for w in words if w[:1].isupper())
+    return len(words) > 0 and caps / len(words) > 0.5
+
+
+def _excerpts(texts: list[tuple[str | None, str]], limit: int = 2) -> list[PlotExcerpt]:
+    """Story-shaped excerpts: the first run of >=2 consecutive narrative sentences."""
+    ordered = sorted(texts, key=lambda t: (t[0] != "en", t[1]))
+    out: list[PlotExcerpt] = []
+    for lang, text in ordered:
+        if lang != "en" or len(text) < 60:
+            continue
+        sentences = _SENTENCE_SPLIT.split(_PAREN_RE.sub("", text.strip()))
+        clean = [
+            len(s) > 40
+            and not _META_SENTENCE_RE.search(s)
+            and not _name_listy(s)
+            and _PRESENT_TENSE_RE.search(s) is not None
+            for s in sentences
+        ]
+        excerpt = ""
+        for i in range(len(sentences) - 1):
+            if clean[i] and clean[i + 1]:
+                excerpt = " ".join(sentences[i : i + 2])[:320].strip()
+                break
+        if len(excerpt) >= 60:
+            out.append(PlotExcerpt(language=lang or "en", excerpt=excerpt))
+        if len(out) >= limit:
+            break
+    return out
+
+
+@app.command()
+def snapshot(
+    slice_path: Path = typer.Option(DEFAULT_SLICE, "--slice"),  # noqa: B008 — typer idiom
+    decoys_path: Path = typer.Option(DEFAULT_DECOYS, "--decoys"),  # noqa: B008 — typer idiom
+    out: Path = typer.Option(SNAPSHOT_PATH),  # noqa: B008 — typer idiom
+) -> None:
+    """Export gate-view tool-result recordings for the scaffold generator."""
+    from sutradhar.graph import repository
+    from sutradhar.graph.schema import PlotText, Version
+
+    slice_ = load_seed_slice(slice_path)
+    engine = create_graph_engine()
+    factory = create_session_factory(engine)
+    works_out: list[WorkSnapshot] = []
+    with factory() as session:
+        for wkey in sorted(slice_.works):
+            seed_work = slice_.works[wkey]
+            qids = [v.wikidata_qid for v in seed_work.versions.values() if v.wikidata_qid]
+            work_id: uuid.UUID | None = None
+            for qid in qids:
+                row = session.execute(
+                    select(Version.work_id).where(Version.wikidata_qid == qid)
+                ).first()
+                if row is not None:
+                    work_id = row.work_id
+                    break
+            if work_id is None:
+                typer.echo(f"  ! {wkey}: no gate-visible version — skipped", err=True)
+                continue
+            gw = repository.get_work(session, work_id)
+            if gw is None:
+                typer.echo(f"  ! {wkey}: work not gate-visible — skipped", err=True)
+                continue
+            variants = {"indian": repository.get_versions(session, work_id, scope="indian")}
+            same_franchise = [
+                k for k, w in slice_.works.items() if w.franchise == seed_work.franchise
+            ]
+            if len(same_franchise) > 1:
+                variants["indian_sequels"] = repository.get_versions(
+                    session, work_id, scope="indian", include_sequels=True
+                )
+            queries = {seed_work.primary_title}
+            queries.update(v.title for v in seed_work.versions.values())
+            for title in sorted(queries.copy()):
+                queries.update(title_perturbations(title))
+            resolved: dict[str, dict[str, Any]] = {}
+            for q in sorted(queries):
+                result = repository.resolve_title(session, q)
+                if result.candidates:
+                    resolved[q] = result.model_dump(mode="json")
+            version_ids = [uuid.UUID(str(e.version_id)) for e in variants["indian"].versions]
+            texts = session.execute(
+                select(PlotText.language, PlotText.text).where(PlotText.version_id.in_(version_ids))
+            ).all()
+            works_out.append(
+                WorkSnapshot(
+                    work_key=wkey,
+                    franchise=seed_work.franchise,
+                    work_id=str(work_id),
+                    canonical_title=gw.canonical_title,
+                    original_language=gw.original_language,
+                    get_work=gw.model_dump(mode="json"),
+                    get_versions={k: v.model_dump(mode="json") for k, v in variants.items()},
+                    resolve_title=resolved,
+                    plot_excerpts=_excerpts([(r.language, r.text) for r in texts]),
+                )
+            )
+    engine.dispose()
+
+    decoys_raw = yaml.safe_load(decoys_path.read_text(encoding="utf-8"))
+    decoys = [DecoyTheme(**d) for d in decoys_raw["decoy_themes"]]
+    snap = ScaffoldSnapshot(
+        slice_config=str(slice_path),
+        tool_schema_sha256=hashlib.sha256(TOOL_SCHEMA_PATH.read_bytes()).hexdigest(),
+        works=works_out,
+        decoy_themes=decoys,
+    )
+    sha = write_scaffold_snapshot(out, snap)
+    typer.echo(f"wrote {out} ({len(works_out)} works) sha256={sha}")
+
+
+@app.command()
+def scaffold(
+    snapshot_path: Path = typer.Option(SNAPSHOT_PATH, "--snapshot"),  # noqa: B008 — typer idiom
+    out: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/scaffolds.jsonl")
+    ),
+    seed: int = typer.Option(42),
+    size: int = typer.Option(2000),
+) -> None:
+    """Generate the scaffold-only dataset (pure; no DB, no models)."""
+    snap = load_scaffold_snapshot(snapshot_path)
+    config = ScaffoldConfig(seed=seed, size=size)
+    conversations = generate(snap, config)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    sha = write_jsonl(out, conversations)
+    stats = mix_stats(conversations)
+    typer.echo(f"wrote {out} ({len(conversations)} conversations) sha256={sha}")
+    typer.echo(json.dumps({b: sum(v.values()) for b, v in sorted(stats.items())}, indent=2))
+
+
+@app.command()
+def validate(
+    dataset: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/scaffolds.jsonl"), "--dataset"
+    ),
+    report_out: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/validation_report.json")
+    ),
+) -> None:
+    """Run every validation layer over a dataset JSONL (task 5; exit 1 on any issue)."""
+    from sutradhar.finetune.dataset import read_jsonl
+    from sutradhar.finetune.validate import validate_dataset
+
+    conversations = read_jsonl(dataset)
+    report = validate_dataset(conversations)
+    report_out.parent.mkdir(parents=True, exist_ok=True)
+    report_out.write_text(
+        json.dumps(report.model_dump(mode="json"), indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    decon = report.decontamination
+    typer.echo(
+        f"conversations: {report.conversations}\n"
+        f"issues:        {len(report.issues)}\n"
+        f"decontamination max similarity: golden={decon.max_similarity_golden} "
+        f"exemplars={decon.max_similarity_exemplars} negatives={decon.max_similarity_negatives} "
+        f"(threshold {decon.threshold}; violations: {len(decon.violations)})\n"
+        f"report: {report_out}"
+    )
+    for issue in report.issues[:20]:
+        typer.echo(f"  ! {issue.conv_id} [{issue.kind}] {issue.detail}", err=True)
+    if not report.ok:
+        raise typer.Exit(1)
+    typer.echo("OK — dataset passes all validation layers")
+
+
+@app.command()
+def teach(
+    dataset: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/scaffolds.jsonl"), "--dataset"
+    ),
+    out: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/taught.jsonl")
+    ),
+    cache_dir: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/teacher_runs")
+    ),
+    revision: str = typer.Option("main", help="Teacher model revision recorded on the stamp."),
+    limit: int = typer.Option(0, help="Rewrite only the first N conversations (0 = all)."),
+    workers: int = typer.Option(16, help="Concurrent conversations (vLLM batches requests)."),
+) -> None:
+    """Teacher surface pass (task 6): rewrite surfaces around sentinel locks (DEC-P4-1/2).
+
+    Requires TEACHER_BASE_URL/TEACHER_MODEL (blank => clear skip, exit 0 — the scaffold
+    dataset remains valid on its own). Raw outputs cached as a versioned artifact.
+    """
+    from datetime import UTC, datetime
+
+    from sutradhar.config import get_settings
+    from sutradhar.finetune.dataset import read_jsonl, write_jsonl
+    from sutradhar.finetune.teacher import ESCALATION_REJECTION_RATE, TeacherClient, surface_pass
+
+    settings = get_settings()
+    client = TeacherClient(settings)
+    if not client.available:
+        typer.echo("teacher off (TEACHER_BASE_URL/TEACHER_MODEL unset) — surface pass skipped")
+        raise typer.Exit(0)
+
+    conversations = read_jsonl(dataset)
+    if limit:
+        conversations = conversations[:limit]
+    stamp = client.stamp(revision=revision)
+    taught, records, summary = surface_pass(
+        conversations, client.rewrite, stamp, max_workers=workers
+    )
+
+    out.parent.mkdir(parents=True, exist_ok=True)
+    sha = write_jsonl(out, taught)
+    run_dir = cache_dir / datetime.now(tz=UTC).strftime("%Y%m%dT%H%M%SZ")
+    run_dir.mkdir(parents=True, exist_ok=True)
+    (run_dir / "records.jsonl").write_text(
+        "".join(r.model_dump_json() + "\n" for r in records), encoding="utf-8"
+    )
+    (run_dir / "summary.json").write_text(
+        summary.model_dump_json(indent=2) + "\n", encoding="utf-8"
+    )
+    typer.echo(
+        f"taught {len(taught)} conversations -> {out} sha256={sha}\n"
+        f"rewrites: {summary.texts_total} (accepted {summary.accepted}, "
+        f"rejected {summary.rejected}, rate {summary.rejection_rate:.2%})\n"
+        f"raw cache: {run_dir}"
+    )
+    if summary.escalation_triggered:
+        typer.echo(
+            f"!! rejection rate > {ESCALATION_REJECTION_RATE:.0%} — DEC-P4-1 escalation "
+            "trigger: revise the rewrite prompt once; if still failing, the frontier-API "
+            "escalation applies (LICENSING.md ToS row FIRST)",
+            err=True,
+        )
+        raise typer.Exit(2)
+
+
+@app.command()
+def seal(
+    dataset: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/taught.jsonl"), "--dataset"
+    ),
+    out_dir: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/sealed")
+    ),
+    snapshot_path: Path = typer.Option(SNAPSHOT_PATH, "--snapshot"),  # noqa: B008 — typer idiom
+    split_seed: int = typer.Option(7),
+    val_share: float = typer.Option(0.05),
+    sample_size: int = typer.Option(100),
+    sample_out: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("finetune/ft_v1_sample.jsonl"), help="Committed Tier-1 sample."
+    ),
+    card_out: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("finetune/dataset_card.json"), help="Committed dataset card."
+    ),
+) -> None:
+    """Seal the dataset (task 7, DEC-P4-7): validate -> split -> card -> sample.
+
+    Refuses to seal anything that fails a validation layer. Split is stratified by
+    behaviour under ``split_seed``; the committed sample is a stratified slice of train.
+    """
+    from sutradhar.config import get_settings
+    from sutradhar.finetune.dataset import DatasetCard, read_jsonl, write_card, write_jsonl
+    from sutradhar.finetune.scaffold import _Rng, mix_stats
+    from sutradhar.finetune.snapshot import snapshot_sha256
+    from sutradhar.finetune.validate import validate_dataset
+
+    conversations = read_jsonl(dataset)
+    report = validate_dataset(conversations)
+    if not report.ok:
+        for issue in report.issues[:20]:
+            typer.echo(f"  ! {issue.conv_id} [{issue.kind}] {issue.detail}", err=True)
+        typer.echo(
+            f"REFUSING to seal: {len(report.issues)} issues, "
+            f"{len(report.decontamination.violations)} decontamination violations",
+            err=True,
+        )
+        raise typer.Exit(1)
+
+    stamps = {c.teacher.model_dump_json() if c.teacher else None for c in conversations}
+    if len(stamps) != 1:
+        typer.echo(f"REFUSING to seal: {len(stamps)} distinct teacher stamps", err=True)
+        raise typer.Exit(1)
+    teacher_stamp = conversations[0].teacher
+
+    # Stratified 95/5 split under split_seed (deterministic; behaviour-balanced val).
+    rng = _Rng(split_seed)
+    by_behaviour: dict[str, list[int]] = {}
+    for i, conv in enumerate(conversations):
+        by_behaviour.setdefault(conv.behaviour, []).append(i)
+    val_idx: set[int] = set()
+    for behaviour in sorted(by_behaviour):
+        indices = list(by_behaviour[behaviour])
+        rng.shuffle(indices)
+        n_val = max(1, round(len(indices) * val_share))
+        val_idx.update(indices[:n_val])
+    train = [c for i, c in enumerate(conversations) if i not in val_idx]
+    val = [c for i, c in enumerate(conversations) if i in val_idx]
+
+    settings = get_settings()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    full_path = out_dir / f"{settings.ft_dataset_id}.jsonl"
+    sha = write_jsonl(full_path, conversations)
+    write_jsonl(out_dir / "train.jsonl", train)
+    write_jsonl(out_dir / "val.jsonl", val)
+
+    # Committed Tier-1 sample: stratified slice of TRAIN (never val — CI sees no held-out
+    # row), deterministic under split_seed.
+    per_behaviour = max(1, sample_size // len(by_behaviour))
+    sample: list[Any] = []
+    for behaviour in sorted(by_behaviour):
+        bucket = [c for c in train if c.behaviour == behaviour]
+        sample.extend(bucket[:per_behaviour])
+    sample = sample[:sample_size]
+    write_jsonl(sample_out, sample)
+
+    card = DatasetCard(
+        dataset_id=settings.ft_dataset_id,
+        counts=mix_stats(conversations),
+        graph_snapshot=snapshot_sha256(snapshot_path),
+        teacher=teacher_stamp,
+        seed=int(conversations[0].conv_id.split("-")[1]),  # scaffold seed (ft-<seed>-<i>)
+        decontamination=report.decontamination,
+        split={"train": len(train), "val": len(val), "split_seed": split_seed},
+        licenses=[
+            "Graph facts: Wikidata (CC0); TMDB (attribution; community-editable);",
+            "IMDb title.akas (personal/non-commercial ONLY -> dataset repo private-first,"
+            " DEC-P4-7);",
+            "Plot excerpts: Wikipedia (CC BY-SA 4.0, revision-pinned via P1 plot_texts);",
+            "Teacher surfaces: sarvamai/sarvam-m outputs (Apache 2.0 - unencumbered, DEC-P4-1).",
+        ],
+        sha256=sha,
+    )
+    write_card(card_out, card)
+    typer.echo(
+        f"sealed {settings.ft_dataset_id}: {len(conversations)} conversations "
+        f"(train {len(train)} / val {len(val)}, split_seed {split_seed})\n"
+        f"sha256: {sha}\nfull:   {full_path}\ncard:   {card_out}\n"
+        f"sample: {sample_out} ({len(sample)} conversations)"
+    )
+
+
+@app.command()
+def push(
+    sealed_dir: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/sealed"), "--sealed-dir"
+    ),
+    card_path: Path = typer.Option(Path("finetune/dataset_card.json")),  # noqa: B008
+) -> None:
+    """Push the sealed dataset to the PRIVATE HF dataset repo (DEC-P4-7)."""
+    from huggingface_hub import HfApi
+
+    from sutradhar.config import get_settings
+    from sutradhar.finetune.dataset import read_card
+
+    settings = get_settings()
+    repo = settings.require("ft_dataset_repo")
+    token = settings.require("hf_token")
+    card = read_card(card_path)
+
+    api = HfApi(token=token)
+    api.create_repo(repo_id=repo, repo_type="dataset", private=True, exist_ok=True)
+    for name in (f"{card.dataset_id}.jsonl", "train.jsonl", "val.jsonl"):
+        api.upload_file(
+            path_or_fileobj=sealed_dir / name,
+            path_in_repo=name,
+            repo_id=repo,
+            repo_type="dataset",
+        )
+    api.upload_file(
+        path_or_fileobj=card_path,
+        path_in_repo="dataset_card.json",
+        repo_id=repo,
+        repo_type="dataset",
+    )
+    readme = (
+        f"---\nlicense: other\nlicense_name: mixed-see-card\n"
+        f"license_link: https://github.com/\npretty_name: {card.dataset_id}\n---\n\n"
+        f"# {card.dataset_id} (PRIVATE-first, DEC-P4-7)\n\n"
+        "Synthetic, record-grounded, code-mixed multi-turn tool-calling SFT dataset for "
+        "Sutradhar (P4). Every tool call validates against frozen TOOL_SCHEMA v0; every "
+        "asserted title resolves to in-conversation tool results; decontaminated against "
+        "the golden set, prompt exemplars, and all negative surfaces. See "
+        "dataset_card.json for counts, provenance, licensing (IMDb-derived rows keep this "
+        f"repo private), and sha256 ({card.sha256}).\n"
+    )
+    api.upload_file(
+        path_or_fileobj=readme.encode("utf-8"),
+        path_in_repo="README.md",
+        repo_id=repo,
+        repo_type="dataset",
+    )
+    typer.echo(f"pushed {card.dataset_id} (private) to {repo}: full/train/val/card/README")
+
+
+@app.command("export-trl")
+def export_trl(
+    sealed_dir: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/sealed"), "--sealed-dir"
+    ),
+    out_dir: Path = typer.Option(  # noqa: B008 — typer idiom
+        Path("data/artifacts/finetune/trl")
+    ),
+) -> None:
+    """Export sealed train/val splits as TRL SFT rows + the hashed TrainConfig (task 9).
+
+    The relay payload for the GPU window: train_rows.jsonl / val_rows.jsonl (messages +
+    tools generated from frozen tool_schema.v0.json) + train_config.json (hash embedded).
+    """
+    from sutradhar.config import get_settings
+    from sutradhar.evals.driver import load_tool_schema, openai_tools
+    from sutradhar.finetune.dataset import read_jsonl
+    from sutradhar.finetune.render import to_trl_rows
+    from sutradhar.finetune.train import TrainConfig
+
+    tools = openai_tools(load_tool_schema(TOOL_SCHEMA_PATH))
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for split in ("train", "val"):
+        conversations = read_jsonl(sealed_dir / f"{split}.jsonl")
+        rows = to_trl_rows(conversations, tools)
+        (out_dir / f"{split}_rows.jsonl").write_text(
+            "".join(json.dumps(r, ensure_ascii=False, sort_keys=True) + "\n" for r in rows),
+            encoding="utf-8",
+        )
+        typer.echo(f"{split}: {len(rows)} rows")
+    config = TrainConfig(base_model=get_settings().llm_model)
+    (out_dir / "train_config.json").write_text(config.to_json(), encoding="utf-8")
+    typer.echo(f"train_config.json hash={config.config_hash()}\nout: {out_dir}")
+
+
+if __name__ == "__main__":
+    app()

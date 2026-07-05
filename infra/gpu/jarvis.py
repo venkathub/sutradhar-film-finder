@@ -15,6 +15,8 @@ invoked only — never on a PR.
 
 from __future__ import annotations
 
+import json
+import os
 import sys
 import time
 from collections.abc import Callable
@@ -146,9 +148,11 @@ def _default_deps() -> Deps:
             gpu_type=settings.gpu_type,
             num_gpus=1,
             template="pytorch",
-            storage=80,
+            storage=settings.gpu_storage_gb,
             name=INSTANCE_NAME,
-            http_ports=str(SERVE_PORT),
+            # Expose the serve port AND the embed port (P4 window step [5]: BGE-M3 on
+            # :8001 for the laptop-driven RAGAS pass — P3 never needed it off-box).
+            http_ports=f"{SERVE_PORT},{EMBED_SERVE_PORT}",
             script_id=str(script_id) if script_id is not None else None,
         )
 
@@ -687,6 +691,453 @@ def judge_session(
         deps.close_client(client)
 
 
+# --- P4 teacher session (DEC-P4-1: Sarvam-M 24B, 8-bit weight-only, ephemeral) --------
+#
+# Serves the synthetic-data teacher (TEACHER_MODEL, e.g. sarvamai/sarvam-m) via vLLM with
+# --quantization fp8 — on the Ampere A100 40 GB this runs as W8A16 WEIGHT-ONLY via Marlin
+# kernels (~24 GB weights + KV headroom; P4_SPEC §3 D1). If bring-up disappoints, the
+# recorded plan-B SKU is the RTX 6000 Ada 48 GB (native FP8, DEC-0003 value alternative).
+# The work is `build_dataset.py teach` running ON THE LAPTOP against the fresh endpoint
+# (JudgeClient/judge_session pattern): create -> serve -> teach -> destroy. Cost ~1-2 h.
+
+DEFAULT_TEACH_TIMEOUT_S = 3 * 3600  # ~6k short rewrites; hard cap keeps DEC-0003 honest
+# 48 GB bf16 download (unauthenticated) + on-the-fly fp8 quantization outlasts the 25-min
+# default health cap comfortably on a slow mirror — 45 min for the teacher bring-up.
+TEACHER_HEALTH_TIMEOUT_S = 2700
+
+
+def build_teacher_startup_script(teacher_model: str) -> str:
+    """Serve the teacher via vLLM, 8-bit weight-only (no HF token — Sarvam-M is ungated).
+
+    HF_HOME is redirected to /home: on JarvisLabs the purchased storage volume mounts at
+    /home while /root sits on a small fixed overlay — the ~48 GB Sarvam-M bf16 download
+    filled it on the first live bring-up (2026-07-03; docs.jarvislabs.ai/getting_started:
+    "always use /home for storage").
+    """
+    return (
+        "#!/bin/bash\n"
+        "set -euxo pipefail\n"
+        "export HF_HOME=/home/hf_cache\n"
+        "mkdir -p $HF_HOME\n"
+        "pip install -U vllm\n"
+        f"vllm serve {teacher_model} --quantization fp8 --max-model-len 8192 "
+        f"--host 0.0.0.0 --port {SERVE_PORT}\n"
+    )
+
+
+def _run_teach(base_url: str, teacher_model: str) -> tuple[int, str, str]:
+    """Default in-session runner: the surface pass against the fresh teacher endpoint."""
+    import os
+    import subprocess
+
+    env = {**os.environ, "TEACHER_BASE_URL": base_url, "TEACHER_MODEL": teacher_model}
+    proc = subprocess.run(  # noqa: S603 — our own entrypoint, controlled args
+        [sys.executable, "finetune/build_dataset.py", "teach"],
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=DEFAULT_TEACH_TIMEOUT_S,
+    )
+    return proc.returncode, proc.stdout, proc.stderr
+
+
+def teacher_session(
+    settings: Settings | None = None,
+    deps: Deps | None = None,
+    *,
+    run_teach: Callable[[str, str], tuple[int, str, str]] = _run_teach,
+    health_timeout_s: float = TEACHER_HEALTH_TIMEOUT_S,
+    poll_interval_s: float = DEFAULT_POLL_INTERVAL_S,
+) -> Evidence:
+    """P4 task 6/7: create -> serve Sarvam-M -> run the surface pass -> destroy.
+
+    Teardown guaranteed in ``finally``; the taught dataset + raw-output cache persist
+    under data/artifacts/finetune/ before the instance dies. Exit code 2 from the teach
+    runner = the DEC-P4-1 escalation trigger (rejection rate > 30%) — surfaced, and the
+    instance is still destroyed.
+    """
+    settings = settings or get_settings()
+    deps = deps or _default_deps()
+    teacher_model = settings.require("teacher_model")  # clear var-named error when unset
+    # Sarvam-M fp8-on-the-fly downloads the FULL bf16 checkpoint (~48 GB) before
+    # quantizing — the 80 GB default disk ran out on the first live bring-up (2026-07-03).
+    settings = settings.model_copy(update={"gpu_storage_gb": max(settings.gpu_storage_gb, 150)})
+    ev = Evidence(requested_model=teacher_model, gpu_type=settings.gpu_type)
+
+    client = deps.create_client(settings)
+    instance: Any = None
+    try:
+        deps.log(f"[gpu-teacher] creating {settings.gpu_type} to serve {teacher_model} …")
+        t0 = deps.monotonic()
+        script = build_teacher_startup_script(teacher_model)
+        instance = deps.create_instance(client, settings, script)
+        ev.machine_id = getattr(instance, "machine_id", None)
+        deps.log(f"  instance {ev.machine_id} running; waiting for vLLM /health …")
+
+        base_url = _wait_for_endpoint(
+            instance, deps, timeout_s=health_timeout_s, poll_interval_s=poll_interval_s
+        )
+        if base_url is None:
+            ev.status = "off"
+            ev.detail = f"vLLM did not become healthy within {health_timeout_s}s"
+            return ev
+        ev.create_to_up_s = round(deps.monotonic() - t0, 1)
+        ev.booted = True
+
+        deps.log(f"  running teacher surface pass against {base_url} …")
+        returncode, stdout, stderr = run_teach(base_url, teacher_model)
+        deps.log(stdout)
+        if stderr:
+            deps.log(stderr)
+        ev.status = "up" if returncode == 0 else "error"
+        ev.detail = (
+            "surface pass complete (taught.jsonl + raw cache persisted)"
+            if returncode == 0
+            else f"teach exited {returncode}"
+            + (" — rejection rate > 30% (DEC-P4-1 escalation trigger)" if returncode == 2 else "")
+        )
+        return ev
+    except Exception as exc:  # noqa: BLE001 — record, then guarantee teardown in finally
+        ev.status = "error"
+        ev.detail = f"{type(exc).__name__}: {exc}"
+        return ev
+    finally:
+        if instance is not None and ev.machine_id is not None:
+            try:
+                ev.destroyed = deps.destroy_instance(client, ev.machine_id)
+                deps.log(f"  destroyed instance {ev.machine_id}: {ev.destroyed}")
+            except Exception as exc:  # noqa: BLE001
+                ev.detail += f" | TEARDOWN FAILED: {exc} — run `make gpu-nuke`"
+                deps.log(f"  TEARDOWN FAILED for {ev.machine_id}: {exc}")
+        try:  # script-quota hygiene: a leaked startup script blocks future runs
+            deps.remove_scripts(client)
+        except Exception as exc:  # noqa: BLE001
+            deps.log(f"  script cleanup failed (non-fatal): {exc}")
+        deps.close_client(client)
+
+
+# --- P4 finetune window (task 10; P4_SPEC §2.4 — the ONE-TIME training + benchmark
+# window). Laptop half of the marker protocol driven by finetune/gpu_window.py (on-box
+# half, relay-shipped). Strict order: base capture -> train -> merged capture(s) ->
+# judge/RAGAS both columns -> pull -> DESTROY (teardown in finally, as always).
+
+FT_MERGED_SERVED_NAME = "sutradhar-qlora-merged"  # vLLM --served-model-name for phase [3]
+FT_TRL_DIR = Path("data/artifacts/finetune/trl")
+FT_WINDOW_ARTIFACTS = Path("data/artifacts/finetune/window")
+FT_WINDOW_SCRIPT = Path(__file__).resolve().parent.parent.parent / "finetune/gpu_window.py"
+FT_TRAIN_SCRIPT = Path(__file__).resolve().parent.parent.parent / "finetune/train_qlora.py"
+DEFAULT_WINDOW_TIMEOUT_S = 8 * 3600  # spec budget: ~4-8 h total
+DEFAULT_MARKER_TIMEOUT_S = 5400
+
+
+def build_window_startup_script(token: str, repo: str, run_id: str) -> str:
+    """Download + run the on-box window driver; job.log + EXIT uploaded even on crash."""
+    return (
+        "#!/bin/bash\n"
+        "set -euo pipefail\n"  # no -x: the token must never echo into instance logs
+        f"export HF_TOKEN={token}\n"
+        "export HF_HOME=/home/hf_cache\n"
+        "mkdir -p /home/hf_cache\n"
+        "pip install -q -U huggingface_hub >/root/pip.log 2>&1 || true\n"
+        "python - <<'PY'\n"
+        "import subprocess, sys\n"
+        "from pathlib import Path\n"
+        "from huggingface_hub import HfApi, hf_hub_download\n"
+        f"repo, run_id = {repo!r}, {run_id!r}\n"
+        "kw = dict(repo_id=repo, repo_type='dataset')\n"
+        "api = HfApi()\n"
+        "log = Path('/root/job.log')\n"
+        "try:\n"
+        "    driver = hf_hub_download(filename=f'runs/{run_id}/gpu_window.py', **kw)\n"
+        "    with log.open('wb') as fh:\n"
+        "        rc = subprocess.call([sys.executable, driver, '--repo', repo,\n"
+        "                              '--run-id', run_id],\n"
+        "                             stdout=fh, stderr=subprocess.STDOUT)\n"
+        "except Exception as exc:\n"
+        "    log.write_text(f'driver exception: {exc!r}')\n"
+        "    rc = 98\n"
+        "try:\n"
+        "    api.upload_file(path_or_fileobj=str(log),\n"
+        "                    path_in_repo=f'runs/{run_id}/job.log', **kw)\n"
+        "except Exception:\n"
+        "    pass\n"
+        "api.upload_file(path_or_fileobj=str(rc).encode(),\n"
+        "                path_in_repo=f'runs/{run_id}/EXIT', **kw)\n"
+        "PY\n"
+    )
+
+
+def _run_ft_benchmark(base_url: str, variant: str) -> tuple[int, str, str]:
+    """Default capture runner: the P3 harness live against the window endpoint."""
+    import os
+    import subprocess
+
+    args = [
+        sys.executable,
+        "evals/run_generation_eval.py",
+        "--mode",
+        "live",
+        "--serving-json",
+        json.dumps({"window_column": variant}),
+    ]
+    if variant == "qlora_no_exemplars":
+        args += ["--prompt-variant", "no_exemplars"]
+    env = {**os.environ, "LLM_BASE_URL": base_url}
+    if variant.startswith("qlora"):
+        env["LLM_MODEL"] = FT_MERGED_SERVED_NAME  # phase [3] serves under this name
+    proc = subprocess.run(  # noqa: S603 — our own entrypoint, controlled args
+        args, env=env, capture_output=True, text=True, timeout=3600
+    )
+    # rc=3 = the runner's GS-02 gate fired ON THE MODEL UNDER TEST. For the window that
+    # is a RESULT (the artifact is recorded; DEC-P4-8's guard judges it at verdict time),
+    # not an orchestration failure — a hallucinating BASE column is exactly the honest
+    # baseline the benchmark exists to document (found live 2026-07-04).
+    if proc.returncode == 3:
+        note = "\n[window] GS-02 gate fired on this column — recorded; verdict applies DEC-P4-8"
+        return 0, proc.stdout + note, proc.stderr
+    return proc.returncode, proc.stdout, proc.stderr
+
+
+def _run_ft_judge(base_url: str, embed_url: str, run_ids: list[str]) -> tuple[int, str, str]:
+    """Default judge runner: re-judge + RAGAS every captured column artifact."""
+    import subprocess
+
+    settings = get_settings()
+    env = {
+        **os.environ,
+        "JUDGE_BASE_URL": base_url,
+        "JUDGE_MODEL": settings.require("judge_model"),
+        "EMBED_BASE_URL": embed_url,
+    }
+    out, err = "", ""
+    for run_id in run_ids:
+        proc = subprocess.run(  # noqa: S603 — our own entrypoint, controlled args
+            [
+                sys.executable,
+                "evals/rejudge_run.py",
+                "--run",
+                run_id,
+                "--with-ragas",
+            ],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=3600,
+        )
+        out += proc.stdout
+        err += proc.stderr
+        if proc.returncode != 0:
+            return proc.returncode, out, err
+    return 0, out, err
+
+
+def _embed_base_url(instance: Any, base_url: str) -> str:
+    """The BGE-M3 endpoint (:8001) as reachable from the laptop: prefer an instance
+    endpoint that names the embed port; fall back to a port swap on the serve URL."""
+    for ep in getattr(instance, "endpoints", None) or []:
+        ep = str(ep).rstrip("/")
+        if str(EMBED_SERVE_PORT) in ep:
+            return ep if ep.endswith("/v1") else f"{ep}/v1"
+    return base_url.replace(str(SERVE_PORT), str(EMBED_SERVE_PORT), 1)
+
+
+def _latest_run_id(runs_dir: Path = Path("evals/generation_runs")) -> str:
+    runs = sorted(p.stem for p in runs_dir.glob("*.json") if ".trace" not in p.name)
+    if not runs:
+        raise RuntimeError("no generation-run artifact found after capture")
+    return runs[-1]
+
+
+def finetune_session(
+    settings: Settings | None = None,
+    deps: Deps | None = None,
+    hub: HubRelay | None = None,
+    *,
+    run_benchmark: Callable[[str, str], tuple[int, str, str]] = _run_ft_benchmark,
+    run_judge_pass: Callable[[str, str, list[str]], tuple[int, str, str]] = _run_ft_judge,
+    latest_run_id: Callable[[], str] = _latest_run_id,
+    window_timeout_s: float = DEFAULT_WINDOW_TIMEOUT_S,
+    marker_timeout_s: float = DEFAULT_MARKER_TIMEOUT_S,
+    health_timeout_s: float = TEACHER_HEALTH_TIMEOUT_S,
+    poll_interval_s: float = DEFAULT_POLL_INTERVAL_S,
+    trl_dir: Path = FT_TRL_DIR,
+    artifacts_root: Path = FT_WINDOW_ARTIFACTS,
+) -> Evidence:
+    """THE one-time window (§2.4): base capture -> train -> QLoRA capture(s) -> judge ->
+    pull -> destroy. Every phase failure still tears the instance down."""
+    from sutradhar.finetune.train import TRAINING_PIPS
+
+    settings = settings or get_settings()
+    deps = deps or _default_deps()
+    hub = hub or _default_hub(settings)
+    base_model = settings.llm_model
+    judge_model = settings.require("judge_model")
+    settings = settings.model_copy(update={"gpu_storage_gb": max(settings.gpu_storage_gb, 150)})
+    ev = Evidence(requested_model=base_model, gpu_type=settings.gpu_type)
+    run_id = f"ftwin-{os.urandom(4).hex()}"
+
+    payload = {
+        "train_config.json": trl_dir / "train_config.json",
+        "train_rows.jsonl": trl_dir / "train_rows.jsonl",
+        "val_rows.jsonl": trl_dir / "val_rows.jsonl",
+        "train_qlora.py": FT_TRAIN_SCRIPT,
+        "gpu_window.py": FT_WINDOW_SCRIPT,
+        "gemma4_train_template.jinja": FT_TRAIN_SCRIPT.parent / "gemma4_train_template.jinja",
+        "merge_adapter.py": FT_TRAIN_SCRIPT.parent / "merge_adapter.py",
+    }
+    missing = [name for name, path in payload.items() if not path.exists()]
+    if missing:
+        ev.status = "error"
+        ev.detail = f"relay payload missing: {missing} — run `make build-ft-scaffold`/export-trl"
+        return ev
+    window_config = {
+        "base_model": base_model,
+        "judge_model": judge_model,
+        "embed_model": settings.embed_model,
+        "serve_flags": settings.vllm_serve_flags.split(),
+        "training_pips": list(TRAINING_PIPS),
+        "marker_timeout_s": marker_timeout_s,
+        # RESUME (2026-07-04 lesson): a relay prefix holding a finished adapter — the
+        # window skips training entirely and goes straight to merge/captures.
+        "resume_from": os.environ.get("FT_RESUME_FROM", ""),
+        "merged_served_name": FT_MERGED_SERVED_NAME,
+    }
+    deps.log(f"[gpu-finetune] window {run_id}: uploading relay payload …")
+    for name, path in payload.items():
+        hub.upload_file(path, f"runs/{run_id}/{name}")
+    config_path = trl_dir / "window_config.json"
+    config_path.write_text(json.dumps(window_config, indent=2) + "\n", encoding="utf-8")
+    hub.upload_file(config_path, f"runs/{run_id}/window_config.json")
+
+    def wait_marker(name: str, timeout_s: float) -> bool:
+        deadline = deps.monotonic() + timeout_s
+        while deps.monotonic() < deadline:
+            if hub.exists(f"runs/{run_id}/{name}"):
+                return True
+            if hub.exists(f"runs/{run_id}/EXIT"):  # box died early
+                return False
+            deps.sleep(poll_interval_s)
+        return False
+
+    def put_marker(name: str) -> None:
+        marker = trl_dir / f".marker_{name}"
+        marker.write_bytes(b"1")
+        hub.upload_file(marker, f"runs/{run_id}/{name}")
+
+    captured_runs: list[str] = []
+    client = deps.create_client(settings)
+    instance: Any = None
+    try:
+        deps.log(f"  creating {settings.gpu_type} for the finetune window …")
+        t0 = deps.monotonic()
+        script = build_window_startup_script(
+            settings.require("hf_token"), settings.require("hf_artifact_repo"), run_id
+        )
+        instance = deps.create_instance(client, settings, script)
+        ev.machine_id = getattr(instance, "machine_id", None)
+
+        # [1] base column
+        deps.log("  waiting for BASE_UP …")
+        if not wait_marker("BASE_UP", health_timeout_s + marker_timeout_s):
+            ev.status = "error"
+            ev.detail = "BASE_UP never appeared" + (
+                f" — job.log tail:\n{hub.fetch_log(run_id)}" if hub.fetch_log(run_id) else ""
+            )
+            return ev
+        base_url = _wait_for_endpoint(
+            instance, deps, timeout_s=health_timeout_s, poll_interval_s=poll_interval_s
+        )
+        if base_url is None:
+            ev.status = "error"
+            ev.detail = "BASE_UP marker present but endpoint unreachable from the laptop"
+            return ev
+        ev.booted = True
+        ev.create_to_up_s = round(deps.monotonic() - t0, 1)
+        deps.log(f"  [1] capturing BASE column against {base_url} …")
+        rc, out, err = run_benchmark(base_url, "base")
+        deps.log(out)
+        if rc != 0:
+            ev.status = "error"
+            ev.detail = f"base capture failed rc={rc}: {err.strip()[-300:]}"
+            return ev
+        captured_runs.append(latest_run_id())
+        put_marker("BASE_CAPTURED")
+
+        # [2]+[3] train happens on-box; wait for the merged model to come up.
+        deps.log("  [2] training on-box; waiting for MERGED_UP …")
+        if not wait_marker("MERGED_UP", window_timeout_s):
+            ev.status = "error"
+            ev.detail = "MERGED_UP never appeared (training failed?)" + (
+                f" — job.log tail:\n{hub.fetch_log(run_id)}" if hub.fetch_log(run_id) else ""
+            )
+            return ev
+        deps.log("  [3] capturing QLORA column (headline, frozen prompt) …")
+        rc, out, err = run_benchmark(base_url, "qlora")
+        deps.log(out)
+        if rc != 0:
+            ev.status = "error"
+            ev.detail = f"qlora capture failed rc={rc}: {err.strip()[-300:]}"
+            return ev
+        captured_runs.append(latest_run_id())
+        deps.log("  [4] capturing QLORA no-exemplar supplementary (DEC-P4-6) …")
+        rc, out, err = run_benchmark(base_url, "qlora_no_exemplars")
+        deps.log(out)
+        if rc != 0:
+            ev.status = "error"
+            ev.detail = f"no-exemplar capture failed rc={rc}: {err.strip()[-300:]}"
+            return ev
+        captured_runs.append(latest_run_id())
+        put_marker("QLORA_CAPTURED")
+
+        # [5] judge + RAGAS over all captured columns, same session.
+        deps.log("  [5] waiting for JUDGE_UP …")
+        if not wait_marker("JUDGE_UP", marker_timeout_s):
+            ev.status = "error"
+            ev.detail = "JUDGE_UP never appeared"
+            return ev
+        embed_url = _embed_base_url(instance, base_url)
+        rc, out, err = run_judge_pass(base_url, embed_url, captured_runs)
+        deps.log(out)
+        if rc != 0:
+            ev.status = "error"
+            ev.detail = f"judge pass failed rc={rc}: {err.strip()[-300:]}"
+            return ev
+        put_marker("JUDGE_DONE")
+
+        # [6] EXIT + pull the on-box outputs (training metrics; adapter went to HF Hub).
+        if not wait_marker("EXIT", marker_timeout_s):
+            ev.status = "error"
+            ev.detail = "EXIT never appeared after JUDGE_DONE"
+            return ev
+        dest = artifacts_root / run_id
+        dest.mkdir(parents=True, exist_ok=True)
+        if hub.exists(f"runs/{run_id}/out/training_metrics.json"):
+            hub.download_dir(f"runs/{run_id}/out", dest)
+        ev.status = "up"
+        ev.detail = (
+            f"window complete: columns {captured_runs} captured + judged; "
+            f"on-box outputs pulled to {dest}"
+        )
+        return ev
+    except Exception as exc:  # noqa: BLE001 — record, then guarantee teardown in finally
+        ev.status = "error"
+        ev.detail = f"{type(exc).__name__}: {exc}"
+        return ev
+    finally:
+        if instance is not None and ev.machine_id is not None:
+            try:
+                ev.destroyed = deps.destroy_instance(client, ev.machine_id)
+                deps.log(f"  destroyed instance {ev.machine_id}: {ev.destroyed}")
+            except Exception as exc:  # noqa: BLE001
+                ev.detail += f" | TEARDOWN FAILED: {exc} — run `make gpu-nuke`"
+                deps.log(f"  TEARDOWN FAILED for {ev.machine_id}: {exc}")
+        try:  # script-quota hygiene + the embedded token dies with the script slot
+            deps.remove_scripts(client)
+        except Exception as exc:  # noqa: BLE001
+            deps.log(f"  script cleanup failed (non-fatal): {exc}")
+        deps.close_client(client)
+
+
 def nuke(settings: Settings | None = None, deps: Deps | None = None) -> list[int]:
     """Destroy any stray instance carrying our tag — a leaked billing GPU is a defect."""
     settings = settings or get_settings()
@@ -733,10 +1184,18 @@ def main(argv: list[str] | None = None) -> int:
         ev = judge_session()
         _write_evidence(ev)
         return 0 if ev.status == "up" and ev.destroyed else 1
+    if cmd == "teacher":
+        ev = teacher_session()
+        _write_evidence(ev)
+        return 0 if ev.status == "up" and ev.destroyed else 1
+    if cmd == "finetune":
+        ev = finetune_session()
+        _write_evidence(ev)
+        return 0 if ev.status == "up" and ev.destroyed else 1
     if cmd == "nuke":
         nuke()
         return 0
-    print(f"usage: jarvis.py [validate|extract|embed|judge|nuke]  (got {cmd!r})")
+    print(f"usage: jarvis.py [validate|extract|embed|judge|teacher|finetune|nuke]  (got {cmd!r})")
     return 2
 
 

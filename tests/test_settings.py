@@ -34,7 +34,7 @@ def test_defaults_load(monkeypatch: pytest.MonkeyPatch) -> None:
     _clear_env(monkeypatch)
     s = Settings(_env_file=None)
     assert s.llm_base_url == "http://localhost:8000/v1"
-    assert s.llm_model == "google/gemma-4-E4B"
+    assert s.llm_model == "google/gemma-4-E4B-it"
     assert s.llm_api_key == "EMPTY"
     assert s.llm_timeout_s == 10.0
     assert s.embed_model == "BAAI/bge-m3"
@@ -150,6 +150,51 @@ def test_missing_judge_base_url_names_env_var(monkeypatch: pytest.MonkeyPatch) -
     assert "JUDGE_BASE_URL" in str(exc.value)
 
 
+def test_p4_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
+    """P4 fine-tune fields: teacher off by default; dataset id is the DEC-P4-7 name."""
+    _clear_env(monkeypatch)
+    s = Settings(_env_file=None)
+    # Teacher unset by default => teacher-dependent steps skip cleanly (DEC-P4-1).
+    assert s.teacher_base_url is None
+    assert s.teacher_model is None
+    assert s.teacher_api_key is None
+    assert s.hf_adapter_repo is None
+    assert s.ft_dataset_repo is None
+    assert s.ft_dataset_id == "sutradhar-ft-v1"
+
+
+def test_p4_env_override(monkeypatch: pytest.MonkeyPatch) -> None:
+    _clear_env(monkeypatch)
+    monkeypatch.setenv("TEACHER_BASE_URL", "http://teacher.example:8002/v1")
+    monkeypatch.setenv("TEACHER_MODEL", "sarvamai/sarvam-m")
+    monkeypatch.setenv("HF_ADAPTER_REPO", "user/sutradhar-gemma4-e4b-qlora-v1")
+    monkeypatch.setenv("FT_DATASET_REPO", "user/sutradhar-ft-v1")
+    monkeypatch.setenv("FT_DATASET_ID", "sutradhar-ft-v2")
+    s = Settings(_env_file=None)
+    assert s.teacher_base_url == "http://teacher.example:8002/v1"
+    assert s.teacher_model == "sarvamai/sarvam-m"
+    assert s.hf_adapter_repo == "user/sutradhar-gemma4-e4b-qlora-v1"
+    assert s.ft_dataset_repo == "user/sutradhar-ft-v1"
+    assert s.ft_dataset_id == "sutradhar-ft-v2"
+
+
+def test_teacher_api_key_redacted(monkeypatch: pytest.MonkeyPatch) -> None:
+    _clear_env(monkeypatch)
+    monkeypatch.setenv("TEACHER_API_KEY", "teacher_topsecret_789")
+    s = Settings(_env_file=None)
+    for rendered in (repr(s), str(s)):
+        assert "teacher_topsecret_789" not in rendered
+
+
+def test_missing_teacher_base_url_names_env_var(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Teacher-dependent operations get a clear, var-named error (DEC-P4-1 posture)."""
+    _clear_env(monkeypatch)
+    s = Settings(_env_file=None)
+    with pytest.raises(ConfigError) as exc:
+        s.require("teacher_base_url")
+    assert "TEACHER_BASE_URL" in str(exc.value)
+
+
 def test_no_real_secret_literals_in_env_example() -> None:
     """.env.example must not carry a filled-in token/key (blank secrets only)."""
     example = _parse_env_example()
@@ -159,6 +204,7 @@ def test_no_real_secret_literals_in_env_example() -> None:
         "TMDB_API_KEY",
         "LANGFUSE_SECRET_KEY",
         "JUDGE_API_KEY",
+        "TEACHER_API_KEY",
     ):
         assert example.get(key, "") == "", f"{key} must be blank in .env.example"
     # No obvious HF token literal anywhere in the file.

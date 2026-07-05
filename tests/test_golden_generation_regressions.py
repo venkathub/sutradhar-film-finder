@@ -84,12 +84,22 @@ def test_artifact_covers_the_full_generation_slice(
 
 
 def test_no_hallucinated_movie_on_gs02(artifact: GenerationRunArtifact) -> None:
-    """The headline faithfulness gate: 0 inventions across the GS-02 negative slice."""
-    assert artifact.metrics.gs02_inventions == 0
-    for result in artifact.fixtures:
-        if result.slice == "negative":
-            for turn in result.hallucination:
-                assert turn.inventions == [], (result.fixture_id, turn.inventions)
+    """The faithfulness gate, RELATIVE form (user-confirmed 2026-07-04): the recomputed
+    GS-02 invention count must equal the pinned artifact's recorded value — no NEW
+    hallucinations can land between GPU windows. The =0 TARGET is not met by either live
+    P4 column (base invented 'Pushpa', QLoRA 'Salaar' — recorded in BENCHMARKS + the
+    DEC-P4 verdict); it stays a hard clause inside `make ft-verdict` (DEC-P4-8) and the
+    absolute assertion returns the moment a pinned column achieves 0."""
+    recomputed = sum(
+        len(turn.inventions)
+        for result in artifact.fixtures
+        if result.slice == "negative"
+        for turn in result.hallucination
+    )
+    assert recomputed == artifact.metrics.gs02_inventions  # drift gate: byte-honest
+    assert recomputed <= 1, "GS-02 inventions grew beyond the recorded P4 baseline"
+    if artifact.mode == "dry_run":
+        assert recomputed == 0  # the mock harness must stay clean
 
 
 def test_every_invalid_emitted_call_is_flagged_and_accounted(

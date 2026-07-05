@@ -60,11 +60,26 @@ def main(
     serving_json: str = typer.Option(
         "", "--serving-json", help="Live runs: JSON blob of serving config for the stamp."
     ),
+    prompt_variant: str = typer.Option(
+        "full",
+        "--prompt-variant",
+        help="full = the frozen headline bundle; no_exemplars = the D6 supplementary "
+        "capture (DEC-P4-6) — prompt_hash gets an explicit ':no_exemplars' suffix so it "
+        "can never masquerade as the frozen stamp.",
+    ),
 ) -> None:
     if mode not in ("dry_run", "live"):
         raise typer.BadParameter("mode must be dry_run or live")
+    if prompt_variant not in ("full", "no_exemplars"):
+        raise typer.BadParameter("prompt-variant must be full or no_exemplars")
     settings = get_settings()
     artifacts = load_prompt_artifacts()
+    if prompt_variant == "no_exemplars":
+        system_prompt = artifacts.system.rstrip() + "\n"
+        prompt_hash = f"{artifacts.prompt_hash}:no_exemplars"
+    else:
+        system_prompt = artifacts.system_prompt()
+        prompt_hash = artifacts.prompt_hash
     schema = load_tool_schema()
     fixtures = select_generation_fixtures(load_fixtures())
     typer.echo(f"[generation-eval] mode={mode}; {len(fixtures)} generation fixtures")
@@ -86,6 +101,7 @@ def main(
             "llm_base_url": settings.llm_base_url,
             "gpu_type": settings.gpu_type,
             "captured_by": "make benchmark-generation",
+            "prompt_variant": prompt_variant,
         }
         if serving_json:
             serving.update(json.loads(serving_json))
@@ -104,8 +120,8 @@ def main(
         results = execute_fixtures(
             fixtures,
             client,
-            system_prompt=artifacts.system_prompt(),
-            prompt_hash=artifacts.prompt_hash,
+            system_prompt=system_prompt,
+            prompt_hash=prompt_hash,
             execute_tool=executor,
             fixture_id_ref=fixture_ref,
             schema=schema,
@@ -142,19 +158,27 @@ def main(
         mode=mode,  # type: ignore[arg-type]
         model=model_id,
         serving=serving,
-        prompt_hash=artifacts.prompt_hash,
+        prompt_hash=prompt_hash,
         tool_schema_version="v0",
         judge=judge_block,
         retrieval_run=retrieval.run_id,
         fixtures=results,
         metrics=metrics,
-        stamp=build_stamp(prompt_hash=artifacts.prompt_hash, retrieval_run=retrieval.run_id),
+        stamp=build_stamp(prompt_hash=prompt_hash, retrieval_run=retrieval.run_id),
     )
 
     out_dir.mkdir(parents=True, exist_ok=True)
     out = out_dir / f"{artifact.run_id}.json"
     out.write_text(artifact.model_dump_json(indent=1) + "\n", encoding="utf-8")
     typer.echo(f"committed generation-run artifact: {out}")
+    if mode == "live" and metrics.fixtures_completed == 0:
+        typer.echo(
+            f"FATAL: 0/{metrics.fixtures_total} fixtures completed against the live "
+            "endpoint — the serving config is broken (tool parser? model?); artifact "
+            "kept for diagnostics but this run is NOT a benchmark column",
+            err=True,
+        )
+        raise typer.Exit(4)
 
     # --- observability evidence (both degrade cleanly when off/unreachable) ---
     tracer.flush()

@@ -1,0 +1,343 @@
+{
+  "$comment": "P4 D3 entity-disjointness fixture list (DEC-P4-3): gate-visible training-slice entities, emitted post-ingestion 2026-07-03. Training entity_ids MUST be a subset of these ids and disjoint from all golden-fixture entities (tests/test_ft_decontamination, task 5).",
+  "slice_config": "data-pipeline/training_slice.yaml",
+  "verified_at": "2026-07-03",
+  "work_count": 15,
+  "version_count": 34,
+  "works": [
+    {
+      "work_id": "e8876779-ad0a-4a83-ab66-b87fa091925f",
+      "primary_title": "Ala Vaikunthapurramloo"
+    },
+    {
+      "work_id": "b7c8f40f-33d8-465a-b2f0-9c0f4430696f",
+      "primary_title": "Anniyan"
+    },
+    {
+      "work_id": "5032ce41-95e6-42e8-8223-769c454f419d",
+      "primary_title": "Arjun Reddy"
+    },
+    {
+      "work_id": "828e6bae-c67c-4357-8379-3ad2fdffd5a9",
+      "primary_title": "Bigil"
+    },
+    {
+      "work_id": "c32ec58e-d29a-41b7-a4c6-fe3f93ff5e69",
+      "primary_title": "Bodyguard"
+    },
+    {
+      "work_id": "923f8e38-dd09-47fa-bf90-d7adc8d26a94",
+      "primary_title": "Don"
+    },
+    {
+      "work_id": "9d879b7d-839a-4b88-8e9c-a6b1f3a33191",
+      "primary_title": "Don"
+    },
+    {
+      "work_id": "fca2fc86-feb7-482c-afa5-c5ecb75ac7ab",
+      "primary_title": "Kanchana"
+    },
+    {
+      "work_id": "ce082e6a-3a3a-459a-aa82-def2a77ffe5f",
+      "primary_title": "Kanchana 2"
+    },
+    {
+      "work_id": "22f5ef4f-6b8d-468e-bc88-7cba9615a7e6",
+      "primary_title": "Mersal"
+    },
+    {
+      "work_id": "0435fb49-927b-4d56-8ead-a7a4bada7a78",
+      "primary_title": "Muni"
+    },
+    {
+      "work_id": "4a41a211-8535-4805-97df-c2687d072f67",
+      "primary_title": "Pokiri"
+    },
+    {
+      "work_id": "2163077f-1962-4dac-8223-6a007d6f138a",
+      "primary_title": "Premam"
+    },
+    {
+      "work_id": "e06cc8ba-349c-42e0-ba49-4458404a3746",
+      "primary_title": "U Turn"
+    },
+    {
+      "work_id": "021501db-9e1f-447b-a073-adb434cca75f",
+      "primary_title": "Vikramarkudu"
+    }
+  ],
+  "versions": [
+    {
+      "version_id": "853b0928-febd-4722-83f2-56b15369b835",
+      "work_id": "e8876779-ad0a-4a83-ab66-b87fa091925f",
+      "title": "Ala Vaikunthapurramloo",
+      "language": "te",
+      "year": 2020,
+      "wikidata_qid": "Q65057760"
+    },
+    {
+      "version_id": "6a933a5f-6efb-4998-8a43-f9077aab5651",
+      "work_id": "e8876779-ad0a-4a83-ab66-b87fa091925f",
+      "title": "Shehzada",
+      "language": "hi",
+      "year": 2023,
+      "wikidata_qid": "Q109284953"
+    },
+    {
+      "version_id": "a8e8f7f3-8b3a-46e7-8f3b-b572db2bd9dd",
+      "work_id": "b7c8f40f-33d8-465a-b2f0-9c0f4430696f",
+      "title": "Anniyan",
+      "language": "ta",
+      "year": 2005,
+      "wikidata_qid": "Q2851751"
+    },
+    {
+      "version_id": "8d6df725-ac8d-48b1-b45a-c48444906d8e",
+      "work_id": "b7c8f40f-33d8-465a-b2f0-9c0f4430696f",
+      "title": "Aparichitudu",
+      "language": "te",
+      "year": 2005,
+      "wikidata_qid": null
+    },
+    {
+      "version_id": "026fc716-d0a4-4c74-8101-609f8df30f84",
+      "work_id": "5032ce41-95e6-42e8-8223-769c454f419d",
+      "title": "Arjun Reddy",
+      "language": "te",
+      "year": 2017,
+      "wikidata_qid": "Q28419404"
+    },
+    {
+      "version_id": "621cf294-2842-45ff-a6ba-6585dcf36fa7",
+      "work_id": "5032ce41-95e6-42e8-8223-769c454f419d",
+      "title": "Kabir Singh",
+      "language": "hi",
+      "year": 2019,
+      "wikidata_qid": "Q58411760"
+    },
+    {
+      "version_id": "81d64dfb-8eaf-402a-94a8-22a1330c6b59",
+      "work_id": "5032ce41-95e6-42e8-8223-769c454f419d",
+      "title": "Adithya Varma",
+      "language": "ta",
+      "year": 2019,
+      "wikidata_qid": "Q43259962"
+    },
+    {
+      "version_id": "ead2ee50-a45c-42c5-9c5a-4a7d39562e32",
+      "work_id": "828e6bae-c67c-4357-8379-3ad2fdffd5a9",
+      "title": "Bigil",
+      "language": "ta",
+      "year": 2019,
+      "wikidata_qid": "Q59725832"
+    },
+    {
+      "version_id": "3e0c4ba5-aa64-4082-80c7-ea983747e580",
+      "work_id": "828e6bae-c67c-4357-8379-3ad2fdffd5a9",
+      "title": "Whistle",
+      "language": "te",
+      "year": 2019,
+      "wikidata_qid": null
+    },
+    {
+      "version_id": "5adb4906-b90e-4367-96ae-a055dab72c72",
+      "work_id": "c32ec58e-d29a-41b7-a4c6-fe3f93ff5e69",
+      "title": "Bodyguard",
+      "language": "ml",
+      "year": 2010,
+      "wikidata_qid": "Q4937000"
+    },
+    {
+      "version_id": "74531232-36bc-4f78-8753-a3c66a4614c2",
+      "work_id": "c32ec58e-d29a-41b7-a4c6-fe3f93ff5e69",
+      "title": "Bodyguard",
+      "language": "hi",
+      "year": 2011,
+      "wikidata_qid": "Q312951"
+    },
+    {
+      "version_id": "b04504dc-6f88-4186-b698-4155a91de4c1",
+      "work_id": "c32ec58e-d29a-41b7-a4c6-fe3f93ff5e69",
+      "title": "Kaavalan",
+      "language": "ta",
+      "year": 2011,
+      "wikidata_qid": "Q6343662"
+    },
+    {
+      "version_id": "4e864197-2bc2-49b1-9673-09abf6cf290f",
+      "work_id": "c32ec58e-d29a-41b7-a4c6-fe3f93ff5e69",
+      "title": "Bodyguard",
+      "language": "te",
+      "year": 2012,
+      "wikidata_qid": "Q4937001"
+    },
+    {
+      "version_id": "41355c4a-1ac1-474e-8c8d-9c20b110c9b3",
+      "work_id": "923f8e38-dd09-47fa-bf90-d7adc8d26a94",
+      "title": "Don",
+      "language": "hi",
+      "year": 1978,
+      "wikidata_qid": "Q1238847"
+    },
+    {
+      "version_id": "16730548-ca98-4929-be9a-29ee7ad3534b",
+      "work_id": "923f8e38-dd09-47fa-bf90-d7adc8d26a94",
+      "title": "Don",
+      "language": "hi",
+      "year": 2006,
+      "wikidata_qid": "Q662436"
+    },
+    {
+      "version_id": "14aec4c2-b152-4b07-96c0-687855b15cf4",
+      "work_id": "9d879b7d-839a-4b88-8e9c-a6b1f3a33191",
+      "title": "Don",
+      "language": "ta",
+      "year": 2022,
+      "wikidata_qid": "Q105474617"
+    },
+    {
+      "version_id": "6817ce87-70ae-4072-9593-f383d4004baa",
+      "work_id": "fca2fc86-feb7-482c-afa5-c5ecb75ac7ab",
+      "title": "Kanchana",
+      "language": "ta",
+      "year": 2011,
+      "wikidata_qid": "Q6936071"
+    },
+    {
+      "version_id": "fdb93add-82c1-4cc8-b091-b08a01f6e1c6",
+      "work_id": "fca2fc86-feb7-482c-afa5-c5ecb75ac7ab",
+      "title": "Laxmii",
+      "language": "hi",
+      "year": 2020,
+      "wikidata_qid": "Q63349731"
+    },
+    {
+      "version_id": "9b064b1f-8a6a-493e-9fe0-c6b46a7e4ae0",
+      "work_id": "ce082e6a-3a3a-459a-aa82-def2a77ffe5f",
+      "title": "Kanchana 2",
+      "language": "ta",
+      "year": 2015,
+      "wikidata_qid": "Q6936064"
+    },
+    {
+      "version_id": "0756450d-5454-4918-a396-f24a9db79b9d",
+      "work_id": "22f5ef4f-6b8d-468e-bc88-7cba9615a7e6",
+      "title": "Mersal",
+      "language": "ta",
+      "year": 2017,
+      "wikidata_qid": "Q30612603"
+    },
+    {
+      "version_id": "e6bf2788-5663-4d91-a0b7-a2b818ed6e8e",
+      "work_id": "22f5ef4f-6b8d-468e-bc88-7cba9615a7e6",
+      "title": "Adirindhi",
+      "language": "te",
+      "year": 2017,
+      "wikidata_qid": null
+    },
+    {
+      "version_id": "fcf6b0e0-0e5f-4698-a580-4feda82d8cb6",
+      "work_id": "0435fb49-927b-4d56-8ead-a7a4bada7a78",
+      "title": "Muni",
+      "language": "ta",
+      "year": 2007,
+      "wikidata_qid": "Q6936063"
+    },
+    {
+      "version_id": "104b128d-0986-429e-8bf8-93ad90bb6631",
+      "work_id": "4a41a211-8535-4805-97df-c2687d072f67",
+      "title": "Pokiri",
+      "language": "te",
+      "year": 2006,
+      "wikidata_qid": "Q3630260"
+    },
+    {
+      "version_id": "fe731bf6-9c12-439d-b666-89d00ecaab3d",
+      "work_id": "4a41a211-8535-4805-97df-c2687d072f67",
+      "title": "Pokkiri",
+      "language": "ta",
+      "year": 2007,
+      "wikidata_qid": "Q1796783"
+    },
+    {
+      "version_id": "6ff8e87d-4958-4b0d-8ab7-ac7703f5f1f8",
+      "work_id": "4a41a211-8535-4805-97df-c2687d072f67",
+      "title": "Wanted",
+      "language": "hi",
+      "year": 2009,
+      "wikidata_qid": "Q2622347"
+    },
+    {
+      "version_id": "4e25b577-2d8d-472b-a0cd-e94edbab8545",
+      "work_id": "2163077f-1962-4dac-8223-6a007d6f138a",
+      "title": "Premam",
+      "language": "ml",
+      "year": 2015,
+      "wikidata_qid": "Q19895421"
+    },
+    {
+      "version_id": "16e1a708-71bd-4c4d-9931-3a372750e939",
+      "work_id": "2163077f-1962-4dac-8223-6a007d6f138a",
+      "title": "Premam",
+      "language": "te",
+      "year": 2016,
+      "wikidata_qid": "Q23013780"
+    },
+    {
+      "version_id": "5aba2743-6440-4f32-9d28-c5fed6322556",
+      "work_id": "e06cc8ba-349c-42e0-ba49-4458404a3746",
+      "title": "U Turn",
+      "language": "kn",
+      "year": 2016,
+      "wikidata_qid": "Q25217692"
+    },
+    {
+      "version_id": "0bc81c01-cfe5-4ad8-97fe-388e5a6cc16f",
+      "work_id": "e06cc8ba-349c-42e0-ba49-4458404a3746",
+      "title": "U Turn",
+      "language": "ta",
+      "year": 2018,
+      "wikidata_qid": null
+    },
+    {
+      "version_id": "8b09ae44-65da-4398-bd05-88ef47745997",
+      "work_id": "e06cc8ba-349c-42e0-ba49-4458404a3746",
+      "title": "U Turn",
+      "language": "te",
+      "year": 2018,
+      "wikidata_qid": "Q56275026"
+    },
+    {
+      "version_id": "87966c37-370c-4509-981e-1a9540036aac",
+      "work_id": "e06cc8ba-349c-42e0-ba49-4458404a3746",
+      "title": "U-Turn",
+      "language": "hi",
+      "year": 2023,
+      "wikidata_qid": "Q117842616"
+    },
+    {
+      "version_id": "cd9aa795-adc4-4b6d-a7aa-5ebd1a25da17",
+      "work_id": "021501db-9e1f-447b-a073-adb434cca75f",
+      "title": "Vikramarkudu",
+      "language": "te",
+      "year": 2006,
+      "wikidata_qid": "Q7929598"
+    },
+    {
+      "version_id": "3847dba8-632e-423b-bb9d-efc84404607b",
+      "work_id": "021501db-9e1f-447b-a073-adb434cca75f",
+      "title": "Siruthai",
+      "language": "ta",
+      "year": 2011,
+      "wikidata_qid": "Q3530982"
+    },
+    {
+      "version_id": "ef6031fc-ca35-4541-858b-9be3e313ef97",
+      "work_id": "021501db-9e1f-447b-a073-adb434cca75f",
+      "title": "Rowdy Rathore",
+      "language": "hi",
+      "year": 2012,
+      "wikidata_qid": "Q7371867"
+    }
+  ]
+}

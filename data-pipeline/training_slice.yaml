@@ -1,0 +1,450 @@
+# Sutradhar P4 TRAINING SLICE (P4_SPEC §3 D3, DEC-P4-3) — entity-disjoint franchises the
+# QLoRA training data is scaffolded from. NEVER a golden fixture source; NEVER added to the
+# P2 chunk index or any retrieval fixture (Table 1 stays byte-identical).
+#
+# Structural exclusion rule (test-enforced BEFORE ingestion by
+# tests/test_ft_training_slice_disjoint.py): every title below is outside the
+# rapidfuzz-0.80 radius of (a) all golden-slice titles, (b) all GS-02 negative surfaces,
+# (c) all held-out negative titles (evals/negatives/heldout.yaml), and (d) the frozen
+# exemplar-franchise titles (Ghajini, Okkadu, Ghilli, Interstellar).
+#
+# Ground truth curated 2026-07-03: every QID verified against live Wikidata
+# (wbsearchentities + wbgetentities; evidence = en label, P31=Q11424, P577 year, P364
+# original language; structured P144 edges noted per row). Every row remains a CLAIM
+# re-verified during ingestion; disagreements go to the conflicts queue.
+#
+# Modelling notes (same conventions as seed_slice.yaml):
+# - Dubs (Aparichitudu, Adirindhi, Whistle) have NO separate Wikidata items — version rows
+#   without QIDs (Baahubali convention); their titles verify via TMDB/IMDb AKA rows.
+# - Bilingual originals/remakes are ONE Wikidata item but TWO version rows; the QID sits on
+#   the primary row (U Turn 2018 te carries Q56275026, ta carries none).
+# - `backlog` = reported-but-unconfirmed versions; no QIDs, no denominators, never invented.
+
+meta:
+  verified_at: "2026-07-03"
+  description: >
+    P4 training slice (D3): ~11 non-golden remake/dub/sequel/collision franchises for
+    QLoRA training-data scaffolds. Entity-disjoint from every golden fixture, negative
+    surface, and prompt exemplar (test-enforced). Remake chains (Vikramarkudu, Pokiri,
+    Bodyguard, Arjun Reddy, U Turn, Premam, Ala Vaikunthapurramloo), dub tracks (Anniyan,
+    Mersal, Bigil), a sequel ladder (Muni/Kanchana), and a same-title collision pair
+    (Don 1978/2006 vs Don 2022) for disambiguate scaffolds.
+
+works:
+  # --- Vikramarkudu chain (te original -> ta + hi remakes; P144 present on both) --------
+  vikramarkudu:
+    franchise: vikramarkudu
+    work_type: film
+    primary_title: Vikramarkudu
+    original_language: te
+    first_release_year: 2006
+    versions:
+      vikramarkudu_te:
+        title: Vikramarkudu
+        language: te
+        release_year: 2006
+        country: indian
+        is_original: true
+        wikidata_qid: Q7929598
+      siruthai_ta:
+        title: Siruthai
+        language: ta
+        release_year: 2011
+        country: indian
+        wikidata_qid: Q3530982
+        relationship: { type: is_remake_of, of: vikramarkudu_te }
+        note: P144 -> Q7929598 present on Wikidata (2026-07-03)
+      rowdy_rathore_hi:
+        title: Rowdy Rathore
+        language: hi
+        release_year: 2012
+        country: indian
+        wikidata_qid: Q7371867
+        relationship: { type: is_remake_of, of: vikramarkudu_te }
+        note: P144 -> Q7929598 present on Wikidata (2026-07-03)
+
+  # --- Anniyan dub track (remake-vs-dub contrast: dubs, not remakes) --------------------
+  anniyan:
+    franchise: anniyan
+    work_type: film
+    primary_title: Anniyan
+    original_language: ta
+    first_release_year: 2005
+    versions:
+      anniyan_ta:
+        title: Anniyan
+        language: ta
+        release_year: 2005
+        country: indian
+        is_original: true
+        wikidata_qid: Q2851751
+      aparichitudu_te:
+        title: Aparichitudu
+        language: te
+        release_year: 2005
+        country: indian
+        relationship: { type: is_official_dub_of, of: anniyan_ta }
+        note: >
+          no separate Wikidata item (dub of Q2851751) — title verifies via TMDB
+          translations / IMDb title.akas rows during ingestion
+
+  # --- Muni/Kanchana sequel ladder + Hindi remake of Kanchana ---------------------------
+  muni:
+    franchise: muni_kanchana
+    work_type: film
+    primary_title: Muni
+    original_language: ta
+    first_release_year: 2007
+    versions:
+      muni_ta:
+        title: Muni
+        language: ta
+        release_year: 2007
+        country: indian
+        is_original: true
+        wikidata_qid: Q6936063
+  kanchana:
+    franchise: muni_kanchana
+    work_type: film
+    primary_title: Kanchana
+    original_language: ta
+    first_release_year: 2011
+    is_sequel_of: muni
+    versions:
+      kanchana_ta:
+        title: Kanchana
+        language: ta
+        release_year: 2011
+        country: indian
+        is_original: true
+        wikidata_qid: Q6936071
+      laxmii_hi:
+        title: Laxmii
+        language: hi
+        release_year: 2020
+        country: indian
+        wikidata_qid: Q63349731
+        relationship: { type: is_remake_of, of: kanchana_ta }
+        note: P144 -> Q6936071 present on Wikidata (2026-07-03)
+  kanchana_2:
+    franchise: muni_kanchana
+    work_type: film
+    primary_title: Kanchana 2
+    original_language: ta
+    first_release_year: 2015
+    is_sequel_of: kanchana
+    versions:
+      kanchana_2_ta:
+        title: Kanchana 2
+        language: ta
+        release_year: 2015
+        country: indian
+        is_original: true
+        wikidata_qid: Q6936064
+
+  # --- Pokiri chain (te original -> ta + hi remakes) ------------------------------------
+  pokiri:
+    franchise: pokiri
+    work_type: film
+    primary_title: Pokiri
+    original_language: te
+    first_release_year: 2006
+    versions:
+      pokiri_te:
+        title: Pokiri
+        language: te
+        release_year: 2006
+        country: indian
+        is_original: true
+        wikidata_qid: Q3630260
+      pokkiri_ta:
+        title: Pokkiri
+        language: ta
+        release_year: 2007
+        country: indian
+        wikidata_qid: Q1796783
+        relationship: { type: is_remake_of, of: pokiri_te }
+        note: no P144 edge on Wikidata as of 2026-07-03 — extraction-layer lift candidate
+      wanted_hi:
+        title: Wanted
+        language: hi
+        release_year: 2009
+        country: indian
+        wikidata_qid: Q2622347
+        relationship: { type: is_remake_of, of: pokiri_te }
+        note: no P144 edge on Wikidata as of 2026-07-03 — extraction-layer lift candidate
+
+  # --- Bodyguard chain (ml original -> ta/hi/te remakes; all three P144 present) --------
+  bodyguard:
+    franchise: bodyguard
+    work_type: film
+    primary_title: Bodyguard
+    original_language: ml
+    first_release_year: 2010
+    versions:
+      bodyguard_ml:
+        title: Bodyguard
+        language: ml
+        release_year: 2010
+        country: indian
+        is_original: true
+        wikidata_qid: Q4937000
+      kaavalan_ta:
+        title: Kaavalan
+        language: ta
+        release_year: 2011
+        country: indian
+        wikidata_qid: Q6343662
+        relationship: { type: is_remake_of, of: bodyguard_ml }
+        note: P144 -> Q4937000 present on Wikidata (2026-07-03)
+      bodyguard_hi:
+        title: Bodyguard
+        language: hi
+        release_year: 2011
+        country: indian
+        wikidata_qid: Q312951
+        relationship: { type: is_remake_of, of: bodyguard_ml }
+        note: P144 -> Q4937000 present on Wikidata (2026-07-03)
+      bodyguard_te:
+        title: Bodyguard
+        language: te
+        release_year: 2012
+        country: indian
+        wikidata_qid: Q4937001
+        relationship: { type: is_remake_of, of: bodyguard_ml }
+        note: P144 -> Q4937000 present on Wikidata (2026-07-03)
+
+  # --- Arjun Reddy chain (te original -> hi + ta remakes) -------------------------------
+  arjun_reddy:
+    franchise: arjun_reddy
+    work_type: film
+    primary_title: Arjun Reddy
+    original_language: te
+    first_release_year: 2017
+    versions:
+      arjun_reddy_te:
+        title: Arjun Reddy
+        language: te
+        release_year: 2017
+        country: indian
+        is_original: true
+        wikidata_qid: Q28419404
+      kabir_singh_hi:
+        title: Kabir Singh
+        language: hi
+        release_year: 2019
+        country: indian
+        wikidata_qid: Q58411760
+        relationship: { type: is_remake_of, of: arjun_reddy_te }
+        note: no P144 edge on Wikidata as of 2026-07-03 — extraction-layer lift candidate
+      adithya_varma_ta:
+        title: Adithya Varma
+        language: ta
+        release_year: 2019
+        country: indian
+        wikidata_qid: Q43259962
+        relationship: { type: is_remake_of, of: arjun_reddy_te }
+        note: >
+          Wikidata P577 says 2018 (stale: item predates the reshot release; the released
+          film is 2019, dir. Gireesaaya) — conflicts-queue candidate at ingestion; year
+          claim here follows the released film
+
+  # --- U Turn chain (kn original -> te/ta bilingual + hi remakes; P144 present) ---------
+  u_turn:
+    franchise: u_turn
+    work_type: film
+    primary_title: U Turn
+    original_language: kn
+    first_release_year: 2016
+    versions:
+      u_turn_kn:
+        title: U Turn
+        language: kn
+        release_year: 2016
+        country: indian
+        is_original: true
+        wikidata_qid: Q25217692
+      u_turn_te:
+        title: U Turn
+        language: te
+        release_year: 2018
+        country: indian
+        wikidata_qid: Q56275026
+        relationship: { type: is_remake_of, of: u_turn_kn }
+        note: >
+          bilingual te/ta remake is ONE Wikidata item (Q56275026, P144 -> Q25217692);
+          QID sits on this primary te row (Baahubali convention)
+      u_turn_ta:
+        title: U Turn
+        language: ta
+        release_year: 2018
+        country: indian
+        relationship: { type: is_remake_of, of: u_turn_kn }
+        note: ta half of the bilingual shoot — no separate QID (see u_turn_te)
+      u_turn_hi:
+        title: U-Turn
+        language: hi
+        release_year: 2023
+        country: indian
+        wikidata_qid: Q117842616
+        relationship: { type: is_remake_of, of: u_turn_kn }
+        note: P144 -> Q25217692 present on Wikidata (2026-07-03)
+
+  # --- Mersal dub track (ta original + te dub under a DIFFERENT title) ------------------
+  mersal:
+    franchise: mersal
+    work_type: film
+    primary_title: Mersal
+    original_language: ta
+    first_release_year: 2017
+    versions:
+      mersal_ta:
+        title: Mersal
+        language: ta
+        release_year: 2017
+        country: indian
+        is_original: true
+        wikidata_qid: Q30612603
+      adirindhi_te:
+        title: Adirindhi
+        language: te
+        release_year: 2017
+        country: indian
+        relationship: { type: is_official_dub_of, of: mersal_ta }
+        note: >
+          te dub released under a different title; no separate Wikidata item — verifies
+          via TMDB translations / IMDb title.akas rows during ingestion
+
+  # --- Bigil dub track (ta original + te dub under a DIFFERENT title) -------------------
+  bigil:
+    franchise: bigil
+    work_type: film
+    primary_title: Bigil
+    original_language: ta
+    first_release_year: 2019
+    versions:
+      bigil_ta:
+        title: Bigil
+        language: ta
+        release_year: 2019
+        country: indian
+        is_original: true
+        wikidata_qid: Q59725832
+      whistle_te:
+        title: Whistle
+        language: te
+        release_year: 2019
+        country: indian
+        relationship: { type: is_official_dub_of, of: bigil_ta }
+        note: >
+          te dub released under a different title; no separate Wikidata item — verifies
+          via TMDB translations / IMDb title.akas rows during ingestion
+
+  # --- Premam pair (ml original -> te remake, SAME title across languages) --------------
+  premam:
+    franchise: premam
+    work_type: film
+    primary_title: Premam
+    original_language: ml
+    first_release_year: 2015
+    versions:
+      premam_ml:
+        title: Premam
+        language: ml
+        release_year: 2015
+        country: indian
+        is_original: true
+        wikidata_qid: Q19895421
+      premam_te:
+        title: Premam
+        language: te
+        release_year: 2016
+        country: indian
+        wikidata_qid: Q23013780
+        relationship: { type: is_remake_of, of: premam_ml }
+        note: no P144 edge on Wikidata as of 2026-07-03 — extraction-layer lift candidate
+
+  # --- Ala Vaikunthapurramloo -> Shehzada (te original -> hi remake) --------------------
+  ala_vaikunthapurramloo:
+    franchise: ala_vaikunthapurramloo
+    work_type: film
+    primary_title: Ala Vaikunthapurramloo
+    original_language: te
+    first_release_year: 2020
+    versions:
+      ala_vaikunthapurramloo_te:
+        title: Ala Vaikunthapurramloo
+        language: te
+        release_year: 2020
+        country: indian
+        is_original: true
+        wikidata_qid: Q65057760
+      shehzada_hi:
+        title: Shehzada
+        language: hi
+        release_year: 2023
+        country: indian
+        wikidata_qid: Q109284953
+        relationship: { type: is_remake_of, of: ala_vaikunthapurramloo_te }
+        note: no P144 edge on Wikidata as of 2026-07-03 — extraction-layer lift candidate
+
+  # --- Don collision pair (disambiguate scaffolds): two UNRELATED works, one title ------
+  don_1978:
+    franchise: don_hi
+    work_type: film
+    primary_title: Don
+    original_language: hi
+    first_release_year: 1978
+    versions:
+      don_hi_1978:
+        title: Don
+        language: hi
+        release_year: 1978
+        country: indian
+        is_original: true
+        wikidata_qid: Q1238847
+      don_hi_2006:
+        title: Don
+        language: hi
+        release_year: 2006
+        country: indian
+        wikidata_qid: Q662436
+        relationship: { type: is_remake_of, of: don_hi_1978 }
+        note: P144 -> Q1238847 present on Wikidata (2026-07-03)
+  don_2022:
+    franchise: don_ta
+    work_type: film
+    primary_title: Don
+    original_language: ta
+    first_release_year: 2022
+    versions:
+      don_ta_2022:
+        title: Don
+        language: ta
+        release_year: 2022
+        country: indian
+        is_original: true
+        wikidata_qid: Q105474617
+        note: >
+          unrelated Tamil campus film (dir. Cibi Chakkravarthi) — the collision arm;
+          Wikidata item lacks P577 as of 2026-07-03 (year from release coverage) —
+          conflicts-queue candidate at ingestion
+
+backlog:
+  - name: Aparichit (Hindi dub of Anniyan)
+    reason: >
+      reported Hindi dub; no clean structured record found 2026-07-03 (no Wikidata item,
+      TMDB/IMDb AKA coverage unconfirmed) — backlog, not a version
+  - name: Bachchan (Bengali remake of Vikramarkudu)
+    reason: >
+      reported 2014 Bengali remake; QID/edge not verified against live Wikidata
+      2026-07-03 — backlog pending a structured record
+  - name: Bikram Singha The Lion Is Back (Bengali remake of Vikramarkudu)
+    reason: >
+      discovered via P144 backlink (Q4907444) during the 2026-07-03 spine ingest;
+      user-reviewed 2026-07-03 — backlog only (§7 Q1 convention), training data does
+      not need maximal coverage
+  - name: Bodyguard (Kannada remake of Bodyguard ml)
+    reason: >
+      discovered via P144 backlink (Q4936999) during the 2026-07-03 spine ingest;
+      user-reviewed 2026-07-03 — backlog only (§7 Q1 convention)

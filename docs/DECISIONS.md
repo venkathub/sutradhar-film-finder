@@ -984,3 +984,217 @@ reasoning_effort low, guided JSON (plus a tested plain-retry fallback). Phi-4-14
 the frontier escalation were NOT needed. Methodology note: labels were produced by the project
 owner with an assistant-flagged single-item review correction; report + verdicts committed at
 `evals/judge_validation/report.json`.
+
+---
+
+## DEC-P4-1 — Synthetic-data teacher: Sarvam-M 24B self-hosted, 8-bit weight-only on the ephemeral GPU (2026-07-03)
+
+**Status:** Accepted (P4 grooming; user-confirmed — spec `docs/phases/P4_SPEC.md` §3 D1 / §7 Q1).
+Finalizes the DEC-0001 disjunction ("Sarvam-M 24B *or* a frontier API") in Sarvam-M's favour.
+
+**Options.** (A) **Sarvam-M 24B self-hosted** in one ephemeral session — on the A100 40 GB
+(Ampere: no native FP8, so the quantized path is **W8A16 weight-only FP8 via vLLM Marlin
+kernels**, ~24 GB weights + KV headroom); recorded plan-B SKU = RTX 6000 Ada 48 GB (~$0.99/hr,
+native FP8, DEC-0003's named value alternative). (B) Frontier API (pinned dated version).
+(C) No teacher — templated scaffold surfaces only.
+
+**Decision.** **A.** The model DEC-0001 named for exactly this job (+86% romanized-Indic — the
+code-mix register is its documented strength); fully self-hosted, zero external keys (the
+DEC-P3-1 posture); **Apache 2.0 → teacher outputs unencumbered**, so dataset + adapter publish
+cleanly. B is the **recorded escalation only** — trigger: validator rejection rate > 30% or a
+failed code-mix quality spot-check after one prompt revision; before any frontier use, the
+outputs-ToS row lands in `LICENSING.md` (frontier ToS restrict using outputs to develop
+competing models, and access is revocable — P4_SPEC §8 refs). C rejected: templated code-mix is
+the shallow register QLoRA would overfit to; teacher data quality is the single biggest lever on
+R2 (DEC-0001). Client is OpenAI-compatible + env-driven (`TEACHER_BASE_URL/MODEL/API_KEY`) —
+A↔B is config, not code (DEC-P0-4 contract). Cost ≈ 1–2 h ≈ $1–2.
+
+## DEC-P4-2 — Dataset construction: programmatic scaffolds + teacher surface-realization only (2026-07-03)
+
+**Status:** Accepted (P4 grooming; user-confirmed — P4_SPEC §3 D2).
+
+**Options.** (A) **Deterministic (seeded) scaffolds from gate-visible graph records** — tool-call
+sequences, real tool results, labelled answers — with the teacher rewriting **only** user
+utterances + assistant prose around **placeholder-locked entities**. (B) Teacher free-generates
+whole conversations, post-hoc filtered. (C) Paraphrase-augment the 12 golden fixtures.
+
+**Decision.** **A.** Grounding, v0 tool-call validity, label exactness, and the frozen formatting
+contracts (INTENT preamble, bold-title) hold **by construction** — the teacher physically cannot
+invent a film or a tool; a diff guard rejects any sample whose locked spans changed. Same
+verify-then-keep posture as APIGen/xLAM's three-stage verification and ToolACE (P4_SPEC §8),
+applied at construction time instead of filter time. B makes grounding a filter (the exact
+failure class the GS-02 gate punishes) and labels an extraction problem; C leaks the eval
+surface. Teacher raw outputs cached as a versioned artifact; rejection rate reported on the
+dataset card.
+
+## DEC-P4-3 — Training data: ~1,500–2,500 conversations on an entity-disjoint training slice, structurally excluded from every negative surface (2026-07-03)
+
+**Status:** Accepted (P4 grooming; user-confirmed, no franchise changes — P4_SPEC §3 D3 / §7 Q2).
+
+**Context (the Rev-2 finding that shaped this).** The negative surfaces contain real,
+deliberately-uncatalogued films (GS-02: Kaithi, Salaar, Pushpa, Inception; held-out negatives:
+Master, Pushpa: The Rise, Jailer, Dangal, Kantara, Andhadhun, Tumbbad, Kumbalangi Nights, Super
+Deluxe, Ratsasan, Interstellar, Parasite) whose absence from the title index at the
+rapidfuzz-0.80 radius is **test-enforced** (`test_negatives_absent.py`) and baked into the θ
+calibration (DEC-P2-5). A draft candidate list violated this four ways and was corrected.
+
+**Decision.** ~10–15 **non-golden** franchises ingested via the existing P1 pipeline + human
+gate (gate-visible HIGH/MEDIUM suffices — golden-grade not required), yielding ~1,500–2,500
+conversations (95/5 train/val; LIMA/LIMIT evidence: ~1k curated conversations suffice for
+behaviour/format learning — more buys register overfit, not capability). **Structural exclusion
+rule (test-enforced by `test_ft_training_slice_disjoint`, run BEFORE ingestion):** no training
+franchise may contain any film within the rapidfuzz-0.80 radius of (a) any golden fixture incl.
+GS-02 negatives, (b) any held-out negative title, (c) the frozen exemplar franchises (Ghajini,
+Okkadu/Ghilli, Interstellar — prompt surface for BOTH Table 2 columns). Candidate families
+(verified at ingestion): Vikramarkudu→Rowdy Rathore, Anniyan+Aparichitudu, Kanchana/Muni series
+(Manichitrathazhu lineage excluded — golden), Pokiri→Wanted, Bodyguard (ml→hi), Arjun
+Reddy→Kabir Singh, U-Turn, Mersal/Bigil-class dub tracks, one collision pair, 2–3 NO_MATCH decoy
+themes (also radius-checked). **Consequence:** entity disjointness turns the before/after into a
+behaviour-transfer claim, not memorization; decontamination scope = golden ∪ exemplars ∪ all
+negatives, reported on the dataset card.
+
+**Execution note (2026-07-03, P4 task 3 — ingested).** Final membership: **11 franchises / 15
+works / 34 gate-visible versions** (`data-pipeline/training_slice.yaml`; every QID verified live
+against Wikidata P31/P577/P364 before commit): Vikramarkudu→Siruthai+Rowdy Rathore,
+Anniyan+Aparichitudu(dub), Muni→Kanchana→Kanchana 2 (sequel ladder)+Laxmii(remake),
+Pokiri→Pokkiri+Wanted, Bodyguard ml→ta/hi/te, Arjun Reddy→Kabir Singh+Adithya Varma, U Turn
+kn→te/ta(bilingual)+hi, Mersal+Adirindhi(dub), Bigil+Whistle(dub), Premam ml→te,
+Ala Vaikunthapurramloo→Shehzada, and the Don 1978/2006-vs-Don 2022 (ta) collision pair; 3
+NO_MATCH decoy themes in `training_decoys.yaml`. Exclusion test green BEFORE ingestion; closest
+protected approach 0.667 (Vikramarkudu~Vikram), threshold 0.80. Ingestion via the existing chain
+with a behaviour-preserving `--slice` option on the slice-driven CLIs + dedicated
+`data/raw/*-training` snapshot roots (`make ingest-training`) so golden `--offline` replays stay
+untouched. **Pipeline fix exposed by the new data shape:** the QID-less version-upsert fallback
+keyed on `(work_id, language)` and merged the first same-language remake (Don hi-1978→hi-2006)
+into a self-edge; re-keyed to `(work_id, language, release_year)` (regression-tested in
+`test_ingest_spine.py`; dub-track idempotency preserved). One conflict opened and human-resolved
+(Adithya Varma year: seed+TMDB=2019 vs stale Wikidata P577=2018 → 2019; new
+`data-pipeline/resolve_conflicts.py` applies the audited `conflict_resolutions.yaml` — P1 shipped
+zero conflicts so no applier existed). Discovered P144 backlinks (Bikram Singha Q4907444,
+kn Bodyguard Q4936999) → backlog only, user-reviewed. Post-ingestion: graph = 30 works / 65
+versions / 34 edges; full integration suite green incl. `test_negatives_absent` over the grown
+index; Table 1 pinned run untouched. Entity fixture list committed:
+`finetune/training_slice_entities.json` (emitted by `finetune/export_training_entities.py` from
+gate views only).
+
+## DEC-P4-4 — QLoRA configuration: r=16, α=32, all-linear targets, NF4 (2026-07-03)
+
+**Status:** Accepted (P4 grooming; user-confirmed — P4_SPEC §3 D4). Values live in the hashed
+`TrainConfig`; any execution-time change is a recorded amendment, never silent tuning.
+
+**Decision.** r=16, α=32 (α = 2r heuristic), dropout 0.05, **targets = all linear projections**
+(attn q/k/v/o + MLP gate/up/down — the QLoRA-paper finding: all-linear matters more than rank;
+attn-only is the documented under-performer), NF4 double-quant, bf16 compute, LR 2e-4 cosine,
+2–3 epochs (val-loss checkpoint selection), max_seq 4096, packing off. ~10–12 GB peak (DEC-0003
+sizing) on the A100 40 GB; adapter ~50–100 MB. Rejected: r=8/attn-only (underperforms, savings
+irrelevant at 40 GB); r=64 (no evidence it pays at 4B on ~2k conversations; higher overfit risk).
+Sources: QLoRA paper practice, Lightning-AI LoRA-insights series, Unsloth hyperparameter guide
+(P4_SPEC §8).
+
+## DEC-P4-5 — Training stack: plain TRL SFTTrainer + PEFT + bitsandbytes; liger OFF (2026-07-03)
+
+**Status:** Accepted (P4 grooming; user-confirmed — P4_SPEC §3 D5).
+
+**Decision.** Plain **TRL `SFTTrainer` + PEFT + bitsandbytes**, exact versions pinned in the GPU
+startup script (authoritative-pins-in-script pattern, DEC-P2-7 precedent; laptop lockfile stays
+neural-free). TRL ≥ 0.19 natively supports our exact data shape (`tools` column through the chat
+template; `assistant_only_loss=True` via chat-template assistant masks). **Two research-pass
+guardrails:** (1) `use_liger_kernel` pinned **OFF** — known TRL bug (issue #3781) silently
+discards assistant masks under liger, i.e. loss over the whole sequence with no error;
+(2) masking is **test-asserted on rendered token/mask arrays** (`test_ft_render_masking`), never
+assumed from config. Rejected: Unsloth (a runtime patching layer over TRL/transformers trainer
+classes — a moving layer under the §6.6 "QLoRA numerics repeat" promise; kept as the recorded
+fallback ONLY on a measured window overrun threatening the DEC-0003 envelope); Axolotl (config
+surface without portfolio signal).
+
+## DEC-P4-6 — QLoRA benchmark prompt: identical full frozen prompt for the headline row; supplementary no-exemplar capture (2026-07-03)
+
+**Status:** Accepted (P4 grooming; user-confirmed per recommendation — P4_SPEC §3 D6 / §7 Q4).
+Resolves the exemplar question DEC-P3-4 explicitly deferred to P4.
+
+**Decision.** The headline Table 2 QLoRA row is captured under the **byte-identical frozen
+prompt bundle** (`prompt_hash 78215ccc…` — system + taxonomy + 3 exemplars): one variable
+changes between the rows (the adapter), immune to the "you just changed the prompt" critique.
+A **supplementary no-exemplar capture** (~15 min marginal in the same window) is recorded in the
+artifact + a BENCHMARKS footnote quantifying prompt-token savings — the evidence that the
+adapter internalizes the exemplars, and the intended P5 serving config if the adapter is kept.
+Rejected: no-exemplar headline (two variables, prompt_hash differs across rows of one table);
+skipping the supplementary capture (loses cheap, high-signal internalization evidence).
+
+## DEC-P4-7 — Dataset & adapter hosting: HF Hub with cards; dataset private-first (2026-07-03)
+
+**Status:** Accepted (P4 grooming; user-confirmed — P4_SPEC §3 D7 / §7 Q5).
+
+**Decision.** Adapter → **`sutradhar-gemma4-e4b-qlora-v1`** (public at publish time; registered
+in the MLflow registry, DEC-P3-2). Dataset → **`sutradhar-ft-v1`**, **PRIVATE-first**: the
+IMDb-derived AKA titles in the graph and the teacher provenance are reviewed against
+`LICENSING.md` before any public flip. In-repo for Tier-1 CI: the dataset card, sha256, and a
+~100-conversation committed sample (secret-free, fork-safe — DEC-P2-6 posture). Rejected: full
+JSONL in git (MBs of generated text; publication-before-review by construction); DVC (a whole
+tool for one artifact family HF Hub already covers — ROADMAP §6.1 names HF Datasets + cards).
+
+## DEC-P4-8 — Keep/cut verdict rule, frozen BEFORE the GPU window (2026-07-03)
+
+**Status:** Accepted (P4 grooming; margins frozen under the user's Q3 delegation — P4_SPEC §3
+D8 / §7 Q3). Implemented verbatim in `sutradhar.finetune.verdict` and committed before any
+training; the rule cannot move after the numbers exist.
+
+**Decision.** **KEEP the adapter iff** (i) strict improvement on **≥ 2 of the 3 primary
+metrics** {GS-07 code-mixed intent accuracy, GS-07 slot F1, GS-08 backtracking coherence};
+(ii) **at least one improving primary metric clears ≥ +0.05 absolute** — so judge/small-n noise
+alone can never trigger a keep at n = 12 fixtures; (iii) **no primary metric regresses**;
+(iv) **all guards hold**: GS-02 inventions = 0 on both columns (hard gate regardless of lift),
+emitted-call schema-validity ≥ base, tool-call sequence accuracy ≥ base. Anything else → **CUT**:
+the adapter is dropped, the finding + numbers recorded here, and P5 proceeds on the well-prompted
+base (the DEC-0001 pre-commitment — knowing when fine-tuning did NOT help is the senior signal).
+Rejected: strict improvement on every Table 2 metric (relevancy/latency aren't FT targets;
+near-ties at small n would cut a genuinely better adapter); any-single-metric (keeps adapters on
+noise). `make ft-verdict` computes the verdict as a pure function over the two committed
+generation-run artifacts — the 30-second demo path.
+
+## DEC-P4-9 — P4 execution record + THE VERDICT: adapter CUT under the frozen rule (2026-07-04)
+
+**Status:** Accepted (P4 tasks 12–13 execution; verdict computed by `make ft-verdict` over the
+committed window artifacts — the DEC-P4-8 rule as frozen on 2026-07-03, applied untouched).
+
+**Verdict: CUT.** Window `ftwin-ce6b6930` (one A100, both columns, byte-identical serving):
+clause (i) 1/3 primaries improved — GS-07 slot F1 0.364→0.600 (+0.236, margin met); clause (iii)
+2 regressions — GS-07 intent 0.400→0.200, GS-08 coherence 0.667→0.333; clause (iv) 3 guard
+failures — schema validity 1.00→0.94, GS-02 = 1 on BOTH columns (base invented "Pushpa", QLoRA
+fuzzy-attached "Salaar"). Meanwhile tool-call sequence accuracy rose 0.083→0.417: the adapter
+learned FORM (slots, tool discipline) and lost JUDGMENT (intent, coherence). Per the DEC-0001
+pre-commitment, **P5 proceeds on the well-prompted base**; a conditional, budget-gated second
+iteration is scoped as ROADMAP P4.1 (transcript-diagnosed data defects: unconditional
+ask-back-on-ambiguity teaching, missing title-abstention class, no loop-termination examples —
+with a pre-registered guard amendment because the base's own GS-02 failure makes a KEEP
+unreachable under the original wording).
+
+**Execution amendments (recorded, dated):**
+- **Model pin corrected:** `google/gemma-4-E4B` → **`google/gemma-4-E4B-it`**
+  (`@ fee6332c1abaafb…`). The bare base ships no chat template; the -it template natively renders
+  TOOL_SCHEMA tools + the gemma4 call format. Train-time derivative template
+  (`finetune/gemma4_train_template.jinja`) adds `{% generation %}` markers only — proven
+  byte-identical over all 96 sealed samples, 0 mask violations. (DEC-0001 follow-up discharged.)
+- **`VLLM_SERVE_FLAGS` env** (default `--enable-auto-tool-choice --tool-call-parser gemma4
+  --reasoning-parser gemma4`): tool-bearing requests 400 without the family parser — found live;
+  guarded thereafter by an ON-BOX tools self-test before any capture marker, plus a laptop
+  rc-guard (0 completed fixtures = abort, not a benchmark).
+- **Resumable window** (the load-bearing lesson): the adapter is checkpointed to the HF relay
+  immediately after training; `FT_RESUME_FROM` lets a fresh window skip training entirely. The
+  first window died at merged-serving AFTER a successful train (val loss 0.0502) — the adapter
+  was hand-rescued over SSH, and the publishing window resumed from it for ~$1.5 instead of a
+  full retrain. Also fixed en route: training pins resolved as a set (`uv pip compile`), isolated
+  train venv, LoRA targets resolved against the real module tree (Gemma4ClippableLinear → inner
+  `.linear`, multimodal towers excluded), multimodal merge (AutoModelForMultimodalLM +
+  KV-sharing tensor graft + processor packaging), `--served-model-name` for the merged column.
+- **Tier-1 pin + gate (user-confirmed):** committed `evals/generation_runs/PINNED_RUN` → the live
+  base column (env override intact); the GS-02 CI gate became RELATIVE (recomputed inventions ==
+  the pinned artifact's recorded value — no NEW hallucinations between windows) because the =0
+  target is unmet by both live columns; =0 remains a hard clause in `make ft-verdict` and the
+  absolute CI assertion returns when a pinned column achieves it.
+
+**Cost accounting (honest):** teacher session ≈ $7 (est. $2 — think-mode latency + disk/proxy
+failures) + window attempts ≈ $6.2 (8 serving/packaging failures incl. a duplicate-loop leak
+≈ $0.4, one clean resume window ≈ $1.5) ≈ **$13–14 total vs the ≈ $10 Q6 cap**. Every failure
+mode is now a committed fix + test; the resume design caps any future window failure at the
+cost of the phase it died in.
