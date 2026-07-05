@@ -176,6 +176,28 @@ validation (GS-07 calls + every recorded result) · **the Recall@10 ≥ 0.90 gat
 recomputation-vs-committed-metrics drift check (negative-control verified: a doctored
 ranking fails). GS-11 fuzzy titles held through the full pipeline.
 
+### Live serving sidecar (P5 task 4, DEC-P5-4)
+
+`serve_embed_rerank.py` — the P5 live-path counterpart of the P2 embed job: one
+self-contained FastAPI process on the GPU box (`:8001`, next to vLLM on `:8000`) serving
+**BGE-M3 dense+sparse** at `POST /v1/embeddings` (OpenAI shape + a per-item
+`"sparse": {token_id: weight}` extension) and **bge-reranker-v2-m3** at `POST /v1/rerank`
+(`{"results": [{"index", "relevance_score"}]}`, sigmoid scores — the DEC-P2-5 semantics),
+plus a root `GET /health` the `serve` session health-gates on.
+
+- **Why FlagEmbedding, not a second vLLM / Infinity process (DEC-P5-4):** the P2 index
+  and the calibrated θ were produced by FlagEmbedding's dense+sparse pair; only the same
+  library reproduces those lexical weights bit-for-bit. vLLM's pooling route is
+  dense-only ("extra weights" support is version-sensitive) and Infinity never shipped
+  BGE-M3 sparse — parity beats elegance.
+- **Contract locked laptop-side** (`tests/test_serve_embed_rerank_stub.py`, DEC-P2-7
+  pattern): the *live providers themselves* (`sutradhar.rag.providers.HttpEmbeddings` /
+  `HttpReranker`) round-trip against the app in-process with stub backends that are
+  asserted byte-compatible with `embed_and_score.py`'s stubs. A request naming the wrong
+  model id is a 400 (typed client error, never silent scoring drift).
+- Run: `python serve_embed_rerank.py --port 8001` (real; model ids from
+  `EMBED_MODEL`/`RERANK_MODEL` env or flags) · `--stub` = deterministic no-model mode.
+
 ## Reproduce from scratch (fresh clone + .env; GPU optional)
 
 ```
