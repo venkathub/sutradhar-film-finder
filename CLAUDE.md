@@ -39,8 +39,8 @@ and document why. Knowing when fine-tuning did NOT help is a senior signal, not 
 1. Chat UI — find-a-movie chat; shows all language versions with the original flagged; renders
    citations and a trace view.
 2. API layer (FastAPI) — orchestration, request/response guardrails, caching, and token/cost/
-   latency tracking. (Optional Java moat: the public gateway MAY be Spring Boot if I choose to
-   showcase Java; decide in P5 grooming, don't assume.)
+   latency tracking. (Java-moat question DECIDED in P5 grooming: FastAPI only, Spring Boot
+   gateway deliberately cut — DEC-P5-1, 2026-07-05.)
 3. RAG Engine — query normalization + transliteration, hybrid retrieval (BGE-M3 dense + sparse),
    cross-encoder reranking (bge-reranker-v2-m3), grounding and source attribution, prompt-
    injection guardrails.
