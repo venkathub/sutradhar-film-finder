@@ -1281,6 +1281,17 @@ make the agent *do* anything or *assert* an ungrounded film.
 **Consequences.** `sutradhar.serving.guardrails` + `sutradhar.evals.injection` + fixtures;
 the offline corpus scan report; a "Serving & guardrails" evidence section in `BENCHMARKS.md`.
 
+**Implementation note (2026-07-05, P5 task 8).** Part 2 is realized as a **separate serving
+lock**, not an in-place regeneration: `evals/prompts/prompts.serving.lock.json` pins the v1.1
+bundle (the three untouched v1.0 files + `spotlighting_appendix_v1_1.md`,
+`prompt_hash 98b3ece1…`), while `prompts.lock.json` stays byte-identical at `78215ccc…`.
+Reason: the Tier-1 comparability gate
+(`test_golden_generation_regressions.py::test_stamp_pins_current_prompt_and_schema`) asserts the
+pinned Table 2 artifact's hash equals the *current* v1.0 lock — regenerating in place would have
+broken the very pin Q2 promised to preserve. `load_serving_prompt_artifacts()` verifies BOTH
+locks (the appendix extends the frozen bundle; it can never silently edit it). Same intent as
+approved, mechanically safer.
+
 ## DEC-P5-4 — Live embed/rerank serving + `serve` session: self-contained FlagEmbedding sidecar co-located with vLLM on one ephemeral A100 (2026-07-05)
 
 **Status:** Accepted (P5 grooming; user-approved — spec §3 D4 + §7 Q4).

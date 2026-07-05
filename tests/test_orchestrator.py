@@ -403,8 +403,8 @@ def test_turn_cap_raises_session_limit() -> None:
 
 
 def test_guardrail_hooks_are_applied() -> None:
-    def spotlight(payload: dict[str, Any]) -> str:
-        return "MARKED::" + json.dumps(payload, ensure_ascii=False)
+    def spotlight(payload: dict[str, Any]) -> tuple[str, list[str]]:
+        return "MARKED::" + json.dumps(payload, ensure_ascii=False), ["content withheld"]
 
     def gate(answer: str, titles: list[str]) -> tuple[str, list[str]]:
         assert "Drishyam" in titles and "Papanasam" in titles  # grounding surface fed in
@@ -415,7 +415,8 @@ def test_guardrail_hooks_are_applied() -> None:
     out = orch.run_turn(None, "papanasam?")
     assert isinstance(out, ChatResponse)
     assert out.answer.endswith("[gated]")
-    assert out.warnings == ["unverified title suppressed"]
+    # Spotlight warnings (per tool result) + gate warnings, in order.
+    assert out.warnings == ["content withheld", "content withheld", "unverified title suppressed"]
     # Every tool message the model saw went through spotlight.
     tool_msgs = [
         m["content"] for req in model.requests for m in req["messages"] if m.get("role") == "tool"

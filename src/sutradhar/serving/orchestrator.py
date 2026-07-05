@@ -55,16 +55,18 @@ from sutradhar.serving.schemas import (
 from sutradhar.serving.sessions import ConversationState, SessionStore, check_limits
 from sutradhar.toolcalls import load_tool_schema, openai_tools, validate_emitted_call
 
-# Hook signatures (task 8 provides the real implementations).
-Spotlight = Callable[[dict[str, Any]], str]
+# Hook signatures (task 8 provides the real implementations in serving.guardrails).
+# spotlight returns (message content, warnings) — withheld adversarial content surfaces
+# in the response warnings[] (P5_SPEC §2.5 layer 5).
+Spotlight = Callable[[dict[str, Any]], tuple[str, list[str]]]
 OutputGate = Callable[[str, list[str]], tuple[str, list[str]]]
 
 _TITLE_KEYS = frozenset({"title", "matched_title", "canonical_title"})
 
 
-def default_spotlight(payload: dict[str, Any]) -> str:
+def default_spotlight(payload: dict[str, Any]) -> tuple[str, list[str]]:
     """Identity serialization (no marking) — replaced by guardrails.spotlight in task 8."""
-    return json.dumps(payload, ensure_ascii=False)
+    return json.dumps(payload, ensure_ascii=False), []
 
 
 def default_output_gate(answer: str, tool_titles: list[str]) -> tuple[str, list[str]]:
@@ -259,12 +261,15 @@ class Orchestrator:
                             tracker.see_get_versions(payload)
                         elif call.name == "refine_filter":
                             tracker.see_refine_filter(payload)
+                    # Untrusted content marked before it enters the prompt (D3);
+                    # withheld-content warnings surface in the response.
+                    content, spot_warnings = self._spotlight(payload)
+                    warnings.extend(spot_warnings)
                     messages.append(
                         {
                             "role": "tool",
                             "tool_call_id": call.id,
-                            # Untrusted content marked before it enters the prompt (D3).
-                            "content": self._spotlight(payload),
+                            "content": content,
                         }
                     )
 
