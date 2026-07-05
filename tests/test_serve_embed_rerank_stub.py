@@ -124,10 +124,30 @@ def test_empty_input_is_400(http_client: TestClient) -> None:
     assert resp.status_code == 400
 
 
-def test_unknown_request_field_is_422(http_client: TestClient) -> None:
-    """extra='forbid' on the wire models: a malformed request is rejected, never guessed."""
+def test_openai_compat_string_input_and_encoding_format(http_client: TestClient) -> None:
+    """OpenAI-compat (the 2026-07-05 relevancy root cause): clients like RAGAS's
+    OpenAIEmbeddings send `input` as a BARE STRING plus `encoding_format=base64`; the
+    sidecar must accept both and always answer with float arrays."""
     resp = http_client.post(
         "/v1/embeddings",
-        json={"model": EMBED_MODEL, "input": ["q"], "injected_field": 1},
+        json={"model": EMBED_MODEL, "input": "single string", "encoding_format": "base64"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()["data"]
+    assert len(data) == 1 and isinstance(data[0]["embedding"], list)
+    assert len(data[0]["embedding"]) == 1024
+
+    # Equivalent to the list form (same text, same vector).
+    as_list = http_client.post(
+        "/v1/embeddings", json={"model": EMBED_MODEL, "input": ["single string"]}
+    ).json()["data"]
+    assert as_list[0]["embedding"] == data[0]["embedding"]
+
+
+def test_rerank_unknown_field_still_422(http_client: TestClient) -> None:
+    """The rerank route keeps extra='forbid' — it has no OpenAI-compat obligation."""
+    resp = http_client.post(
+        "/v1/rerank",
+        json={"model": RERANK_MODEL, "query": "q", "documents": ["d"], "injected": 1},
     )
     assert resp.status_code == 422

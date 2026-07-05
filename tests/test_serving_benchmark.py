@@ -43,8 +43,12 @@ jarvis = _load_jarvis()
 class _FakeInstance:
     def __init__(self, machine_id: int) -> None:
         self.machine_id = machine_id
-        self.public_ip = "10.0.0.9"
-        self.endpoints: list[str] = []
+        self.public_ip = ""  # proxy-only host (notebooksn), like the real box
+        # Two proxy URLs (no port in them) — the LLM and the embed/rerank sidecar.
+        self.endpoints = [
+            f"https://llm{machine_id}.notebooksn.jarvislabs.net",
+            f"https://side{machine_id}.notebooksn.jarvislabs.net",
+        ]
         self.name = jarvis.INSTANCE_NAME
 
 
@@ -135,8 +139,10 @@ def test_happy_path_two_sessions_sealed_and_destroyed(tmp_path: Path) -> None:
     assert ev.status == "up" and ev.destroyed is True
     assert client.destroyed == [4001, 4002]  # BOTH sessions torn down, in order
     assert client.closed is True
-    # Live URLs threaded into the captures (rerank == embed: one sidecar).
-    assert urls_seen["llm"].endswith(":8000/v1")
+    # Live URLs threaded into the captures: LLM and sidecar are DISTINCT proxy URLs
+    # (the 2026-07-05 lesson), rerank == embed (one sidecar process).
+    assert urls_seen["llm"].startswith("https://llm4001")
+    assert urls_seen["embed"].startswith("https://side4001")
     assert urls_seen["embed"] == urls_seen["rerank"]
 
     sealed = list(tmp_path.glob("servewin-*.json"))
@@ -183,14 +189,16 @@ def test_session_a_failure_still_runs_session_b(tmp_path: Path) -> None:
         calls["b"] += 1
         return _ok_relevancy(judge, embed)
 
-    # Session A's smoke fails (vLLM up but chat errors) — B must still run + seal.
-    smokes = {"n": 0}
-
+    # Session A's LLM never passes the chat smoke (gemma), session B's judge does —
+    # keyed on the requested model id (A smokes gemma, B smokes the judge model).
     def smoke(url: str, s: Any) -> EndpointStatus:
-        smokes["n"] += 1
-        status = "error" if smokes["n"] == 1 else "up"
+        up = "gpt-oss" in s.llm_model  # only the judge session resolves an LLM
         return EndpointStatus(
-            status=status, model="m", sample_token=None, latency_ms=None, detail=status
+            status="up" if up else "error",
+            model=s.llm_model,
+            sample_token="x" if up else None,
+            latency_ms=9.0 if up else None,
+            detail="up" if up else "chat 404",
         )
 
     ev = jarvis.serving_benchmark_session(
@@ -198,14 +206,14 @@ def test_session_a_failure_still_runs_session_b(tmp_path: Path) -> None:
         _deps(client, run_smoke=smoke),
         run_captures=_ok_captures,
         run_relevancy=relevancy,
-        health_timeout_s=50,
+        health_timeout_s=5,
         poll_interval_s=1,
         out_dir=tmp_path,
     )
     assert calls["b"] == 1  # session B still executed after A failed
     assert client.destroyed == [4001, 4002]  # nothing leaked
     artifact = json.loads(next(tmp_path.glob("servewin-*.json")).read_text())
-    assert artifact["parity"]["ok"] is False  # session A never got to capture
+    assert artifact["parity"]["ok"] is False  # session A never resolved an LLM
     assert artifact["relevancy"]["ok"] is True
     assert ev.destroyed is True
 

@@ -73,12 +73,24 @@ def parity_check(session: Any, settings: Settings, artifacts_root: Path) -> Step
 
     def run() -> dict[str, Any]:
         run_id = settings.require("retrieval_run")
+        # Derive the winner cell from the committed artifact and re-validate ONLY that
+        # config/depth through live providers (bounds GPU calls; it is the Table 1 gate).
+        recorded = json.loads(
+            (Path("evals/retrieval_runs") / f"{run_id}.json").read_text(encoding="utf-8")
+        )
+        winner_key = recorded["winner"]  # e.g. "1024tok_15pct/d20"
+        chunk_config, depth_str = winner_key.split("/d")
         embedder = HttpEmbeddings(settings.require("embed_base_url"), settings.embed_model)
         reranker = HttpReranker(
             settings.require("rerank_base_url"), settings.rerank_model, chunk_text_lookup(session)
         )
         artifact = run_retrieval_eval(
-            session, artifacts_root, run_id, providers=(embedder, reranker)
+            session,
+            artifacts_root,
+            run_id,
+            providers=(embedder, reranker),
+            chunk_configs=(chunk_config,),
+            rerank_depths=(int(depth_str),),
         )
         winner = artifact.winner
         assert winner is not None
@@ -190,10 +202,19 @@ def relevancy_backfill(settings: Settings, run_id: str | None) -> StepResult:
         per_fixture = {
             r.fixture_id: (r.ragas.answer_relevancy if r.ragas else None) for r in artifact.fixtures
         }
+        # Capture the per-fixture RAGAS error too — the P4 footnote-¹ null was recorded
+        # WITHOUT the exception, forcing a blind re-run. Surface it so any residual null
+        # is diagnosable from the sealed artifact (root-cause first, then recompute).
+        errors = {
+            r.fixture_id: (r.ragas.answer_relevancy_error if r.ragas else "no ragas block")
+            for r in artifact.fixtures
+            if not (r.ragas and r.ragas.answer_relevancy is not None)
+        }
         present = [v for v in per_fixture.values() if v is not None]
         return {
             "generation_run": artifact.run_id,
             "per_fixture": per_fixture,
+            "errors": errors,
             "mean_answer_relevancy": round(sum(present) / len(present), 4) if present else None,
             "n_scored": len(present),
             "n_total": len(per_fixture),
@@ -302,15 +323,18 @@ def run_serve_captures(
         os.environ["LLM_BASE_URL"] = llm_base_url
         injection = injection_capture()
 
-        # Latency: real orchestrator against the seeded live graph + live retriever.
+        # Latency: real orchestrator against the seeded live graph + live retriever
+        # (winner config from the committed run — identical to Table 1).
         run_id = live.require("retrieval_run")
-        artifact_meta = json.loads(
-            (artifacts_root / run_id / "meta.json").read_text(encoding="utf-8")
+        recorded = json.loads(
+            (Path("evals/retrieval_runs") / f"{run_id}.json").read_text(encoding="utf-8")
         )
+        winner_chunk, winner_depth = recorded["winner"].split("/d")
         cfg = RetrievalConfig(
-            chunk_config=str(artifact_meta.get("winner_chunk_config", "1024tok_15pct")),
+            chunk_config=winner_chunk,
             embed_model=live.embed_model,
             index_version=run_id,
+            rerank_depth=int(winner_depth),
         )
         retriever = Retriever(
             session,

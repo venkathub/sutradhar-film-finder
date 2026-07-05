@@ -127,6 +127,9 @@ class Deps:
     probe_health: Callable[[str, float], bool]
     run_smoke: Callable[[str, Settings], EndpointStatus]
     remove_scripts: Callable[[Any], int] = lambda client: 0
+    # Re-fetch an instance so late-registered proxy endpoints (e.g. the :8001 sidecar URL,
+    # which appears after the create-time snapshot) become visible; default = identity.
+    refresh_instance: Callable[[Any, Any], Any] = lambda client, instance: instance
     monotonic: Callable[[], float] = time.monotonic
     sleep: Callable[[float], None] = time.sleep
     log: Callable[[str], None] = lambda msg: print(msg, flush=True)
@@ -177,6 +180,17 @@ def _default_deps() -> Deps:
                 removed += 1
         return removed
 
+    def refresh_instance(client: Any, instance: Any) -> Any:
+        """Re-fetch by machine_id: proxy endpoints (:8001) register AFTER creation."""
+        machine_id = getattr(instance, "machine_id", None)
+        try:
+            for candidate in client.instances.list():
+                if getattr(candidate, "machine_id", None) == machine_id:
+                    return candidate
+        except Exception:  # noqa: BLE001 — refresh is best-effort, stale beats crash
+            pass
+        return instance
+
     return Deps(
         create_client=create_client,
         close_client=lambda c: c.close(),
@@ -186,6 +200,7 @@ def _default_deps() -> Deps:
         probe_health=probe_health,
         run_smoke=run_smoke,
         remove_scripts=remove_scripts,
+        refresh_instance=refresh_instance,
     )
 
 
@@ -205,6 +220,71 @@ def _wait_for_endpoint(
                 return url
         deps.sleep(poll_interval_s)
     return None
+
+
+def _resolve_serve_endpoints(
+    instance: Any,
+    deps: Deps,
+    settings: Settings,
+    *,
+    timeout_s: float,
+    poll_interval_s: float,
+    client: Any = None,
+    require_sidecar: bool = False,
+) -> tuple[str | None, str | None, EndpointStatus | None]:
+    """Disambiguate the LLM from the embed/rerank sidecar on the multi-service serve box.
+
+    Both vLLM (:8000) and the FastAPI sidecar (:8001) answer ``/health``, and JarvisLabs
+    ``notebooksn`` proxy URLs carry no port — so a port-swap can't tell them apart (the
+    2026-07-05 window's 404). The LLM is the candidate whose **chat smoke** returns
+    ``up`` (this also naturally waits for vLLM to finish loading); the sidecar is the
+    other healthy candidate. The instance is REFRESHED each poll because the :8001 proxy
+    endpoint registers AFTER creation (and the embedder loads slower than the LLM smoke
+    passes — the reason the P4 relevancy pass embedded against the judge and 404'd,
+    footnote ¹). ``require_sidecar`` fails rather than falling back to the port-swap no-op
+    when a distinct sidecar is mandatory (the relevancy backfill).
+    Returns ``(llm_url, sidecar_url, smoke_status)``."""
+    deadline = deps.monotonic() + timeout_s
+    while deps.monotonic() < deadline:
+        if client is not None:
+            instance = deps.refresh_instance(client, instance)
+        candidates = candidate_base_urls(instance)
+        llm_url: str | None = None
+        status: EndpointStatus | None = None
+        for url in candidates:
+            if not deps.probe_health(url, 10.0):
+                continue
+            probe = deps.run_smoke(url, settings)
+            if probe.status == "up":  # /v1/models + chat succeeded → the real LLM
+                llm_url, status = url, probe
+                break
+        if llm_url is not None:
+            # Wait for a DISTINCT healthy sidecar URL (refreshing to catch the late :8001).
+            sidecar_deadline = deps.monotonic() + timeout_s
+            while deps.monotonic() < sidecar_deadline:
+                if client is not None:
+                    instance = deps.refresh_instance(client, instance)
+                healthy = next(
+                    (
+                        u
+                        for u in candidate_base_urls(instance)
+                        if u != llm_url and deps.probe_health(u, 10.0)
+                    ),
+                    None,
+                )
+                if healthy is not None:
+                    deps.log(f"  LLM endpoint: {llm_url}; sidecar: {healthy}")
+                    return llm_url, healthy, status
+                deps.sleep(poll_interval_s)
+            if require_sidecar:
+                deps.log(f"  no distinct sidecar became healthy for {llm_url}")
+                return llm_url, None, status
+            # Single-candidate hosts (tests / single-service boxes): port-swap heuristic.
+            sidecar = _embed_base_url(instance, llm_url)
+            deps.log(f"  LLM endpoint: {llm_url}; sidecar (fallback): {sidecar}")
+            return llm_url, sidecar, status
+        deps.sleep(poll_interval_s)
+    return None, None, None
 
 
 def validate(
@@ -1185,6 +1265,41 @@ def build_serve_startup_script(
     )
 
 
+def build_judge_sidecar_startup_script(
+    token: str,
+    judge_model: str,
+    embed_model: str,
+    rerank_model: str,
+    sidecar_source: str,
+) -> str:
+    """Judge (:8000) + the SAME FlagEmbedding sidecar for BGE-M3 (:8001).
+
+    Replaces the P3/P4 ``vllm serve --task embed`` embedder, which this vLLM version
+    rejects (``unrecognized arguments: --task embed``, found live 2026-07-05) — the reason
+    the relevancy pass embedded against the judge and 404'd. The sidecar is the proven
+    embed path (it produced session A's parity Recall@10=1.0). The judge is served plain
+    (no gemma tool-parser flags — RAGAS/judge traffic is plain chat completions)."""
+    return (
+        "#!/bin/bash\n"
+        "set -euo pipefail\n"
+        f"export HF_TOKEN={token}\n"
+        "export HF_HOME=/home/hf_cache\n"
+        "mkdir -p /home/hf_cache\n"
+        "cat > /root/serve_embed_rerank.py << 'SIDECAR_PY'\n"
+        f"{sidecar_source}\n"
+        "SIDECAR_PY\n"
+        "python -m venv /root/sidecar_venv\n"
+        "/root/sidecar_venv/bin/pip install -q numpy fastapi uvicorn huggingface_hub "
+        "'transformers<5' FlagEmbedding >/root/pip_sidecar.log 2>&1\n"
+        f"nohup /root/sidecar_venv/bin/python /root/serve_embed_rerank.py "
+        f"--host 0.0.0.0 --port {EMBED_SERVE_PORT} "
+        f"--embed-model {embed_model} --rerank-model {rerank_model} "
+        "> /root/sidecar.log 2>&1 &\n"
+        "pip install -U vllm >/root/pip_vllm.log 2>&1\n"
+        f"vllm serve {judge_model} --host 0.0.0.0 --port {SERVE_PORT}\n"
+    )
+
+
 def serve_session(
     settings: Settings | None = None,
     deps: Deps | None = None,
@@ -1227,35 +1342,27 @@ def serve_session(
         ev.machine_id = getattr(instance, "machine_id", None)
         deps.log(f"  instance {ev.machine_id} running; waiting for vLLM /health …")
 
-        base_url = _wait_for_endpoint(
-            instance, deps, timeout_s=health_timeout_s, poll_interval_s=poll_interval_s
+        # Smoke-based disambiguation (2026-07-05 lesson): both services answer /health
+        # and the proxy URLs carry no port — the LLM is the candidate whose chat smoke
+        # returns "up"; the sidecar is the other healthy candidate.
+        base_url, embed_url, status = _resolve_serve_endpoints(
+            instance,
+            deps,
+            settings,
+            timeout_s=health_timeout_s,
+            poll_interval_s=poll_interval_s,
+            client=client,
         )
-        if base_url is None:
+        if base_url is None or status is None:
             ev.status = "off"
-            ev.detail = f"vLLM did not become healthy within {health_timeout_s}s"
+            ev.detail = f"LLM endpoint not up within {health_timeout_s}s"
             return ev
-
-        embed_url = _embed_base_url(instance, base_url)
-        deps.log(f"  vLLM healthy: {base_url}; waiting for sidecar /health …")
-        sidecar_deadline = deps.monotonic() + health_timeout_s
-        while not deps.probe_health(embed_url, 10.0):
-            if deps.monotonic() >= sidecar_deadline:
-                ev.status = "error"
-                ev.detail = (
-                    f"sidecar did not become healthy on {embed_url} within {health_timeout_s}s"
-                )
-                return ev
-            deps.sleep(poll_interval_s)
-
-        status = deps.run_smoke(base_url, settings)
+        assert embed_url is not None
         ev.status = status.status
         ev.served_model = status.model
         ev.sample_token = status.sample_token
         ev.latency_ms = status.latency_ms
-        ev.booted = status.status == "up"
-        if not ev.booted:
-            ev.detail = f"smoke returned {status.status}: {status.detail}"
-            return ev
+        ev.booted = True
         ev.create_to_up_s = round(deps.monotonic() - t0, 1)
 
         deps.log("  serve window UP — export these in the API shell:")
@@ -1306,6 +1413,10 @@ def serve_session(
 # Both destroy in `finally`; the artifact seals whatever evidence was gathered.
 
 
+class _SessionSkippedError(Exception):
+    """Control-flow marker: this window phase deliberately skips a session."""
+
+
 def _default_serve_captures(llm_url: str, embed_url: str, rerank_url: str) -> dict[str, Any]:
     from sutradhar.serving.benchmark import run_serve_captures
 
@@ -1328,17 +1439,35 @@ def serving_benchmark_session(
     poll_interval_s: float = DEFAULT_POLL_INTERVAL_S,
     sidecar_path: Path = SIDECAR_SCRIPT,
     out_dir: Path = Path("evals/serving_runs"),
+    phase: str = "all",  # all | serve | relevancy
+    merge_run: str | None = None,  # merge this phase's steps into an existing artifact
 ) -> Evidence:
-    """create(serve) → captures → destroy → create(judge) → relevancy → destroy → seal."""
-    from sutradhar.serving.benchmark import StepResult, build_artifact, seal
+    """create(serve) → captures → destroy → create(judge) → relevancy → destroy → seal.
+
+    ``phase="relevancy"`` + ``merge_run=<run_id>`` re-runs ONLY session B and merges the
+    result into the already-sealed artifact (cost discipline: session A's captures are
+    real evidence — don't re-pay for them while iterating the relevancy leg)."""
+    from sutradhar.serving.benchmark import ServingRunArtifact, StepResult, build_artifact, seal
 
     settings = settings or get_settings()
     deps = deps or _default_deps()
     ev = Evidence(requested_model=settings.llm_model, gpu_type=settings.gpu_type)
-    run_id = f"servewin-{os.urandom(4).hex()}"
+    run_id = merge_run or f"servewin-{os.urandom(4).hex()}"
     steps: dict[str, Any] = {}
     endpoints: dict[str, str] = {}
     served_model: str | None = None
+    base_artifact: ServingRunArtifact | None = None
+    if merge_run:
+        base_artifact = ServingRunArtifact.model_validate_json(
+            (out_dir / f"{merge_run}.json").read_text(encoding="utf-8")
+        )
+        steps.update(
+            parity=base_artifact.parity,
+            injection=base_artifact.injection,
+            latency=base_artifact.latency,
+        )
+        endpoints = dict(base_artifact.serving.get("endpoints", {}))
+        served_model = base_artifact.model
 
     if not sidecar_path.exists():
         ev.status = "error"
@@ -1360,9 +1489,18 @@ def serving_benchmark_session(
 
     try:
         # --- Session A: the serve topology (Gemma + sidecar) ---
-        deps.log(f"[serving-benchmark] {run_id}: session A — serve topology …")
         instance: Any = None
+        if phase == "relevancy":
+            # Cost discipline: session A's captures are already-sealed evidence (merge_run)
+            # or deliberately skipped; don't re-pay for the serve window while iterating B.
+            deps.log(f"[serving-benchmark] {run_id}: session A skipped (phase=relevancy)")
+            for name in ("parity", "injection", "latency"):
+                steps.setdefault(name, StepResult(ok=False, error="skipped (phase=relevancy)"))
+        else:
+            deps.log(f"[serving-benchmark] {run_id}: session A — serve topology …")
         try:
+            if phase == "relevancy":
+                raise _SessionSkippedError()
             t0 = deps.monotonic()
             script = build_serve_startup_script(
                 settings.require("hf_token"),
@@ -1374,20 +1512,22 @@ def serving_benchmark_session(
             )
             instance = deps.create_instance(client, settings, script)
             ev.machine_id = getattr(instance, "machine_id", None)
-            base_url = _wait_for_endpoint(
-                instance, deps, timeout_s=health_timeout_s, poll_interval_s=poll_interval_s
+            # Smoke-based disambiguation: both services answer /health and the proxy URLs
+            # carry no port (the 2026-07-05 404 lesson) — the LLM is the candidate whose
+            # chat smoke returns "up"; the sidecar is the other healthy candidate.
+            base_url, embed_url, status = _resolve_serve_endpoints(
+                instance,
+                deps,
+                settings,
+                timeout_s=health_timeout_s,
+                poll_interval_s=poll_interval_s,
+                client=client,
+                require_sidecar=True,  # parity + latency need the real embed/rerank
             )
-            if base_url is None:
-                raise RuntimeError(f"vLLM not healthy within {health_timeout_s}s")
-            embed_url = _embed_base_url(instance, base_url)
-            deadline = deps.monotonic() + health_timeout_s
-            while not deps.probe_health(embed_url, 10.0):
-                if deps.monotonic() >= deadline:
-                    raise RuntimeError(f"sidecar not healthy on {embed_url}")
-                deps.sleep(poll_interval_s)
-            status = deps.run_smoke(base_url, settings)
-            if status.status != "up":
-                raise RuntimeError(f"smoke returned {status.status}: {status.detail}")
+            if base_url is None or status is None:
+                raise RuntimeError(f"LLM endpoint not up within {health_timeout_s}s")
+            if embed_url is None:
+                raise RuntimeError("embed/rerank sidecar never became reachable")
             ev.booted = True
             ev.create_to_up_s = round(deps.monotonic() - t0, 1)
             served_model = status.model
@@ -1397,6 +1537,8 @@ def serving_benchmark_session(
             for name in ("parity", "injection", "latency"):
                 result = steps.get(name)
                 deps.log(f"  [{name}] ok={getattr(result, 'ok', None)}")
+        except _SessionSkippedError:
+            pass
         except Exception as exc:  # noqa: BLE001 — record as step evidence, keep going
             deps.log(f"  session A failed: {exc}")
             for name in ("parity", "injection", "latency"):
@@ -1415,14 +1557,34 @@ def serving_benchmark_session(
         instance = None
         try:
             judge_model = settings.require("judge_model")
-            script = build_judge_startup_script(judge_model, settings.embed_model)
-            instance = deps.create_instance(client, settings, script)
-            judge_url = _wait_for_endpoint(
-                instance, deps, timeout_s=health_timeout_s, poll_interval_s=poll_interval_s
+            # NOT build_judge_startup_script: its `vllm serve --task embed` is rejected by
+            # current vLLM (found live 2026-07-05) — use the proven FlagEmbedding sidecar.
+            script = build_judge_sidecar_startup_script(
+                settings.require("hf_token"),
+                judge_model,
+                settings.embed_model,
+                settings.rerank_model,
+                sidecar_path.read_text(encoding="utf-8"),
             )
-            if judge_url is None:
-                raise RuntimeError(f"judge not healthy within {health_timeout_s}s")
-            judge_embed_url = _embed_base_url(instance, judge_url)
+            instance = deps.create_instance(client, settings, script)
+            # Disambiguate judge (chat) from BGE-M3 (embed-only) the same smoke way — the
+            # port-swap heuristic is a NO-OP on notebooksn URLs, which is why the P4
+            # footnote-¹ relevancy pass embedded against the judge and returned null.
+            # Smoke must request the JUDGE model id (the box serves gpt-oss, not gemma).
+            judge_settings = settings.model_copy(update={"llm_model": judge_model})
+            judge_url, judge_embed_url, _ = _resolve_serve_endpoints(
+                instance,
+                deps,
+                judge_settings,
+                timeout_s=health_timeout_s,
+                poll_interval_s=poll_interval_s,
+                client=client,
+                require_sidecar=True,  # relevancy MUST embed against BGE-M3, never gpt-oss
+            )
+            if judge_url is None or judge_embed_url is None:
+                raise RuntimeError(
+                    f"judge or its BGE-M3 embedder not healthy within {health_timeout_s}s"
+                )
             deps.log(f"  judge window UP ({judge_url}); running relevancy backfill …")
             steps["relevancy"] = run_relevancy(judge_url, judge_embed_url)
             deps.log(f"  [relevancy] ok={getattr(steps['relevancy'], 'ok', None)}")
@@ -1520,7 +1682,11 @@ def main(argv: list[str] | None = None) -> int:
         _write_evidence(ev)
         return 0 if ev.status == "up" and ev.destroyed else 1
     if cmd == "serving-benchmark":
-        ev = serving_benchmark_session()
+        # Optional: `serving-benchmark relevancy <merge_run_id>` re-runs only session B
+        # and merges into the sealed artifact (relevancy iteration, cost discipline).
+        phase = argv[1] if len(argv) > 1 else "all"
+        merge_run = argv[2] if len(argv) > 2 else None
+        ev = serving_benchmark_session(phase=phase, merge_run=merge_run)
         _write_evidence(ev)
         return 0 if ev.status == "up" and ev.destroyed else 1
     if cmd == "nuke":

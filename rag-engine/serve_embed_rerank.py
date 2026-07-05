@@ -128,10 +128,16 @@ class BgeReranker:
 
 
 class EmbeddingsRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    # OpenAI-compatible: `input` may be a single string OR a list, and clients (e.g. RAGAS's
+    # OpenAIEmbeddings) send `encoding_format` — accept and ignore extra standard fields
+    # rather than 422 (the 2026-07-05 relevancy root cause). We always return float arrays.
+    model_config = ConfigDict(extra="ignore")
 
     model: str
-    input: list[str]
+    input: str | list[str]
+
+    def texts(self) -> list[str]:
+        return [self.input] if isinstance(self.input, str) else self.input
 
 
 class RerankRequest(BaseModel):
@@ -163,9 +169,10 @@ def build_app(
     def embeddings(req: EmbeddingsRequest) -> dict[str, Any]:
         if req.model != embed_model:
             raise HTTPException(400, f"served embed model is {embed_model!r}, not {req.model!r}")
-        if not req.input:
-            raise HTTPException(400, "input must be a non-empty list of texts")
-        dense, sparse = embedder.embed(req.input)
+        texts = req.texts()
+        if not texts:
+            raise HTTPException(400, "input must be a non-empty string or list of texts")
+        dense, sparse = embedder.embed(texts)
         return {
             "object": "list",
             "model": embed_model,
@@ -178,7 +185,7 @@ def build_app(
                     # the field vLLM pooling / Infinity cannot serve (DEC-P5-4).
                     "sparse": {str(k): float(v) for k, v in sparse[i].items()},
                 }
-                for i in range(len(req.input))
+                for i in range(len(texts))
             ],
         }
 

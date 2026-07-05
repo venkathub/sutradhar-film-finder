@@ -366,21 +366,46 @@ def test_serve_happy_path_holds_prints_exports_and_destroys() -> None:
     assert "holding" in joined  # heartbeat ran
 
 
-def test_serve_teardown_when_sidecar_never_healthy() -> None:
+def test_serve_disambiguates_llm_from_sidecar_by_smoke() -> None:
+    """Both services answer /health and proxy URLs carry no port (2026-07-05 window
+    lesson): the LLM is the candidate whose CHAT SMOKE returns up, the sidecar is the
+    other healthy candidate — never a port-swap guess."""
     client = _FakeClient()
+    logs: list[str] = []
+    smoked: list[str] = []
 
-    def sidecar_down(url: str, timeout: float) -> bool:
-        return "8001" not in url  # vLLM healthy, sidecar never
+    def smoke(url: str, s: Settings) -> EndpointStatus:
+        smoked.append(url)
+        # The sidecar URL (listed FIRST) answers /health but fails the chat smoke.
+        status = "error" if "sidecar" in url else "up"
+        return EndpointStatus(
+            status=status, model="m", sample_token="x", latency_ms=9.0, detail=status
+        )
+
+    instance = _FakeInstance(4242)
+    instance.endpoints = [
+        "https://sidecar4242.notebooksn.jarvislabs.net",  # no port in the URL
+        "https://llm4242.notebooksn.jarvislabs.net",
+    ]
+    instance.public_ip = ""  # proxy-only host
 
     ev = jarvis.serve_session(
-        _serve_settings(),
-        _base_deps(client, probe_health=sidecar_down),
-        health_timeout_s=5,
+        _serve_settings(hold_minutes=1),
+        _base_deps(
+            client,
+            create_instance=lambda c, s, script: instance,
+            run_smoke=smoke,
+            log=logs.append,
+        ),
+        health_timeout_s=100,
         poll_interval_s=1,
         sidecar_path=_sidecar_path(),
     )
-    assert ev.status == "error"
-    assert "sidecar" in ev.detail
+    assert ev.status == "up"
+    joined = "\n".join(logs)
+    # The LLM export is the smoke-passing candidate; the sidecar is the OTHER one.
+    assert "export LLM_BASE_URL=https://llm4242.notebooksn.jarvislabs.net/v1" in joined
+    assert "export EMBED_BASE_URL=https://sidecar4242.notebooksn.jarvislabs.net/v1" in joined
     assert client.destroyed == [4242]  # never leak a GPU
 
 
