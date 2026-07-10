@@ -1,8 +1,21 @@
 # P5 Spec — Serving, API & Conversational Backtracking
 
-> **Status: APPROVED (2026-07-05).** Grooming confirmed by the user; §3 decisions are logged as
-> **DEC-P5-1..6** in `docs/DECISIONS.md`; §7 questions are resolved (recommended options adopted
-> throughout). This spec is the execution baseline for P5.
+> **Status: EXECUTED — PHASE COMPLETE (2026-07-05).** All 14 §5 tasks delivered on
+> `feature/p5-serving-api` (18 implementation commits `7236a85..2269ccb`); §6 Definition of Done
+> checked item by item below. **Every §4 gate met:** indirect-injection **ASR = 0.0 with defenses
+> on** (vs 0.273 off), **false-positive rate = 0.0** on benign controls; live-path parity
+> **Recall@10 = 1.0, VSR GS-01/06 = 1.0** (Table 1 re-validated through live GPU providers);
+> **GS-02 API-level inventions = 0** (the output gate); **answer_relevancy = 0.571 (12/12 scored)**
+> backfilled over the pinned base run — the Table 2 footnote-¹ gap **discharged**. Sealed window
+> **`servewin-25c029d3`** (`evals/serving_runs/`, MANIFEST-verified); MLflow **`sutradhar/serving`
+> run `d453c73e`**; API e2e latency p50/p95 **4535/5395 ms**, **76 tok/s** through the full turn +
+> a vLLM `/metrics` snapshot. Tests: **Tier-1 717 passed / 1 skipped / 119 deselected**,
+> **integration 119 passed**, ruff + ruff-format + mypy(strict) clean. Decisions **DEC-P5-1..6**
+> logged; §7 questions resolved.
+>
+> _History: APPROVED 2026-07-05 (baseline); DEC-P5-1..6 logged at grooming; §7 confirmations
+> resolved (recommended options adopted). EXECUTED 2026-07-05 — deviations discovered live are
+> recorded in the close-out block immediately below._
 >
 > P5 builds the orchestration API and on-demand serving that answer the gating story end-to-end:
 > FastAPI request path (normalize → retrieve → ground → tool-calling LLM → cited answer with the
@@ -15,6 +28,59 @@
 > (`prompt_hash 78215ccc…`, DEC-P3-4). If a future P4.1 flips to KEEP, `LLM_MODEL` swaps to the
 > merged adapter and (per DEC-P4-6) the recorded no-exemplar prompt becomes the serving config —
 > both are env/config changes, not code changes. **P5 does not wait on P4.1.**
+>
+> ---
+>
+> ### Execution close-out (2026-07-05) — deviations discovered live, all logged
+>
+> The §1–§8 design body below is the **as-designed** record; what actually shipped diverged in the
+> following ways (each already recorded in DECISIONS/BENCHMARKS — consolidated here for traceability,
+> the P3/P4 close-out convention):
+>
+> 1. **Two-session GPU topology** (refines §2.6's "one ephemeral session"): the serve window
+>    (Gemma + sidecar) runs parity/injection/latency; a **separate brief judge session**
+>    (gpt-oss-20b + BGE-M3 sidecar) runs the answer-relevancy backfill — the judge does **not**
+>    co-reside with the serve stack on one A100-40GB (user-confirmed; DEC-P5-4 execution notes).
+>    Added `phase=serve|relevancy` + `merge_run` so a single leg can be re-run and merged into the
+>    sealed artifact (cost discipline while iterating).
+> 2. **Endpoint disambiguation fix** — JarvisLabs `notebooksn` proxy URLs carry **no port** and
+>    both vLLM and the sidecar answer `/health`, so the port-swap heuristic was a no-op;
+>    `_resolve_serve_endpoints` now identifies the LLM as the candidate whose **chat smoke** passes
+>    and the sidecar as the other healthy candidate (refreshing the instance for the late-registered
+>    `:8001` proxy). This was the **true root cause of the P4 footnote-¹ null relevancy** (RAGAS had
+>    been embedding against the judge, not BGE-M3).
+> 3. **`vllm serve --task embed` is rejected by current vLLM** (`unrecognized arguments`, found
+>    on-box) → the judge session serves BGE-M3 via the **same FlagEmbedding sidecar**
+>    (`build_judge_sidecar_startup_script`), not the old P3/P4 vLLM embed task.
+> 4. **Sidecar OpenAI-compat** — RAGAS's `OpenAIEmbeddings` sends `input` as a bare string +
+>    `encoding_format`; the sidecar's `/v1/embeddings` now accepts string|list and tolerates
+>    standard extra fields (it had 422'd under `extra="forbid"`). The `/rerank` route keeps
+>    `extra="forbid"`.
+> 5. **Prompt v1.1 = a SEPARATE serving lock** (`evals/prompts/prompts.serving.lock.json`, hash
+>    `98b3ece1…`), **not** an in-place regeneration of `prompts.lock.json` — this refines §2.5-¶4 /
+>    §7-Q2's "regenerated lock" wording. Reason: the Tier-1 comparability gate pins Table 2 to the
+>    *current* v1.0 lock (`78215ccc…`); a separate lock preserves that pin while extending the
+>    serving bundle with the spotlighting appendix. `load_serving_prompt_artifacts()` verifies BOTH
+>    locks (DEC-P5-3 implementation note).
+> 6. **Output-gate live gap found + fixed** — the first capture measured ASR **0.1818**: two
+>    context attacks asserted an ungrounded title the gate *warned* but did not neutralize (the
+>    invention's `(year)` sat inside the `**…**` span, slipping a naive membership check). Fixed
+>    (regex wraps every surface form + idempotent fallback banner), regression-tested against the
+>    injection scorer, and **re-confirmed live: 0.1818 → 0.0**.
+> 7. **§6 DoD "recorded to MLflow" gap filled** — the window seals a committed artifact + Langfuse,
+>    and now also logs to MLflow: `obs.mlflow_log.log_serving_run` + experiment `sutradhar/serving`
+>    + `make mlflow-log-serving` (all four legs' metrics + the §6.1 stamp).
+> 8. **Cost: ≈ $3–4 actual vs the ≈ $1–1.5 §7-Q4 estimate** — several short live iterations
+>    debugging deviations 2–4 and 6; teardown was `nuke`-verified clean after every window (zero
+>    strays).
+> 9. **Test-name divergence (cosmetic)** — §4's literal names (`test_api_chat_e2e`, `test_degrade`,
+>    `test_orchestrator_loop`, `test_wrapper_executor_shapes`) are implemented under descriptive
+>    names with identical coverage; the six named golden regressions live in the **integration tier**
+>    (live DB), matching §2.8's "API integration tests … + live DB".
+> 10. **Extra artifacts beyond the §2.11 manifest** — `evals/prompts/spotlighting_appendix_v1_1.md`
+>     + `prompts.serving.lock.json` (deviation 5); the `mlflow-log-serving` Make target
+>     (deviation 7); committed `evals/injection_runs/inj-{on,off}-dryrun.json` (Tier-1 dry-run
+>     gate source).
 
 ---
 
@@ -291,7 +357,8 @@ proved LLM+BGE-M3 co-residency (:8000/:8001 precedent). The sidecar is self-cont
 will wrap. (vLLM's in-process sleep/wake mode was considered and set aside: JarvisLabs
 pause/resume already provides the cheaper whole-instance equivalent, and our posture is
 ephemeral create→destroy, not a warm process.) Cost: the P5 capture window ≈ 1–1.5 h ≈ **$1–1.5**
-(§7 Q4).
+(§7 Q4). **(Executed as TWO ephemeral sessions — serve topology + a separate judge session for
+the relevancy backfill; see the Execution close-out block, deviation 1.)**
 
 ### 2.7 Dashboards & cost accounting
 
@@ -538,30 +605,38 @@ the *served* answer, not just the repository:
 
 ## 6. Definition of Done (instantiates CLAUDE.md DoD)
 
-- [ ] Code complete and matches this approved spec (§3 confirmed 2026-07-05; DEC-P5-1..6 logged).
-- [ ] Unit + integration tests passing in Tier-1 CI, **including both GPU-on (scripted) and
-      GPU-off paths** and the six named golden regressions through the API.
-- [ ] Eval gates met and recorded to MLflow: injection ASR = 0 (defenses on), FP = 0 on benign
-      controls, live-path parity = Table 1 gate values, GS-02 API-level inventions = 0.
-- [ ] **Benchmark tables updated in `docs/BENCHMARKS.md`:**
-      *Table 1* — untouched (config unchanged); a **live-path parity note** with the serving-run
-      stamp re-validates it end-to-end.
-      *Table 2* — `answer_relevancy` backfilled on the pinned base run (footnote ¹ discharged);
-      no other cell changes (columns stay pinned under `prompt_hash 78215ccc…`).
-      *New "Serving & guardrails" section* — API e2e latency p50/p95, tokens/sec through the API
-      (+ vLLM `/metrics` snapshot), injection ASR defense-on/off + utility-under-attack,
-      degradation posture — each row carrying the §6.1
-      reproducibility stamp (code SHA, prompt v1.1 hash, tool-schema v0 sha256, serving-run id,
-      model@revision, vLLM flags).
-- [ ] `serving/README.md` written (purpose, architecture, run, results); `docs/DECISIONS.md` gains
-      DEC-P5-1..6; `TOOL_SCHEMA.md` status note added.
-- [ ] Runs cleanly from scratch: fresh clone + `.env` → `make up && make api-up` serves the
-      GPU-off experience with zero GPU.
-- [ ] **30-second demo path:** `make api-up` then one curl to `/api/chat` (structured offline
-      answer with evidence links) and one to `/api/replay/GS-08a` (the recorded backtracking
-      story) — no GPU, no wait. (With a GPU window: the same curl against the live path.)
-- [ ] Resume-ready quantified bullet in `docs/PORTFOLIO.md` (e.g. injection ASR 0 vs baseline,
-      e2e latency, $-per-demo, graceful-degradation design).
+- [x] Code complete and matches this approved spec (§3 confirmed 2026-07-05; DEC-P5-1..6 logged) —
+      18 implementation commits `7236a85..2269ccb`; deviations recorded in the close-out block.
+- [x] Unit + integration tests passing, **including both GPU-on (scripted) and GPU-off paths** and
+      the six named golden regressions through the API — **Tier-1 717 passed / 1 skipped**,
+      **integration 119 passed** (`test_api_golden_regressions.py` = the six named tests on the
+      live DB); ruff + ruff-format + mypy(strict) clean.
+- [x] Eval gates met and **recorded to MLflow** (`sutradhar/serving` run `d453c73e`): injection
+      **ASR = 0.0** (defenses on) / 0.273 off, **FP = 0.0** on benign controls, **live-path parity
+      Recall@10 = 1.0 / VSR GS-01/06 = 1.0** (= Table 1 gate), **GS-02 API-level inventions = 0**.
+- [x] **Benchmark tables updated in `docs/BENCHMARKS.md`:**
+      *Table 1* — untouched (config unchanged); **live-path parity note** added with the
+      serving-run stamp (Recall@10/VSR re-validated through live providers).
+      *Table 2* — `answer_relevancy = 0.571` (12/12) backfilled on the pinned base run **(footnote
+      ¹ discharged, with the P4-null root cause documented)**; no other cell changes (columns stay
+      pinned under `prompt_hash 78215ccc…`); QLoRA column stays `—` (CUT, not re-served).
+      *New "Serving & guardrails" section* — API e2e latency p50/p95 (4535/5395 ms), tokens/sec
+      (76) + vLLM `/metrics` snapshot, injection ASR defense-on/off + FP + utility-under-attack
+      (0.727), degradation posture — each row carrying the §6.1 reproducibility stamp (code SHA
+      `46860625`, prompt **v1.1** `98b3ece1`, tool-schema v0 sha256 `4c10ea97`, serving-run id,
+      model, vLLM flags).
+- [x] `serving/README.md` results block written; `docs/DECISIONS.md` carries DEC-P5-1..6 (+ the
+      DEC-P5-3/P5-4 execution notes); `TOOL_SCHEMA.md` P5 status note added.
+- [x] Runs cleanly from scratch: fresh clone + `.env` → `make up && make api-up` serves the
+      GPU-off experience with **zero GPU and zero DB** — verified: `POST /api/chat` → HTTP 200
+      offline payload, `GET /api/replay/GS-08a` → recorded transcript.
+- [x] **30-second demo path** verified from the real app factory: `make api-up`, one curl to
+      `/api/chat` (structured offline answer with evidence links) and one to `/api/replay/GS-08a`
+      (the recorded backtracking story) — no GPU, no wait. (With a GPU window: the same curl
+      against the live path.)
+- [x] Resume-ready quantified bullet in `docs/PORTFOLIO.md` — P5 section with injection ASR
+      0.273 → 0.0, e2e latency 4535/5395 ms @ 76 tok/s, graceful-degradation design, and the
+      relevancy-gap root-cause-and-discharge story.
 
 ---
 
@@ -577,7 +652,9 @@ the *served* answer, not just the repository:
   DEC-P5-1 consequences.)
 - **Q4 — Window budget → ≈ $1–1.5 APPROVED** for the single P5 capture session (parity +
   injection ASR on/off + latency/tokens + `/metrics` snapshot + relevancy backfill), within the
-  DEC-0003 envelope. (Recorded in DEC-P5-4 consequences.)
+  DEC-0003 envelope. (Recorded in DEC-P5-4 consequences.) **Actual: ≈ $3–4** across several short
+  live-debug iterations (topology + endpoint/embed/gate fixes); teardown `nuke`-clean each time.
+  See the Execution close-out block, deviation 8.**
 
 ---
 
