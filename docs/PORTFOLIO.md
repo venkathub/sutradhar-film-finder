@@ -116,3 +116,32 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   regression to three specific training-data defects (documented, with a budget-gated fix phase
   scoped). Negative result, positive evidence: benchmark tables, MLflow registry entry, exported
   Langfuse traces, and a public adapter card all say so out loud.
+
+## P5 — Serving, API & guardrails: the gating story as a deployed request path
+
+- **Shipped the end-to-end request path** (FastAPI orchestration: normalize → hybrid retrieve →
+  schema-validated tool-calling agent loop → deterministically gated, cited answer) and proved it
+  live: the winner retrieval config re-validated **through live GPU providers at Recall@10 = 1.0
+  and version-set recall = 1.0** — bit-identical to the recorded-artifact gate, demonstrating "the
+  live path swaps providers, not code" — plus server-side multi-turn backtracking over HTTP and
+  six named golden regressions asserted on the *served* JSON payload, not just the repository.
+- **Engineered layered indirect-prompt-injection defense and measured it live: attack-success
+  rate 0.273 → 0.000** (14-fixture BIPIA/AgentDojo-style suite: query- and context-side attacks,
+  exfiltration, tool-redirection, plus benign false-positive controls at 0.0 FP). Structural
+  layers (read-only tool surface, schema-validated calls, a deterministic no-hallucinated-movie
+  output gate) do the real work; datamarking-spotlight + the gate close the rest — framed against
+  the 2025 design-patterns literature. A live capture even surfaced a real gate gap (an
+  ungrounded title with the year inside the bold span slipped a naive check), which I fixed,
+  regression-tested, and re-confirmed live at ASR 0.
+- **Made graceful degradation a feature, not a gap:** with the on-demand GPU off (the default),
+  `POST /api/chat` returns a structured HTTP 200 offline payload and `/api/replay/{fixture}`
+  serves committed benchmark transcripts — the full Papanasam story is demonstrable with **zero
+  GPU and zero database** (integration-tested both states), with per-request token/cost/latency
+  accounting feeding `/api/metrics` and Langfuse.
+- **Captured the deployed-path benchmark on a strict budget and debugged it honestly:** one
+  `make serving-benchmark` window (two ephemeral A100 sessions, teardown-guaranteed, ~$3–4 across
+  live iterations) recording **API p50/p95 latency 4535/5395 ms at 76 tok/s**, and it **root-caused
+  and discharged the P4 answer-relevancy evidence gap** (null for all fixtures) down to a
+  proxy-URL endpoint-disambiguation bug — recomputing RAGAS answer_relevancy = **0.571 (12/12
+  scored)** over the pinned base run. Sealed artifact + MANIFEST, MLflow `sutradhar/serving`, and
+  the honest "what broke live" trail all committed.

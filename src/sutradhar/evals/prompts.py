@@ -29,6 +29,14 @@ LOCK_FILE = "prompts.lock.json"
 # The frozen artifact set, in hash order. Adding/renaming a file is a prompt-version bump.
 ARTIFACT_FILES = ("system_v1.md", "exemplars_v1.md", "intent_taxonomy_v1.json")
 
+# P5 serving bundle (v1.1, DEC-P5-3/Q2): the frozen v1 files + the spotlighting appendix,
+# recorded under a SEPARATE lock. prompts.lock.json (v1.0, hash 78215ccc…) stays untouched
+# so the pinned Table 2 columns and their comparability gate keep holding; the serving
+# stamp records the v1.1 hash from this lock instead.
+SERVING_APPENDIX_FILE = "spotlighting_appendix_v1_1.md"
+SERVING_ARTIFACT_FILES = (*ARTIFACT_FILES, SERVING_APPENDIX_FILE)
+SERVING_LOCK_FILE = "prompts.serving.lock.json"
+
 INTENT_PREAMBLE_PREFIX = "INTENT: "
 
 
@@ -41,6 +49,8 @@ class PromptArtifacts:
     taxonomy: dict[str, Any]
     file_hashes: dict[str, str]
     prompt_hash: str
+    # P5 serving bundle only (v1.1): the spotlighting appendix; None for the v1.0 bundle.
+    appendix: str | None = None
 
     @property
     def intent_labels(self) -> frozenset[str]:
@@ -51,23 +61,30 @@ class PromptArtifacts:
         return frozenset(self.taxonomy["slot_keys"])
 
     def system_prompt(self) -> str:
-        """The full frozen system message: system prompt + exemplars, one hashed unit.
+        """The full frozen system message: system prompt + exemplars (+ v1.1 appendix on
+        the serving bundle), one hashed unit.
 
         DEC-P3-4 option B: exemplars ride in the system message (native function-calling
         format stays available for the real tool traffic).
         """
-        return f"{self.system.rstrip()}\n\n{self.exemplars.rstrip()}\n"
+        base = f"{self.system.rstrip()}\n\n{self.exemplars.rstrip()}\n"
+        if self.appendix is None:
+            return base
+        return f"{base}\n{self.appendix.rstrip()}\n"
 
 
 def _sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def compute_hashes(directory: Path = PROMPTS_DIR) -> tuple[dict[str, str], str]:
+def compute_hashes(
+    directory: Path = PROMPTS_DIR,
+    files: tuple[str, ...] = ARTIFACT_FILES,
+) -> tuple[dict[str, str], str]:
     """Per-file SHA-256 digests + the combined prompt_hash (order- and name-sensitive)."""
     file_hashes: dict[str, str] = {}
     combined = hashlib.sha256()
-    for name in ARTIFACT_FILES:
+    for name in files:
         payload = (directory / name).read_bytes()
         file_hashes[name] = _sha256(payload)
         combined.update(name.encode("utf-8"))
@@ -119,6 +136,49 @@ def load_prompt_artifacts(directory: Path = PROMPTS_DIR) -> PromptArtifacts:
     )
 
 
+def write_serving_lock(directory: Path = PROMPTS_DIR) -> dict[str, Any]:
+    """(Re)generate the v1.1 SERVING lock (P5, DEC-P5-3/Q2) — prompts.lock.json untouched."""
+    file_hashes, prompt_hash = compute_hashes(directory, files=SERVING_ARTIFACT_FILES)
+    lock = {
+        "$comment": (
+            "P5 serving bundle (v1.1, DEC-P5-3): the frozen v1 artifacts + the spotlighting "
+            "appendix, under their own prompt_hash. The v1.0 prompts.lock.json stays pinned "
+            "(Table 2 comparability); serving-run stamps record THIS hash. Regenerate: "
+            "python -m sutradhar.evals.prompts --write-serving-lock."
+        ),
+        "files": file_hashes,
+        "prompt_hash": prompt_hash,
+    }
+    (directory / SERVING_LOCK_FILE).write_text(json.dumps(lock, indent=2) + "\n", encoding="utf-8")
+    return lock
+
+
+def load_serving_prompt_artifacts(directory: Path = PROMPTS_DIR) -> PromptArtifacts:
+    """The v1.1 serving bundle (v1.0 files + spotlighting appendix), lock-verified.
+
+    Verifies BOTH locks: the v1.0 sub-bundle must still match ``prompts.lock.json``
+    (the appendix extends the frozen bundle, it never edits it) and the composed
+    bundle must match ``prompts.serving.lock.json``.
+    """
+    base = load_prompt_artifacts(directory)  # v1.0 verification included
+    file_hashes, prompt_hash = compute_hashes(directory, files=SERVING_ARTIFACT_FILES)
+    lock = json.loads((directory / SERVING_LOCK_FILE).read_text(encoding="utf-8"))
+    if lock.get("files") != file_hashes or lock.get("prompt_hash") != prompt_hash:
+        raise ValueError(
+            f"Serving prompt artifacts do not match {SERVING_LOCK_FILE} — either revert the "
+            "edit or deliberately re-pin: uv run python -m sutradhar.evals.prompts "
+            "--write-serving-lock"
+        )
+    return PromptArtifacts(
+        system=base.system,
+        exemplars=base.exemplars,
+        taxonomy=base.taxonomy,
+        file_hashes=file_hashes,
+        prompt_hash=prompt_hash,
+        appendix=(directory / SERVING_APPENDIX_FILE).read_text(encoding="utf-8"),
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Inspect / re-pin the frozen prompt artifacts.")
     parser.add_argument(
@@ -126,10 +186,18 @@ def main() -> None:
         action="store_true",
         help="(Re)generate prompts.lock.json from the current artifact files.",
     )
+    parser.add_argument(
+        "--write-serving-lock",
+        action="store_true",
+        help="(Re)generate the v1.1 serving lock (prompts.serving.lock.json) only.",
+    )
     args = parser.parse_args()
     if args.write_lock:
         lock = write_lock()
         print(f"wrote {PROMPTS_DIR / LOCK_FILE}")
+    elif args.write_serving_lock:
+        lock = write_serving_lock()
+        print(f"wrote {PROMPTS_DIR / SERVING_LOCK_FILE}")
     else:
         files, prompt_hash = compute_hashes()
         lock = {"files": files, "prompt_hash": prompt_hash}

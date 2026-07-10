@@ -35,7 +35,6 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from jsonschema import Draft202012Validator
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
@@ -45,7 +44,15 @@ from sutradhar.evals.retrieval import EvalRunArtifact, QueryRecord
 from sutradhar.obs.tracing import Tracer
 from sutradhar.serving.llm_client import LLMClient
 
-TOOL_SCHEMA_PATH = Path("docs/phases/tool_schema.v0.json")
+# Tool-call schema plumbing promoted to sutradhar.toolcalls (P5 task 1); re-exported here
+# so every existing import site (evals, finetune, tests) keeps working unchanged.
+# Explicit `as` aliasing = an explicit re-export under mypy strict (no_implicit_reexport).
+from sutradhar.toolcalls import TOOL_SCHEMA_PATH as TOOL_SCHEMA_PATH
+from sutradhar.toolcalls import load_tool_schema as load_tool_schema
+from sutradhar.toolcalls import openai_tools as openai_tools
+from sutradhar.toolcalls import params_subschema as params_subschema
+from sutradhar.toolcalls import validate_emitted_call as validate_emitted_call
+
 MAX_TOOL_ROUNDS = 6
 
 # Executor signature: (tool_name, validated_arguments) -> v0-shaped result dict.
@@ -56,51 +63,6 @@ ToolExecutor = Callable[[str, dict[str, Any]], dict[str, Any]]
 
 class ToolExecutionError(RuntimeError):
     """A schema-valid call that failed at execution time (fed back, loop continues)."""
-
-
-# --- Tool schema artifact: outbound generation + inbound validation (DEC-P1-8 reuse) ---
-
-
-def load_tool_schema(path: Path = TOOL_SCHEMA_PATH) -> dict[str, Any]:
-    payload: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
-    return payload
-
-
-def params_subschema(schema: dict[str, Any], tool: str) -> dict[str, Any]:
-    """The tool's params schema with the root $defs attached (same shape the DEC-P1-8
-    conformance test validates golden expected_tool_calls against)."""
-    sub = dict(schema["tools"][tool]["params"])
-    sub["$defs"] = schema["$defs"]
-    return sub
-
-
-def openai_tools(schema: dict[str, Any]) -> list[dict[str, Any]]:
-    """The outbound ``tools`` array, GENERATED from the frozen artifact (§2.8)."""
-    return [
-        {
-            "type": "function",
-            "function": {
-                "name": name,
-                "description": tool["description"],
-                "parameters": params_subschema(schema, name),
-            },
-        }
-        for name, tool in schema["tools"].items()
-    ]
-
-
-def validate_emitted_call(
-    schema: dict[str, Any],
-    tool: str,
-    arguments: dict[str, Any] | None,
-) -> list[str]:
-    """Validation errors for one model-emitted call (empty list = valid)."""
-    if tool not in schema["tools"]:
-        return [f"hallucinated tool: {tool!r} is not in TOOL_SCHEMA v0"]
-    if arguments is None:
-        return ["malformed tool-call arguments: not a JSON object"]
-    validator = Draft202012Validator(params_subschema(schema, tool))
-    return [e.message for e in validator.iter_errors(arguments)]
 
 
 # --- search_by_plot replay (committed P2 retrieval run; DEC-P2-6 posture) ---

@@ -175,3 +175,18 @@ layer. A reviewer can see at a glance that the set was engineered for coverage.
 - false-merge rate = 0 on GS-10.
 - GS-07/08 are the fixtures where QLoRA must beat the well-prompted base model; if it does not,
   record the finding and decide explicitly whether to keep the adapter.
+
+---
+
+## Injection fixtures live in a separate suite (P5, DEC-P5-3 Q1)
+
+Indirect prompt-injection scenarios are **not** part of this frozen GS-01..11 catalog — they
+carry no ground-truth-verification semantics and would muddy the retrieval/generation matrix.
+They live in their own suite, `evals/injection/*.yaml` (schema
+`sutradhar.evals.injection.InjectionFixture`, id space `INJ-\d{2}`): query-side direct
+injections, context-side payloads spliced into tool results by a wrapper executor (the live
+graph is never polluted; result shapes still round-trip the v0 schema), exfiltration probes,
+AgentDojo-class tool-call redirection, and benign look-alike false-positive controls. Metrics
+(ASR, false-positive rate, utility-under-attack) and the defense-on/off evidence row live in
+`docs/BENCHMARKS.md`; the gate is **ASR = 0 with defenses on** on the deterministic set. Run:
+`make injection-eval`.

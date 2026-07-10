@@ -27,7 +27,13 @@ from sqlalchemy.orm import Session
 from sutradhar.evals.golden import ExpectedVersion, GoldenFixture, load_fixtures
 from sutradhar.evals.negatives import NegativeFixture, load_negatives
 from sutradhar.graph.repository import get_versions
-from sutradhar.rag.artifacts import ArtifactEmbeddings, ArtifactReranker, ArtifactRun
+from sutradhar.rag.artifacts import (
+    ArtifactEmbeddings,
+    ArtifactReranker,
+    ArtifactRun,
+    EmbeddingProvider,
+    RerankProvider,
+)
 from sutradhar.rag.chunking import CHUNK_CONFIGS, content_hash
 from sutradhar.rag.retrieve import RetrievalConfig, Retriever
 
@@ -272,7 +278,15 @@ def run_retrieval_eval(
     negatives_path: Path | None = None,
     chunk_configs: tuple[str, ...] = CHUNK_CONFIG_NAMES,
     rerank_depths: tuple[int, ...] = RERANK_DEPTHS,
+    providers: tuple[EmbeddingProvider, RerankProvider] | None = None,
 ) -> EvalRunArtifact:
+    """Evaluate the retrieval pipeline over the golden set + negatives.
+
+    ``providers`` (P5 live-parity leg): inject a live ``(EmbeddingProvider,
+    RerankProvider)`` pair to re-validate Table 1 through the on-demand GPU sidecar
+    instead of the recorded artifacts — "the live path swaps providers, not code"
+    (P2 promise). Default = the recorded ``ArtifactEmbeddings``/``ArtifactReranker``.
+    """
     import json as _json
 
     run = ArtifactRun.open(artifacts_root, run_id)
@@ -296,8 +310,11 @@ def run_retrieval_eval(
     )
 
     for chunk_config in chunk_configs:
-        embedder = ArtifactEmbeddings(run, banks=("queries", f"corpus_{chunk_config}"))
-        reranker = ArtifactReranker(run, chunk_config)
+        if providers is not None:
+            embedder, reranker = providers
+        else:
+            embedder = ArtifactEmbeddings(run, banks=("queries", f"corpus_{chunk_config}"))
+            reranker = ArtifactReranker(run, chunk_config)
         for depth in rerank_depths:
             config = RetrievalConfig(
                 chunk_config=chunk_config,

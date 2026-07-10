@@ -127,6 +127,9 @@ class Deps:
     probe_health: Callable[[str, float], bool]
     run_smoke: Callable[[str, Settings], EndpointStatus]
     remove_scripts: Callable[[Any], int] = lambda client: 0
+    # Re-fetch an instance so late-registered proxy endpoints (e.g. the :8001 sidecar URL,
+    # which appears after the create-time snapshot) become visible; default = identity.
+    refresh_instance: Callable[[Any, Any], Any] = lambda client, instance: instance
     monotonic: Callable[[], float] = time.monotonic
     sleep: Callable[[float], None] = time.sleep
     log: Callable[[str], None] = lambda msg: print(msg, flush=True)
@@ -177,6 +180,17 @@ def _default_deps() -> Deps:
                 removed += 1
         return removed
 
+    def refresh_instance(client: Any, instance: Any) -> Any:
+        """Re-fetch by machine_id: proxy endpoints (:8001) register AFTER creation."""
+        machine_id = getattr(instance, "machine_id", None)
+        try:
+            for candidate in client.instances.list():
+                if getattr(candidate, "machine_id", None) == machine_id:
+                    return candidate
+        except Exception:  # noqa: BLE001 — refresh is best-effort, stale beats crash
+            pass
+        return instance
+
     return Deps(
         create_client=create_client,
         close_client=lambda c: c.close(),
@@ -186,6 +200,7 @@ def _default_deps() -> Deps:
         probe_health=probe_health,
         run_smoke=run_smoke,
         remove_scripts=remove_scripts,
+        refresh_instance=refresh_instance,
     )
 
 
@@ -205,6 +220,71 @@ def _wait_for_endpoint(
                 return url
         deps.sleep(poll_interval_s)
     return None
+
+
+def _resolve_serve_endpoints(
+    instance: Any,
+    deps: Deps,
+    settings: Settings,
+    *,
+    timeout_s: float,
+    poll_interval_s: float,
+    client: Any = None,
+    require_sidecar: bool = False,
+) -> tuple[str | None, str | None, EndpointStatus | None]:
+    """Disambiguate the LLM from the embed/rerank sidecar on the multi-service serve box.
+
+    Both vLLM (:8000) and the FastAPI sidecar (:8001) answer ``/health``, and JarvisLabs
+    ``notebooksn`` proxy URLs carry no port — so a port-swap can't tell them apart (the
+    2026-07-05 window's 404). The LLM is the candidate whose **chat smoke** returns
+    ``up`` (this also naturally waits for vLLM to finish loading); the sidecar is the
+    other healthy candidate. The instance is REFRESHED each poll because the :8001 proxy
+    endpoint registers AFTER creation (and the embedder loads slower than the LLM smoke
+    passes — the reason the P4 relevancy pass embedded against the judge and 404'd,
+    footnote ¹). ``require_sidecar`` fails rather than falling back to the port-swap no-op
+    when a distinct sidecar is mandatory (the relevancy backfill).
+    Returns ``(llm_url, sidecar_url, smoke_status)``."""
+    deadline = deps.monotonic() + timeout_s
+    while deps.monotonic() < deadline:
+        if client is not None:
+            instance = deps.refresh_instance(client, instance)
+        candidates = candidate_base_urls(instance)
+        llm_url: str | None = None
+        status: EndpointStatus | None = None
+        for url in candidates:
+            if not deps.probe_health(url, 10.0):
+                continue
+            probe = deps.run_smoke(url, settings)
+            if probe.status == "up":  # /v1/models + chat succeeded → the real LLM
+                llm_url, status = url, probe
+                break
+        if llm_url is not None:
+            # Wait for a DISTINCT healthy sidecar URL (refreshing to catch the late :8001).
+            sidecar_deadline = deps.monotonic() + timeout_s
+            while deps.monotonic() < sidecar_deadline:
+                if client is not None:
+                    instance = deps.refresh_instance(client, instance)
+                healthy = next(
+                    (
+                        u
+                        for u in candidate_base_urls(instance)
+                        if u != llm_url and deps.probe_health(u, 10.0)
+                    ),
+                    None,
+                )
+                if healthy is not None:
+                    deps.log(f"  LLM endpoint: {llm_url}; sidecar: {healthy}")
+                    return llm_url, healthy, status
+                deps.sleep(poll_interval_s)
+            if require_sidecar:
+                deps.log(f"  no distinct sidecar became healthy for {llm_url}")
+                return llm_url, None, status
+            # Single-candidate hosts (tests / single-service boxes): port-swap heuristic.
+            sidecar = _embed_base_url(instance, llm_url)
+            deps.log(f"  LLM endpoint: {llm_url}; sidecar (fallback): {sidecar}")
+            return llm_url, sidecar, status
+        deps.sleep(poll_interval_s)
+    return None, None, None
 
 
 def validate(
@@ -1138,6 +1218,431 @@ def finetune_session(
         deps.close_client(client)
 
 
+# --- P5 serve session (task 5, P5_SPEC §2.6, DEC-P5-4): the live-demo window -----------
+# One A100, three endpoints: vLLM (LLM, :8000) + one sidecar process (BGE-M3 dense+sparse
+# /v1/embeddings AND bge-reranker-v2-m3 /v1/rerank, :8001). Health-gate everything, print
+# the env exports the API needs, hold for SERVE_HOLD_MINUTES, destroy in `finally`.
+
+SIDECAR_SCRIPT = Path("rag-engine/serve_embed_rerank.py")
+SERVE_HEARTBEAT_S = 60.0  # hold-loop heartbeat cadence
+
+
+def build_serve_startup_script(
+    token: str,
+    llm_model: str,
+    serve_flags: str,
+    embed_model: str,
+    rerank_model: str,
+    sidecar_source: str,
+) -> str:
+    """vLLM (:8000, foreground) + the embed/rerank sidecar (:8001, background).
+
+    The sidecar file is heredoc-embedded at build time (self-contained, DEC-P2-7: the box
+    never sees the repo; nothing needs to come back, so no HF relay either). It runs in
+    its OWN venv: FlagEmbedding needs ``transformers<5`` (its reranker calls
+    ``tokenizer.prepare_for_model``, removed in v5) while vLLM tracks latest — one shared
+    env would silently up/downgrade one of them. No ``-x``: the token must never echo."""
+    return (
+        "#!/bin/bash\n"
+        "set -euo pipefail\n"  # no -x: the token must never echo into instance logs
+        f"export HF_TOKEN={token}\n"
+        "export HF_HOME=/home/hf_cache\n"
+        "mkdir -p /home/hf_cache\n"
+        "cat > /root/serve_embed_rerank.py << 'SIDECAR_PY'\n"
+        f"{sidecar_source}\n"
+        "SIDECAR_PY\n"
+        # Sidecar venv: the DEC-P2-7 authoritative pins (same as build_embed_startup_script)
+        # + the serving deps; isolated from vLLM's transformers requirement.
+        "python -m venv /root/sidecar_venv\n"
+        "/root/sidecar_venv/bin/pip install -q numpy fastapi uvicorn huggingface_hub "
+        "'transformers<5' FlagEmbedding >/root/pip_sidecar.log 2>&1\n"
+        f"nohup /root/sidecar_venv/bin/python /root/serve_embed_rerank.py "
+        f"--host 0.0.0.0 --port {EMBED_SERVE_PORT} "
+        f"--embed-model {embed_model} --rerank-model {rerank_model} "
+        "> /root/sidecar.log 2>&1 &\n"
+        "pip install -U vllm >/root/pip_vllm.log 2>&1\n"
+        f"vllm serve {llm_model} --host 0.0.0.0 --port {SERVE_PORT} {serve_flags}\n"
+    )
+
+
+def build_judge_sidecar_startup_script(
+    token: str,
+    judge_model: str,
+    embed_model: str,
+    rerank_model: str,
+    sidecar_source: str,
+) -> str:
+    """Judge (:8000) + the SAME FlagEmbedding sidecar for BGE-M3 (:8001).
+
+    Replaces the P3/P4 ``vllm serve --task embed`` embedder, which this vLLM version
+    rejects (``unrecognized arguments: --task embed``, found live 2026-07-05) — the reason
+    the relevancy pass embedded against the judge and 404'd. The sidecar is the proven
+    embed path (it produced session A's parity Recall@10=1.0). The judge is served plain
+    (no gemma tool-parser flags — RAGAS/judge traffic is plain chat completions)."""
+    return (
+        "#!/bin/bash\n"
+        "set -euo pipefail\n"
+        f"export HF_TOKEN={token}\n"
+        "export HF_HOME=/home/hf_cache\n"
+        "mkdir -p /home/hf_cache\n"
+        "cat > /root/serve_embed_rerank.py << 'SIDECAR_PY'\n"
+        f"{sidecar_source}\n"
+        "SIDECAR_PY\n"
+        "python -m venv /root/sidecar_venv\n"
+        "/root/sidecar_venv/bin/pip install -q numpy fastapi uvicorn huggingface_hub "
+        "'transformers<5' FlagEmbedding >/root/pip_sidecar.log 2>&1\n"
+        f"nohup /root/sidecar_venv/bin/python /root/serve_embed_rerank.py "
+        f"--host 0.0.0.0 --port {EMBED_SERVE_PORT} "
+        f"--embed-model {embed_model} --rerank-model {rerank_model} "
+        "> /root/sidecar.log 2>&1 &\n"
+        "pip install -U vllm >/root/pip_vllm.log 2>&1\n"
+        f"vllm serve {judge_model} --host 0.0.0.0 --port {SERVE_PORT}\n"
+    )
+
+
+def serve_session(
+    settings: Settings | None = None,
+    deps: Deps | None = None,
+    *,
+    health_timeout_s: float = DEFAULT_HEALTH_TIMEOUT_S,
+    poll_interval_s: float = DEFAULT_POLL_INTERVAL_S,
+    heartbeat_s: float = SERVE_HEARTBEAT_S,
+    sidecar_path: Path = SIDECAR_SCRIPT,
+) -> Evidence:
+    """create → vLLM + sidecar → health-gate → print exports → hold (TTL) → destroy.
+
+    The hold is bounded by ``SERVE_HOLD_MINUTES``; Ctrl-C (or ``make gpu-stop`` from
+    another terminal) ends it early — teardown is guaranteed in ``finally`` either way."""
+    settings = settings or get_settings()
+    deps = deps or _default_deps()
+    ev = Evidence(requested_model=settings.llm_model, gpu_type=settings.gpu_type)
+
+    if not sidecar_path.exists():
+        ev.status = "error"
+        ev.detail = f"sidecar script missing: {sidecar_path} — fresh clone should have it"
+        return ev
+    script = build_serve_startup_script(
+        settings.require("hf_token"),
+        settings.llm_model,
+        settings.vllm_serve_flags,
+        settings.embed_model,
+        settings.rerank_model,
+        sidecar_path.read_text(encoding="utf-8"),
+    )
+
+    client = deps.create_client(settings)
+    instance: Any = None
+    try:
+        deps.log(
+            f"[gpu-serve] creating {settings.gpu_type} to serve {settings.llm_model} "
+            f"+ embed/rerank sidecar (hold {settings.serve_hold_minutes} min) …"
+        )
+        t0 = deps.monotonic()
+        instance = deps.create_instance(client, settings, script)
+        ev.machine_id = getattr(instance, "machine_id", None)
+        deps.log(f"  instance {ev.machine_id} running; waiting for vLLM /health …")
+
+        # Smoke-based disambiguation (2026-07-05 lesson): both services answer /health
+        # and the proxy URLs carry no port — the LLM is the candidate whose chat smoke
+        # returns "up"; the sidecar is the other healthy candidate.
+        base_url, embed_url, status = _resolve_serve_endpoints(
+            instance,
+            deps,
+            settings,
+            timeout_s=health_timeout_s,
+            poll_interval_s=poll_interval_s,
+            client=client,
+        )
+        if base_url is None or status is None:
+            ev.status = "off"
+            ev.detail = f"LLM endpoint not up within {health_timeout_s}s"
+            return ev
+        assert embed_url is not None
+        ev.status = status.status
+        ev.served_model = status.model
+        ev.sample_token = status.sample_token
+        ev.latency_ms = status.latency_ms
+        ev.booted = True
+        ev.create_to_up_s = round(deps.monotonic() - t0, 1)
+
+        deps.log("  serve window UP — export these in the API shell:")
+        deps.log(f"    export LLM_BASE_URL={base_url}")
+        deps.log(f"    export EMBED_BASE_URL={embed_url}")
+        deps.log(f"    export RERANK_BASE_URL={embed_url}")
+
+        hold_deadline = deps.monotonic() + settings.serve_hold_minutes * 60.0
+        try:
+            while (remaining := hold_deadline - deps.monotonic()) > 0:
+                deps.log(
+                    f"  [gpu-serve] holding — {remaining / 60.0:.0f} min left "
+                    "(Ctrl-C or `make gpu-stop` to end early)"
+                )
+                deps.sleep(min(heartbeat_s, remaining))
+            ev.detail = (
+                f"serve window held {settings.serve_hold_minutes} min (TTL reached), destroyed"
+            )
+        except KeyboardInterrupt:
+            ev.detail = "serve window stopped early (Ctrl-C) — teardown as designed"
+        return ev
+    except Exception as exc:  # noqa: BLE001 — record, then guarantee teardown in finally
+        ev.status = "error"
+        ev.detail = f"{type(exc).__name__}: {exc}"
+        return ev
+    finally:
+        if instance is not None and ev.machine_id is not None:
+            try:
+                ev.destroyed = deps.destroy_instance(client, ev.machine_id)
+                deps.log(f"  destroyed instance {ev.machine_id}: {ev.destroyed}")
+            except Exception as exc:  # noqa: BLE001
+                ev.detail += f" | TEARDOWN FAILED: {exc} — run `make gpu-nuke`"
+                deps.log(f"  TEARDOWN FAILED for {ev.machine_id}: {exc}")
+        try:  # script-quota hygiene + the embedded token dies with the script slot
+            deps.remove_scripts(client)
+        except Exception as exc:  # noqa: BLE001
+            deps.log(f"  script cleanup failed (non-fatal): {exc}")
+        deps.close_client(client)
+
+
+# --- P5 serving-benchmark window (task 13, P5_SPEC §5.13, DEC-P5-4/Q4) ----------------
+# Two ephemeral sessions, one sealed artifact:
+#   Session A (serve topology): vLLM Gemma :8000 + embed/rerank sidecar :8001 —
+#     parity check + injection ASR on/off + e2e latency/tokens + vLLM /metrics snapshot.
+#   Session B (judge topology, user-confirmed 2026-07-05): JUDGE_MODEL :8000 + BGE-M3
+#     :8001 — the answer_relevancy backfill. gpt-oss-20b does NOT co-reside with the
+#     serve stack on one A100 40GB; the proven judge-session path is reused instead.
+# Both destroy in `finally`; the artifact seals whatever evidence was gathered.
+
+
+class _SessionSkippedError(Exception):
+    """Control-flow marker: this window phase deliberately skips a session."""
+
+
+def _default_serve_captures(llm_url: str, embed_url: str, rerank_url: str) -> dict[str, Any]:
+    from sutradhar.serving.benchmark import run_serve_captures
+
+    return dict(run_serve_captures(llm_url, embed_url, rerank_url))
+
+
+def _default_relevancy_capture(judge_url: str, embed_url: str) -> Any:
+    from sutradhar.serving.benchmark import run_relevancy_capture
+
+    return run_relevancy_capture(judge_url, embed_url)
+
+
+def serving_benchmark_session(
+    settings: Settings | None = None,
+    deps: Deps | None = None,
+    *,
+    run_captures: Callable[[str, str, str], dict[str, Any]] = _default_serve_captures,
+    run_relevancy: Callable[[str, str], Any] = _default_relevancy_capture,
+    health_timeout_s: float = DEFAULT_HEALTH_TIMEOUT_S,
+    poll_interval_s: float = DEFAULT_POLL_INTERVAL_S,
+    sidecar_path: Path = SIDECAR_SCRIPT,
+    out_dir: Path = Path("evals/serving_runs"),
+    phase: str = "all",  # all | serve | relevancy
+    merge_run: str | None = None,  # merge this phase's steps into an existing artifact
+) -> Evidence:
+    """create(serve) → captures → destroy → create(judge) → relevancy → destroy → seal.
+
+    ``phase="relevancy"`` re-runs ONLY session B and ``phase="serve"`` ONLY session A;
+    with ``merge_run=<run_id>`` the phase's fresh steps merge into the already-sealed
+    artifact (cost discipline — don't re-pay for the leg that is already real evidence)."""
+    from sutradhar.serving.benchmark import ServingRunArtifact, StepResult, build_artifact, seal
+
+    settings = settings or get_settings()
+    deps = deps or _default_deps()
+    ev = Evidence(requested_model=settings.llm_model, gpu_type=settings.gpu_type)
+    run_id = merge_run or f"servewin-{os.urandom(4).hex()}"
+    steps: dict[str, Any] = {}
+    endpoints: dict[str, str] = {}
+    served_model: str | None = None
+    base_artifact: ServingRunArtifact | None = None
+    if merge_run:
+        base_artifact = ServingRunArtifact.model_validate_json(
+            (out_dir / f"{merge_run}.json").read_text(encoding="utf-8")
+        )
+        steps.update(
+            parity=base_artifact.parity,
+            injection=base_artifact.injection,
+            latency=base_artifact.latency,
+            relevancy=base_artifact.relevancy,
+        )
+        endpoints = dict(base_artifact.serving.get("endpoints", {}))
+        served_model = base_artifact.model
+
+    if not sidecar_path.exists():
+        ev.status = "error"
+        ev.detail = f"sidecar script missing: {sidecar_path}"
+        return ev
+
+    client = deps.create_client(settings)
+
+    def _teardown(instance: Any, label: str) -> None:
+        machine_id = getattr(instance, "machine_id", None)
+        if machine_id is None:
+            return
+        try:
+            ev.destroyed = deps.destroy_instance(client, machine_id)
+            deps.log(f"  destroyed {label} instance {machine_id}: {ev.destroyed}")
+        except Exception as exc:  # noqa: BLE001
+            ev.detail += f" | TEARDOWN FAILED ({label}): {exc} — run `make gpu-nuke`"
+            deps.log(f"  TEARDOWN FAILED for {machine_id}: {exc}")
+
+    try:
+        # --- Session A: the serve topology (Gemma + sidecar) ---
+        instance: Any = None
+        if phase == "relevancy":
+            # Cost discipline: session A's captures are already-sealed evidence (merge_run)
+            # or deliberately skipped; don't re-pay for the serve window while iterating B.
+            deps.log(f"[serving-benchmark] {run_id}: session A skipped (phase=relevancy)")
+            for name in ("parity", "injection", "latency"):
+                steps.setdefault(name, StepResult(ok=False, error="skipped (phase=relevancy)"))
+        else:
+            deps.log(f"[serving-benchmark] {run_id}: session A — serve topology …")
+        try:
+            if phase == "relevancy":
+                raise _SessionSkippedError()
+            t0 = deps.monotonic()
+            script = build_serve_startup_script(
+                settings.require("hf_token"),
+                settings.llm_model,
+                settings.vllm_serve_flags,
+                settings.embed_model,
+                settings.rerank_model,
+                sidecar_path.read_text(encoding="utf-8"),
+            )
+            instance = deps.create_instance(client, settings, script)
+            ev.machine_id = getattr(instance, "machine_id", None)
+            # Smoke-based disambiguation: both services answer /health and the proxy URLs
+            # carry no port (the 2026-07-05 404 lesson) — the LLM is the candidate whose
+            # chat smoke returns "up"; the sidecar is the other healthy candidate.
+            base_url, embed_url, status = _resolve_serve_endpoints(
+                instance,
+                deps,
+                settings,
+                timeout_s=health_timeout_s,
+                poll_interval_s=poll_interval_s,
+                client=client,
+                require_sidecar=True,  # parity + latency need the real embed/rerank
+            )
+            if base_url is None or status is None:
+                raise RuntimeError(f"LLM endpoint not up within {health_timeout_s}s")
+            if embed_url is None:
+                raise RuntimeError("embed/rerank sidecar never became reachable")
+            ev.booted = True
+            ev.create_to_up_s = round(deps.monotonic() - t0, 1)
+            served_model = status.model
+            endpoints = {"llm": base_url, "embed": embed_url, "rerank": embed_url}
+            deps.log(f"  serve window UP ({base_url}); running captures …")
+            steps.update(run_captures(base_url, embed_url, embed_url))
+            for name in ("parity", "injection", "latency"):
+                result = steps.get(name)
+                deps.log(f"  [{name}] ok={getattr(result, 'ok', None)}")
+        except _SessionSkippedError:
+            pass
+        except Exception as exc:  # noqa: BLE001 — record as step evidence, keep going
+            deps.log(f"  session A failed: {exc}")
+            for name in ("parity", "injection", "latency"):
+                steps.setdefault(
+                    name, StepResult(ok=False, error=f"session A: {type(exc).__name__}: {exc}")
+                )
+        finally:
+            _teardown(instance, "serve")
+            try:
+                deps.remove_scripts(client)
+            except Exception as exc:  # noqa: BLE001
+                deps.log(f"  script cleanup failed (non-fatal): {exc}")
+
+        # --- Session B: the judge topology (relevancy backfill) ---
+        instance = None
+        if phase == "serve":
+            # Cost discipline (mirror of phase=relevancy): reconfirm session A only, keep
+            # the already-sealed relevancy result from merge_run.
+            deps.log(f"[serving-benchmark] {run_id}: session B skipped (phase=serve)")
+            steps.setdefault("relevancy", StepResult(ok=False, error="skipped (phase=serve)"))
+        else:
+            deps.log(f"[serving-benchmark] {run_id}: session B — judge topology …")
+        try:
+            if phase == "serve":
+                raise _SessionSkippedError()
+            judge_model = settings.require("judge_model")
+            # NOT build_judge_startup_script: its `vllm serve --task embed` is rejected by
+            # current vLLM (found live 2026-07-05) — use the proven FlagEmbedding sidecar.
+            script = build_judge_sidecar_startup_script(
+                settings.require("hf_token"),
+                judge_model,
+                settings.embed_model,
+                settings.rerank_model,
+                sidecar_path.read_text(encoding="utf-8"),
+            )
+            instance = deps.create_instance(client, settings, script)
+            # Disambiguate judge (chat) from BGE-M3 (embed-only) the same smoke way — the
+            # port-swap heuristic is a NO-OP on notebooksn URLs, which is why the P4
+            # footnote-¹ relevancy pass embedded against the judge and returned null.
+            # Smoke must request the JUDGE model id (the box serves gpt-oss, not gemma).
+            judge_settings = settings.model_copy(update={"llm_model": judge_model})
+            judge_url, judge_embed_url, _ = _resolve_serve_endpoints(
+                instance,
+                deps,
+                judge_settings,
+                timeout_s=health_timeout_s,
+                poll_interval_s=poll_interval_s,
+                client=client,
+                require_sidecar=True,  # relevancy MUST embed against BGE-M3, never gpt-oss
+            )
+            if judge_url is None or judge_embed_url is None:
+                raise RuntimeError(
+                    f"judge or its BGE-M3 embedder not healthy within {health_timeout_s}s"
+                )
+            deps.log(f"  judge window UP ({judge_url}); running relevancy backfill …")
+            steps["relevancy"] = run_relevancy(judge_url, judge_embed_url)
+            deps.log(f"  [relevancy] ok={getattr(steps['relevancy'], 'ok', None)}")
+        except _SessionSkippedError:
+            pass
+        except Exception as exc:  # noqa: BLE001
+            deps.log(f"  session B failed: {exc}")
+            steps.setdefault(
+                "relevancy", StepResult(ok=False, error=f"session B: {type(exc).__name__}: {exc}")
+            )
+        finally:
+            _teardown(instance, "judge")
+            try:
+                deps.remove_scripts(client)
+            except Exception as exc:  # noqa: BLE001
+                deps.log(f"  script cleanup failed (non-fatal): {exc}")
+
+        # --- Seal (always: partial evidence beats no evidence) ---
+        artifact = build_artifact(
+            run_id,
+            settings,
+            parity=steps["parity"],
+            injection=steps["injection"],
+            latency=steps["latency"],
+            relevancy=steps["relevancy"],
+            served_model=served_model,
+            endpoints=endpoints,
+        )
+        path = seal(artifact, out_dir)
+        # Record eval thresholds to MLflow (§6 DoD), degrading if the server is off — a
+        # window never fails because MLflow is down (the log_generation_run posture).
+        try:
+            from sutradhar.obs.mlflow_log import log_serving_run
+
+            mlflow_run = log_serving_run(artifact, path, settings=settings)
+            deps.log(f"  logged to MLflow: {mlflow_run}")
+        except Exception as exc:  # noqa: BLE001
+            deps.log(f"  MLflow logging skipped ({type(exc).__name__}: {exc})")
+        ev.status = "up" if artifact.all_ok else "error"
+        ev.detail = (
+            f"serving benchmark sealed: {path} "
+            f"(parity={steps['parity'].ok} injection={steps['injection'].ok} "
+            f"latency={steps['latency'].ok} relevancy={steps['relevancy'].ok})"
+        )
+        return ev
+    finally:
+        deps.close_client(client)
+
+
 def nuke(settings: Settings | None = None, deps: Deps | None = None) -> list[int]:
     """Destroy any stray instance carrying our tag — a leaked billing GPU is a defect."""
     settings = settings or get_settings()
@@ -1192,10 +1697,25 @@ def main(argv: list[str] | None = None) -> int:
         ev = finetune_session()
         _write_evidence(ev)
         return 0 if ev.status == "up" and ev.destroyed else 1
+    if cmd == "serve":
+        ev = serve_session()
+        _write_evidence(ev)
+        return 0 if ev.status == "up" and ev.destroyed else 1
+    if cmd == "serving-benchmark":
+        # Optional: `serving-benchmark relevancy <merge_run_id>` re-runs only session B
+        # and merges into the sealed artifact (relevancy iteration, cost discipline).
+        phase = argv[1] if len(argv) > 1 else "all"
+        merge_run = argv[2] if len(argv) > 2 else None
+        ev = serving_benchmark_session(phase=phase, merge_run=merge_run)
+        _write_evidence(ev)
+        return 0 if ev.status == "up" and ev.destroyed else 1
     if cmd == "nuke":
         nuke()
         return 0
-    print(f"usage: jarvis.py [validate|extract|embed|judge|teacher|finetune|nuke]  (got {cmd!r})")
+    print(
+        "usage: jarvis.py [validate|extract|embed|judge|teacher|finetune|serve"
+        f"|serving-benchmark|nuke]  (got {cmd!r})"
+    )
     return 2
 
 

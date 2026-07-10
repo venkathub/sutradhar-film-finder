@@ -303,3 +303,156 @@ def test_teacher_startup_script_quantized_no_secret() -> None:
     assert "--quantization fp8" in script  # W8A16 weight-only on Ampere (P4_SPEC D1)
     assert "HF_HOME=/home/hf_cache" in script  # persistent volume — root overlay is tiny
     assert "hf_" not in script.replace("hf_cache", "")  # ungated model — no token embedded
+
+
+# --- P5 serve session (task 5): vLLM + sidecar, bounded hold, guaranteed teardown ---
+
+
+def _serve_settings(hold_minutes: int = 1) -> Settings:
+    return Settings(
+        _env_file=None,
+        LLM_MODEL="google/gemma-4-E4B-it",
+        GPU_TYPE="A100",
+        HF_TOKEN="hf_test_token",
+        SERVE_HOLD_MINUTES=str(hold_minutes),
+    )
+
+
+def _sidecar_path() -> Path:
+    return Path(__file__).resolve().parents[1] / "rag-engine" / "serve_embed_rerank.py"
+
+
+def test_serve_startup_script_contents() -> None:
+    script = jarvis.build_serve_startup_script(
+        "hf_test_token",
+        "google/gemma-4-E4B-it",
+        "--enable-auto-tool-choice --tool-call-parser gemma4",
+        "BAAI/bge-m3",
+        "BAAI/bge-reranker-v2-m3",
+        "SIDECAR_SOURCE_MARKER = 1",
+    )
+    assert "set -euo pipefail" in script and "set -euxo" not in script  # token never echoes
+    assert script.count("hf_test_token") == 1
+    assert "SIDECAR_SOURCE_MARKER = 1" in script  # sidecar heredoc-embedded
+    assert "'transformers<5' FlagEmbedding" in script  # DEC-P2-7 authoritative pins
+    assert "sidecar_venv" in script  # isolated from vLLM's transformers requirement
+    assert f"--port {jarvis.EMBED_SERVE_PORT}" in script
+    assert "--embed-model BAAI/bge-m3 --rerank-model BAAI/bge-reranker-v2-m3" in script
+    assert (
+        f"vllm serve google/gemma-4-E4B-it --host 0.0.0.0 --port {jarvis.SERVE_PORT} "
+        "--enable-auto-tool-choice --tool-call-parser gemma4" in script
+    )
+
+
+def test_serve_happy_path_holds_prints_exports_and_destroys() -> None:
+    client = _FakeClient()
+    logs: list[str] = []
+    deps = _base_deps(client, log=logs.append)
+    ev = jarvis.serve_session(
+        _serve_settings(hold_minutes=1),
+        deps,
+        health_timeout_s=100,
+        poll_interval_s=1,
+        sidecar_path=_sidecar_path(),
+    )
+    assert ev.status == "up" and ev.booted is True
+    assert "TTL reached" in ev.detail
+    assert client.destroyed == [4242] and ev.destroyed is True
+    assert client.closed is True
+    joined = "\n".join(logs)
+    assert "export LLM_BASE_URL=http://10.0.0.9:8000/v1" in joined
+    assert "export EMBED_BASE_URL=http://10.0.0.9:8001/v1" in joined
+    assert "export RERANK_BASE_URL=http://10.0.0.9:8001/v1" in joined
+    assert "holding" in joined  # heartbeat ran
+
+
+def test_serve_disambiguates_llm_from_sidecar_by_smoke() -> None:
+    """Both services answer /health and proxy URLs carry no port (2026-07-05 window
+    lesson): the LLM is the candidate whose CHAT SMOKE returns up, the sidecar is the
+    other healthy candidate — never a port-swap guess."""
+    client = _FakeClient()
+    logs: list[str] = []
+    smoked: list[str] = []
+
+    def smoke(url: str, s: Settings) -> EndpointStatus:
+        smoked.append(url)
+        # The sidecar URL (listed FIRST) answers /health but fails the chat smoke.
+        status = "error" if "sidecar" in url else "up"
+        return EndpointStatus(
+            status=status, model="m", sample_token="x", latency_ms=9.0, detail=status
+        )
+
+    instance = _FakeInstance(4242)
+    instance.endpoints = [
+        "https://sidecar4242.notebooksn.jarvislabs.net",  # no port in the URL
+        "https://llm4242.notebooksn.jarvislabs.net",
+    ]
+    instance.public_ip = ""  # proxy-only host
+
+    ev = jarvis.serve_session(
+        _serve_settings(hold_minutes=1),
+        _base_deps(
+            client,
+            create_instance=lambda c, s, script: instance,
+            run_smoke=smoke,
+            log=logs.append,
+        ),
+        health_timeout_s=100,
+        poll_interval_s=1,
+        sidecar_path=_sidecar_path(),
+    )
+    assert ev.status == "up"
+    joined = "\n".join(logs)
+    # The LLM export is the smoke-passing candidate; the sidecar is the OTHER one.
+    assert "export LLM_BASE_URL=https://llm4242.notebooksn.jarvislabs.net/v1" in joined
+    assert "export EMBED_BASE_URL=https://sidecar4242.notebooksn.jarvislabs.net/v1" in joined
+    assert client.destroyed == [4242]  # never leak a GPU
+
+
+def test_serve_teardown_when_smoke_raises() -> None:
+    client = _FakeClient()
+
+    def boom(url: str, s: Settings) -> EndpointStatus:
+        raise RuntimeError("vllm crashed mid-smoke")
+
+    ev = jarvis.serve_session(
+        _serve_settings(),
+        _base_deps(client, run_smoke=boom),
+        health_timeout_s=100,
+        poll_interval_s=1,
+        sidecar_path=_sidecar_path(),
+    )
+    assert ev.status == "error"
+    assert client.destroyed == [4242] and ev.destroyed is True
+
+
+def test_serve_ctrl_c_during_hold_stops_early_and_destroys() -> None:
+    client = _FakeClient()
+    logs: list[str] = []
+
+    def sleep(seconds: float) -> None:
+        if any("holding" in line for line in logs):
+            raise KeyboardInterrupt  # user hits Ctrl-C mid-hold
+
+    ev = jarvis.serve_session(
+        _serve_settings(hold_minutes=60),
+        _base_deps(client, log=logs.append, sleep=sleep),
+        health_timeout_s=100,
+        poll_interval_s=1,
+        sidecar_path=_sidecar_path(),
+    )
+    assert ev.status == "up"  # early stop is not a failure
+    assert "stopped early" in ev.detail
+    assert client.destroyed == [4242] and ev.destroyed is True
+
+
+def test_serve_missing_sidecar_file_errors_before_create(tmp_path: Path) -> None:
+    client = _FakeClient()
+    ev = jarvis.serve_session(
+        _serve_settings(),
+        _base_deps(client),
+        sidecar_path=tmp_path / "nope.py",
+    )
+    assert ev.status == "error"
+    assert "sidecar script missing" in ev.detail
+    assert client.destroyed == []  # nothing was created, nothing to destroy

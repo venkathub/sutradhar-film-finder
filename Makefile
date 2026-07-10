@@ -8,8 +8,8 @@
 COMPOSE ?= docker compose -f infra/docker-compose.yml
 
 .DEFAULT_GOAL := help
-.PHONY: help setup fmt lint typecheck test test-int check up down down-v mlflow-up mlflow-down db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ingest-training resolve-conflicts export-training-entities ft-snapshot build-ft-scaffold validate-dataset teach-dataset gpu-teacher ft-dryrun gpu-finetune ft-verdict extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
-        smoke hf-check gpu-validate gpu-nuke
+.PHONY: help setup fmt lint typecheck test test-int check up down down-v mlflow-up mlflow-down mlflow-backfill mlflow-log-serving db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ingest-training resolve-conflicts export-training-entities ft-snapshot build-ft-scaffold validate-dataset teach-dataset gpu-teacher ft-dryrun gpu-finetune ft-verdict extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
+        smoke hf-check gpu-validate gpu-serve gpu-stop gpu-nuke api-up serving-benchmark injection-eval
 
 help: ## List available targets
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -55,6 +55,9 @@ mlflow-down: ## Stop the MLflow service (runs persist in Postgres + data/mlflow-
 
 mlflow-backfill: ## P3: log the committed P2 retrieval run (Table 1) to MLflow (needs mlflow-up)
 	uv run python -m sutradhar.obs.mlflow_log backfill-retrieval
+
+mlflow-log-serving: ## P5: log the committed serving-benchmark window to MLflow (needs mlflow-up)
+	uv run python -m sutradhar.obs.mlflow_log log-serving
 
 langfuse-up: ## P3: idempotent from-scratch Langfuse bootstrap on AIC Cloud (DEC-P3-7; needs AICCLOUD_API_KEY)
 	uv run python infra/langfuse/provision.py
@@ -136,11 +139,23 @@ ft-verdict: ## P4: 30-second demo — base-vs-QLoRA table + the frozen DEC-P4-8 
 smoke: ## LLM connectivity smoke test (green whether the GPU endpoint is up or off)
 	uv run python -m sutradhar.serving.smoke
 
+api-up: ## P5: serve the orchestration API (GPU-off experience works with zero GPU/DB)
+	uv run uvicorn --factory sutradhar.serving.app:create_app --host 0.0.0.0 --port $${API_PORT:-8080}
+
 hf-check: ## Verify Hugging Face Hub auth (whoami via HF_TOKEN)
 	uv run python -m sutradhar.serving.hf_check
 
 gpu-validate: ## One-time ephemeral JarvisLabs create->serve->smoke->destroy validation
 	uv run python infra/gpu/jarvis.py validate
+
+gpu-serve: ## P5: on-demand serve window — vLLM + embed/rerank sidecar, hold SERVE_HOLD_MINUTES, destroy
+	uv run python infra/gpu/jarvis.py serve
+
+serving-benchmark: ## P5: THE capture window — parity + injection ASR on/off + latency + relevancy -> sealed artifact
+	uv run python infra/gpu/jarvis.py serving-benchmark
+
+gpu-stop: ## P5: end the serve window from another terminal (destroys the tagged instance)
+	uv run python infra/gpu/jarvis.py nuke
 
 gpu-nuke: ## Safety: destroy any stray tagged JarvisLabs instance (no leaked GPU)
 	uv run python infra/gpu/jarvis.py nuke
@@ -156,6 +171,9 @@ gpu-judge: ## P3: ephemeral judge session (serve JUDGE_MODEL + BGE-M3 -> kappa r
 
 generation-dryrun: ## P3: 30-second demo — scripted mock endpoint -> scored transcripts -> committed artifact
 	uv run python evals/run_generation_eval.py --mode dry_run
+
+injection-eval: ## P5: injection suite dry-run (defenses ON) -> ASR/FP/utility -> committed summary
+	uv run python evals/run_injection_eval.py --defenses on
 
 benchmark-generation: ## P4 window: authoritative generation benchmark against LLM_BASE_URL (Table 2)
 	uv run python evals/run_generation_eval.py --mode live --with-judge --with-ragas

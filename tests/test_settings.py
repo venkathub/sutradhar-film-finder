@@ -209,3 +209,30 @@ def test_no_real_secret_literals_in_env_example() -> None:
         assert example.get(key, "") == "", f"{key} must be blank in .env.example"
     # No obvious HF token literal anywhere in the file.
     assert not re.search(r"hf_[A-Za-z0-9]{20,}", _ENV_EXAMPLE.read_text(encoding="utf-8"))
+
+
+def test_p5_serving_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
+    """P5 serving fields (P5_SPEC §2.2): rerank endpoint off by default; typed knobs."""
+    _clear_env(monkeypatch)
+    s = Settings(_env_file=None)
+    # Unset = GPU off = first-class degraded state (mirrors EMBED_BASE_URL).
+    assert s.rerank_base_url is None
+    assert s.api_port == 8080
+    assert s.session_ttl_s == 3600
+    assert s.gpu_hourly_usd == 0.89  # DEC-0003 A100 rate
+    assert s.serve_hold_minutes == 60
+
+
+def test_p5_serving_env_override(monkeypatch: pytest.MonkeyPatch) -> None:
+    _clear_env(monkeypatch)
+    monkeypatch.setenv("RERANK_BASE_URL", "http://gpu.example:8001")
+    monkeypatch.setenv("API_PORT", "9000")
+    monkeypatch.setenv("SESSION_TTL_S", "120")
+    monkeypatch.setenv("GPU_HOURLY_USD", "1.29")
+    monkeypatch.setenv("SERVE_HOLD_MINUTES", "15")
+    s = Settings(_env_file=None)
+    assert s.rerank_base_url == "http://gpu.example:8001"
+    assert s.api_port == 9000  # int coercion
+    assert s.session_ttl_s == 120
+    assert s.gpu_hourly_usd == 1.29  # float coercion
+    assert s.serve_hold_minutes == 15

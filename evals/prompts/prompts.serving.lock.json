@@ -1,0 +1,10 @@
+{
+  "$comment": "P5 serving bundle (v1.1, DEC-P5-3): the frozen v1 artifacts + the spotlighting appendix, under their own prompt_hash. The v1.0 prompts.lock.json stays pinned (Table 2 comparability); serving-run stamps record THIS hash. Regenerate: python -m sutradhar.evals.prompts --write-serving-lock.",
+  "files": {
+    "system_v1.md": "5e8a64c6c54a71d549fb348a413b3f88982974e85d83ff5c700a5fb35e494b20",
+    "exemplars_v1.md": "7be4d9273db5ce53bbb222643942810007fa28cd3b5f4216d93f9cdfa0b77f9e",
+    "intent_taxonomy_v1.json": "16b6de0ac229ef06e174490e0a0f9e0a12e591cd514e3cd7766f7b5d094126a2",
+    "spotlighting_appendix_v1_1.md": "8cb4f0adeb8a56890dc76071535e872b5ba927dc1f57bb7730da9c51c13f889c"
+  },
+  "prompt_hash": "98b3ece18697ba46e67c6d10cd5afe207564c39336e0f426bed188ca43a4d221"
+}

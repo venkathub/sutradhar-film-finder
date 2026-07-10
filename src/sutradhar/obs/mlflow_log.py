@@ -27,6 +27,7 @@ from sutradhar.evals.retrieval import EvalRunArtifact
 
 EXPERIMENT_GENERATION = "sutradhar/generation"
 EXPERIMENT_RETRIEVAL = "sutradhar/retrieval"
+EXPERIMENT_SERVING = "sutradhar/serving"
 
 RETRIEVAL_RUNS_DIR = Path("evals/retrieval_runs")
 
@@ -120,6 +121,63 @@ def backfill_retrieval_run(
         return str(run.info.run_id)
 
 
+def log_serving_run(
+    artifact: Any,
+    artifact_path: Path,
+    *,
+    settings: Settings | None = None,
+    tracking_uri: str | None = None,
+) -> str:
+    """Log one P5 serving-benchmark window (§6 DoD: eval thresholds recorded to MLflow).
+
+    Params = the §6.1 reproducibility stamp + serving config; metrics = the four capture
+    legs flattened (parity Recall@10/VSR, injection ASR on/off + FP + utility, latency
+    p50/p95 + tokens/sec, answer_relevancy). Replayable GPU-free from the sealed artifact
+    (``sutradhar.serving.benchmark.ServingRunArtifact``). Degrades if MLflow is off."""
+    import mlflow
+
+    settings = settings or get_settings()
+    mlflow.set_tracking_uri(tracking_uri or settings.mlflow_tracking_uri)
+    mlflow.set_experiment(EXPERIMENT_SERVING)
+    with mlflow.start_run(run_name=artifact.run_id) as run:
+        params: dict[str, Any] = {
+            "run_id": artifact.run_id,
+            "created_at": artifact.created_at,
+            "code_sha": artifact.code_sha,
+            "model": artifact.model,
+            "prompt_hash": artifact.prompt_hash,  # v1.1 serving bundle
+            "tool_schema_version": artifact.tool_schema_version,
+            "tool_schema_sha256": artifact.tool_schema_sha256,
+            "all_ok": artifact.all_ok,
+        }
+        params.update(
+            {f"serving.{k}": v for k, v in artifact.serving.items() if not isinstance(v, dict)}
+        )
+        mlflow.log_params(params)
+
+        metrics: dict[str, float] = {}
+        for leg in ("parity", "injection", "latency", "relevancy"):
+            step = getattr(artifact, leg)
+            metrics[f"{leg}.ok"] = float(step.ok)
+            _flatten(leg, step.data, metrics)
+        # MLflow metric keys allow only [A-Za-z0-9_./ -]; drop '@' and 'defenses_on/off'
+        # dotted booleans already coerced by _flatten.
+        clean = {k.replace("@", "_at_"): v for k, v in metrics.items()}
+        mlflow.log_metrics(clean)
+        mlflow.log_artifact(str(artifact_path))
+        return str(run.info.run_id)
+
+
+def latest_serving_artifact(runs_dir: Path = Path("evals/serving_runs")) -> tuple[Any, Path]:
+    from sutradhar.serving.benchmark import ServingRunArtifact
+
+    runs = [f for f in sorted(runs_dir.glob("*.json"))]
+    if not runs:
+        raise FileNotFoundError(f"no committed serving run under {runs_dir}")
+    path = runs[-1]
+    return ServingRunArtifact.model_validate_json(path.read_text("utf-8")), path
+
+
 def latest_retrieval_artifact(runs_dir: Path = RETRIEVAL_RUNS_DIR) -> tuple[EvalRunArtifact, Path]:
     runs = [
         f
@@ -141,7 +199,13 @@ def main(argv: list[str] | None = None) -> int:
         print(f"backfilled Table 1 run {artifact.run_id} -> MLflow run {run_id}")
         print(f"experiment: {EXPERIMENT_RETRIEVAL} @ {get_settings().mlflow_tracking_uri}")
         return 0
-    print("usage: python -m sutradhar.obs.mlflow_log backfill-retrieval")
+    if cmd == "log-serving":
+        artifact, path = latest_serving_artifact()
+        run_id = log_serving_run(artifact, path)
+        print(f"logged serving window {artifact.run_id} -> MLflow run {run_id}")
+        print(f"experiment: {EXPERIMENT_SERVING} @ {get_settings().mlflow_tracking_uri}")
+        return 0
+    print("usage: python -m sutradhar.obs.mlflow_log [backfill-retrieval|log-serving]")
     return 2
 
 
