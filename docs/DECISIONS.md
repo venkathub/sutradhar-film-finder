@@ -1385,3 +1385,118 @@ feeds the dashboards; dashboard screenshots + `export_trace` JSON + `/metrics` s
 per window (evidence outlives the VPS). **The RAGAS answer_relevancy backfill over the pinned
 base run runs in the P5 window** (root-cause the `ftwin-ce6b6930` null first), discharging the
 BENCHMARKS footnote ¹; no other Table 2 cell changes.
+
+---
+
+## DEC-P6-1 — UI stack: Vite + React + TypeScript SPA, built to static assets (2026-07-10)
+
+**Status:** Accepted (P6 grooming; user-confirmed — spec `docs/phases/P6_SPEC.md` §3 D1 + §7 Q3).
+
+**Options.** (A) **Vite + React + TS SPA** built to static assets, served by the app container and
+consumable by the static host. (B) Server-rendered Jinja2 + htmx (single Python runtime, zero
+node). (C) Streamlit/Gradio.
+
+**Decision.** **A.** "Product UI with citations + trace view" is a named skill row (ROADMAP §4);
+A is the only option producing pure static assets both serving surfaces can use, with
+componentized version cards/trace view and first-class testing. B reads as "backend engineer
+avoided frontend"; C has the weakest product signal and a heavyweight runtime for what should be
+static files. **Toolchain pins (research-verified 2026-07-10, spec §8):** Node 24 LTS "Krypton"
+(Active LTS; 22 is maintenance), Vite 8.x (stable on Rolldown since 2026-03-12; 8.1 current),
+React 19, Vitest 4 (Browser Mode, Playwright provider) — exact versions locked in
+`ui/app/package.json` + committed lockfile (the DEC-P0-1 lockfile discipline applied to node).
+Node is **build-time only** — never deployed, never serving; ROADMAP §2 compute placement
+untouched.
+
+**Consequences.** `ui/app/` is frontend assets (no `sutradhar.*` package, per the P0 stub note);
+`make ui-build`/`ui-dev` targets; a node job joins Tier-1 CI; the UI tool-label map is
+**generated from `tool_schema.v0.json`** with a drift test (DEC-P1-8 posture extended to the UI).
+
+## DEC-P6-2 — Response delivery: non-streaming JSON + progress states; SSE/token streaming CUT (2026-07-10)
+
+**Status:** Accepted (P6 grooming; user-confirmed — spec §3 D2). Finalizes the DEC-P5-1
+"SSE/streaming is P6 UI polish if wanted" deferral as a **deliberate cut**.
+
+**Options.** (A) **Non-streaming JSON (the pinned P5 contract) + staged progress affordance in
+the UI.** (B) SSE phase events (tool-call started/finished), final JSON unchanged. (C) Full token
+streaming.
+
+**Decision.** **A.** C is structurally wrong for this system: the no-hallucinated-movie **output
+gate must see the complete answer before display** — token streaming would show-then-retract an
+invention, breaking the guardrail story; and the agent loop interleaves tool rounds, so tokens
+arrive late regardless. B adds an endpoint + orchestrator callback surface + a second tested
+client path for turns measured at p50/p95 4.5/5.4 s (`servewin-25c029d3`) — a spinner's problem,
+not an architecture's. B is recorded as the documented future upgrade if live traffic ever
+warrants it.
+
+**Consequences.** One rendering path for live and replayed turns; the P5 ChatResponse contract
+changes only additively (DEC-P6-4).
+
+## DEC-P6-3 — Standing surfaces: GitHub Pages static site; demo video as a GitHub Release asset; VPS stays Langfuse-only; MLflow mirror and standing degradation app CUT (2026-07-10)
+
+**Status:** Accepted (P6 grooming; user-confirmed — spec §3 D3 + §7 Q1/Q2/Q4/Q5). Resolves the
+DEC-P3-7 "same VPS is the intended P6 consolidation host — decided in P6" clause.
+
+**Options (site).** (A) **GitHub Pages from `site/` via the official Actions deploy flow,
+github.io URL.** (B) AIC VPS (Caddy + cloudflared named tunnel on a real domain). (C) Cloudflare
+Pages/Netlify.
+
+**Decision.** **A** (limits verified 2026-07-10: 1 GB site / 100 GB-mo soft bandwidth / 10
+builds-hr; free on the already-public repo; a non-commercial portfolio fits the Pages terms).
+B would hang "always-available" off an outbound tunnel + a ₹799/mo box with **no inbound 443**
+(P3 finding) — a single point of failure for the one artifact that must never be down — and a
+named tunnel adds a domain-delegated-to-Cloudflare dependency. No custom domain
+(user-confirmed); github.io is the canonical URL. Four bundled sub-decisions, all
+user-confirmed:
+1. **Demo video = GitHub Release asset** (< 2 GiB/file, no bandwidth/total-size limit on release
+   assets — verified), linked via `DEMO_VIDEO_URL` from the site and the offline payload; never
+   committed to git history or the 1 GB-capped Pages site. Rejected: YouTube unlisted (evidence
+   on a revocable off-platform account).
+2. **VPS stays Langfuse-only** — its benchmark-cited traces are already exported + committed
+   (DEC-P3-7 posture), so the site never depends on it.
+3. **Read-only MLflow mirror on the VPS: CUT** — committed screenshots + run links already serve
+   the evidence; a public MLflow adds ops/attack surface for zero new proof.
+4. **No standing degradation-mode app** — the static surface is the only permanent deployment;
+   the app remains a one-command local/live-window artifact. A permanently-up chat endpoint
+   would muddy the "nothing inference-side runs 24/7" story CLAUDE.md makes a feature.
+
+**Consequences.** `site/` generator renders the benchmark page **from `BENCHMARKS.md`** (no
+hand-copied numbers) + diagram + video + evidence links; link-check + required-assets tests gate
+deploy; Pages deploy job on merge to main.
+
+## DEC-P6-4 — Trace-view data source: additive `trace[]` on ChatResponse, assembled in-process (2026-07-10)
+
+**Status:** Accepted (P6 grooming; user-confirmed — spec §3 D4).
+
+**Options.** (A) **`ChatResponse.trace: list[TraceStep]`** assembled by the orchestrator from the
+per-call records it already validates. (B) UI queries the Langfuse API. (C) Persist tool records
+in Redis behind a new `GET /api/trace/{conversation_id}`.
+
+**Decision.** **A.** The data already exists at the validation seam; deterministic and testable
+with the scripted fake client; replay transcripts adapt to the same shape (one rendering path).
+B is disqualifying — observability credentials in a browser + VPS coupling for a demo UI. C
+grows session state for data the client wanted at turn time. `TraceStep` carries tool name +
+arguments + `valid`/`validation_error` + a **bounded** `result_summary` + latency; the change is
+additive (existing consumers unaffected); Langfuse remains the ops view via `trace_id`.
+
+**Consequences.** Every rendered tool call re-validates against `tool_schema.v0.json` in CI
+(`test_ui_trace_tool_calls_validate`) — no hallucinated tool/param name can reach a rendered
+trace. v0 is consumed unchanged: **no version bump** (wording-only status note at P6 exit).
+
+## DEC-P6-5 — App containerization: single multi-stage image; FastAPI serves the built UI (2026-07-10)
+
+**Status:** Accepted (P6 grooming; user-confirmed — spec §3 D5).
+
+**Options.** (A) **One `app` image**: `node:24` build stage → uv runtime stage per the official
+Astral multi-stage pattern (`uv sync --frozen --no-dev` with cache mounts; final image = venv +
+app only, no uv/compilers); FastAPI mounts the built UI (same-origin, no CORS). (B) Separate
+nginx container for the UI. (C) No app container.
+
+**Decision.** **A.** One image + one new compose service = the fastest `make demo-up` and the
+cleanest rebuild-from-scratch. B adds a container/CI leg and reverse-proxy config a demo stack
+without TLS/scale doesn't earn (the DEC-P5-1 rationale, again) — recorded as the future-ops
+split if the app ever fronts real traffic. C fails the "full stack containerized, one-command
+bring-up" exit criterion outright.
+
+**Consequences.** `make demo-up` = compose up (postgres, redis, app) → migrate → seed from
+recorded fixtures → open UI: fresh clone to working zero-GPU demo in one command, CI-proven from
+a fresh checkout; model endpoints stay env-driven and empty by default (off = first-class).
