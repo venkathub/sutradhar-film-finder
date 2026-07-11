@@ -73,6 +73,9 @@ through the API path in `tests/integration/test_api_golden_regressions.py`.
 
 ### Results — live serving-benchmark window (2026-07-05, `servewin-25c029d3`)
 
+> **Demo paths:** the rehearsed zero-GPU, live-window, and rebuild-from-scratch flows —
+> with timings, costs, and the verified-teardown checklist — live in `docs/RUNBOOK.md` (P6).
+
 One `make serving-benchmark` run on an on-demand A100 (two ephemeral sessions, both destroyed;
 sealed to `evals/serving_runs/`, logged to MLflow `sutradhar/serving`). Full numbers +
 reproducibility stamp in `docs/BENCHMARKS.md` §"Serving & guardrails":

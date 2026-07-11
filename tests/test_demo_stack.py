@@ -55,3 +55,22 @@ def test_makefile_demo_targets() -> None:
     assert "--profile demo up -d --build --wait" in text
     assert "alembic upgrade head" in text
     assert "seed_graph_ci.py" in text
+
+
+def test_runbook_has_the_three_rehearsed_paths() -> None:
+    """P6 task 10: the RUNBOOK names all three paths + the verified teardown; the
+    task-11 rehearsal must fill the measured slots (this assertion flips then)."""
+    runbook = (REPO_ROOT / "docs" / "RUNBOOK.md").read_text(encoding="utf-8")
+    for required in (
+        "Path A — Zero-GPU demo",
+        "Path B — Live interview demo",
+        "Path C — Rebuild from scratch",
+        "make demo-up",
+        "make gpu-serve",
+        "make gpu-stop",
+        "make gpu-nuke",
+        "DEC-0003",
+    ):
+        assert required in runbook, f"RUNBOOK missing {required!r}"
+    # Honesty: unmeasured timings are marked pending, never invented (until task 11).
+    assert "measured in task 11" in runbook

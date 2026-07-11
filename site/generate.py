@@ -159,6 +159,9 @@ on-demand GPU (off by default) and the evals/observability rail."/>
   {video_li}
   <li><a href="{escape(repo_url)}">Source repository</a> — specs, decision log (every
   architectural choice dated and argued), runbook, and the full eval harness.</li>
+  <li><a href="{escape(repo_url)}/blob/main/docs/RUNBOOK.md">Runbook</a> — the three
+  rehearsed demo paths (zero-GPU, timed live GPU window, rebuild-from-scratch) with
+  measured timings, costs, and the verified-teardown discipline.</li>
   <li>MLflow evidence (committed screenshots):
     <a href="assets/p3-mlflow-generation-dryrun.png">generation eval runs</a> ·
     <a href="assets/mlflow_qlora_run.png">the QLoRA training run</a> ·
