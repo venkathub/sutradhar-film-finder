@@ -1509,7 +1509,9 @@ non-streaming JSON + deterministic D2 progress states, SSE stayed cut (DEC-P6-2)
 deploy workflow live, video-as-Release-asset wiring in place, VPS untouched/Langfuse-only,
 MLflow mirror stayed cut (DEC-P6-3); additive `ChatResponse.trace[]` assembled in-process
 (DEC-P6-4); single multi-stage `app` image, `make demo-up` CI-proven from a fresh checkout
-(DEC-P6-5). Rehearsal window measured (545 s cold bring-up, 25 s warm `demo-up`, $0.21/window,
-teardown `nuke`-verified — `docs/RUNBOOK.md` + BENCHMARKS degradation evidence). **One human
-step pending:** the narrated demo video (script in the RUNBOOK); until recorded + uploaded,
-`DEMO_VIDEO_URL` stays unset and no surface renders a video link.
+(DEC-P6-5). Rehearsal windows measured (545/530 s cold bring-up, 25 s warm `demo-up`,
+$0.21 + $0.17, teardown `nuke`-verified both times — `docs/RUNBOOK.md` + BENCHMARKS
+degradation evidence). **Demo video recorded and published (2026-07-11):** one-take Playwright
+screen capture via the committed recorder (`ui/app/e2e/record_demo.mjs`) — zero-GPU replay →
+live turns → the GPU stopped on camera — Release asset `p6-demo-v1`, `DEMO_VIDEO_URL` set
+(repo variable + env); a narrated re-record stays optional per the RUNBOOK script.

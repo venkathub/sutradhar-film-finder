@@ -217,8 +217,11 @@ original flagged, HIGH tiers), `docs/evidence/p6/live-backtrack-trace-citations.
 open: validated v0 calls, tokens + amortized cost; citation disclosure with the Wikidata link +
 human-gate note), `docs/evidence/p6/live-full-story.png` (three turns incl. the output gate
 flagging an ungrounded title on the tool-less turn 2, and the honest no-match on the decoy).
-Demo video: recording script in `docs/RUNBOOK.md`; published as a Release asset →
-`DEMO_VIDEO_URL`.
+**Demo video (recorded 2026-07-11, follow-up window, instance 442925, ~$0.17):**
+[Release asset `p6-demo-v1`](https://github.com/venkathub/sutradhar-film-finder/releases/download/p6-demo-v1/sutradhar-demo.webm)
+— one-take Playwright capture (84 s): zero-GPU replay → live turns → **the GPU stopped on
+camera** (the UI degrading to "offline by design"); recorder committed at
+`ui/app/e2e/record_demo.mjs`.
 
 **Rehearsal reproducibility stamp:** code SHA `c0eb3b3` · prompt bundle **v1.1** `98b3ece1…` ·
 TOOL_SCHEMA **v0** sha256 `4c10ea97…` (consumed unchanged) · served `google/gemma-4-E4B-it`

@@ -180,7 +180,8 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   teardown `nuke`-verified with the app auto-degrading to the offline state on camera.
 - **The capstone cost story: total on-demand GPU spend for the ENTIRE project ≈ $12–17**
   (every window itemized: $0.34 validation, ~$1 extraction, $0.22 embedding, <$1 judge, ~$2
-  teacher, ~$4–8 train+benchmark + $1.5 resume, ~$3–4 serving benchmark, $0.21 P6 rehearsal)
-  **against $0.00 of standing inference infrastructure** — nothing neural runs 24/7; a $0
-  GitHub Pages site (benchmark report generated from the single source of truth, link-checked
-  in CI) carries the standing evidence.
+  teacher, ~$4–8 train+benchmark + $1.5 resume, ~$3–4 serving benchmark, $0.38 across the two
+  P6 rehearsal/recording windows) **against $0.00 of standing inference infrastructure** —
+  nothing neural runs 24/7; a $0 GitHub Pages site (benchmark report generated from the single
+  source of truth, link-checked in CI) carries the standing evidence, and the demo video ends
+  with the GPU being destroyed on camera.

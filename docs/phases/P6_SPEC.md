@@ -1,15 +1,31 @@
 # P6 Spec — UI, Containerization, Always-Available Surface & Runbook
 
-> **Status: EXECUTED (2026-07-11).** Tasks 1–12 landed in order on `feature/p6-ui-packaging`;
-> rehearsal window measured (545 s cold bring-up, 25 s warm `demo-up`, $0.21/window, teardown
-> `nuke`-verified); evidence in `docs/RUNBOOK.md`, BENCHMARKS §"Graceful degradation", and
-> `docs/evidence/p6/`. **One human step pending:** the narrated demo video (recording script in
-> the RUNBOOK) → Release asset → `DEMO_VIDEO_URL`; no surface renders a video link until then.
+> **Status: EXECUTED — PHASE COMPLETE (2026-07-11).** All 12 §5 tasks delivered in order on
+> `feature/p6-ui-packaging`; §6 Definition of Done checked item by item below. **Every §4 gate
+> met:** rendered version-set recall **1.0** (GS-01/GS-06 on the DOM), **0 invented titles**
+> on decoys (detector re-run over rendered text), dub-never-remake / sibling / false-merge /
+> 3-turn-backtracking regressions green — **8/8 Playwright E2E**, **53/53 Vitest browser-mode**,
+> Tier-1 **780 passed / 1 skipped**, integration **116 passed / 3 pre-existing skips**,
+> ruff + mypy(strict) clean; pinned Table 1/2 artifacts untouched (asserted). Trace-view
+> conformance: every trace step in every committed transcript re-validates against v0
+> (`4c10ea97…`), labels + badge vocabulary byte-generated (drift-gated). Rehearsal windows
+> measured: **545/530 s cold bring-up**, **25 s** warm `make demo-up`, live UI parity
+> **p50 4252 ms**, **$0.21 + $0.17** for the two windows, teardown `nuke`-verified 0 stray
+> both times. **Demo video recorded** (one-take Playwright capture, 84 s: zero-GPU replay →
+> live turns → **GPU stopped on camera**, the UI degrading to "offline by design") and
+> published as Release asset `p6-demo-v1` → `DEMO_VIDEO_URL` set (repo variable + env).
+> Evidence: `docs/RUNBOOK.md` (measured timings), BENCHMARKS §"Graceful degradation" (+ repro
+> stamp), `docs/evidence/p6/` (3 live-UI screenshots). Decisions **DEC-P6-1..5** logged +
+> execution addendum; TOOL_SCHEMA.md P6 wording-only note (no version bump); LICENSING.md
+> TMDB-prominence/IMDb-courtesy rows made executable + P6 distribution rows.
 >
-> **Approved 2026-07-10.** Grooming complete: D1–D5 and Q1–Q5 confirmed by the user
-> with the recommended options (§3/§7); logged as **DEC-P6-1..5** in `docs/DECISIONS.md`.
-> Web-research pass done 2026-07-10 (§8) — toolchain versions, hosting limits, and attribution
-> obligations below are sourced, not assumed. Implementation follows the §5 task order.
+> _History: APPROVED 2026-07-10 (grooming: D1–D5 and Q1–Q5 confirmed with the recommended
+> options; logged as DEC-P6-1..5; §8 web-research pass same day). EXECUTED 2026-07-11 —
+> deviations discovered live are recorded in the close-out notes: the cold bring-up runs
+> ~9 min (not the P0 ~5.5 min — the embed/rerank sidecar adds ~3.5 min); the demo video is a
+> silent Playwright screen capture (recorder committed at `ui/app/e2e/record_demo.mjs`,
+> narrated re-record optional per the RUNBOOK script); GS-06's rendered franchise exposes the
+> sequel work's own original/remakes per v0 semantics (the E2E asserts the precise labels)._
 >
 > P6 packages everything the previous phases proved into the product and portfolio surface:
 > the chat UI (versions with the original flagged, per-claim citations, trace view, graceful
@@ -449,30 +465,35 @@ with the pinned expected tool flows — same fixtures that gate P2/P3):
 
 ---
 
-## 6. Definition of Done (instantiated from CLAUDE.md)
+## 6. Definition of Done (instantiated from CLAUDE.md) — CHECKED AT EXIT (2026-07-11)
 
-- [ ] Code complete and matching this approved spec (D1–D5 as confirmed).
-- [ ] Unit + component + E2E + fresh-checkout container tests written and passing in Tier-1 CI;
-      ruff/mypy-strict clean.
-- [ ] **Eval thresholds:** no retrieval/generation change in this phase — the existing Tier-1
-      gates (pinned Table 1 run, pinned generation run, injection dry-run, golden regressions)
-      pass **untouched**; asserted, not assumed. The Tier-2 rehearsal window records evidence
-      only (no new metric gates).
-- [ ] **Benchmark tables:** Tables 1 and 2 are **NOT updated** — P6 changes no model or
-      retrieval behaviour (the two-table honesty rule). The **"Serving & guardrails / Graceful
-      degradation" evidence sections ARE updated**: demo-video link, UI screenshots, measured
-      GPU bring-up time (R4), static-surface URL, rehearsal-window reproducibility stamp
-      (code SHA · prompt bundle v1.1 hash · v0 sha256 · pinned runs · GPU SKU/$).
-- [ ] `ui/README.md` (purpose/architecture/run/tests), `serving/README.md` + `infra/README.md`
-      updates, `docs/DECISIONS.md` DEC-P6-1..5, TOOL_SCHEMA.md status note.
-- [ ] Runs cleanly from scratch: fresh clone + `.env` from example → `make demo-up` → working
-      zero-GPU demo (CI-proven).
-- [ ] **30-second demo path:** `make demo-up` → UI opens → replay GS-08a with citations + trace
-      view, zero GPU. (The live path is the RUNBOOK's separate, timed flow.)
-- [ ] `docs/RUNBOOK.md` complete with measured timings; teardown/rebuild documented;
-      **no 24/7 inference deployment exists** — verified by `make gpu-nuke` at window end.
-- [ ] `docs/PORTFOLIO.md` finalized with quantified bullets (incl. total GPU spend across the
-      project and the "nothing inference-side runs 24/7" cost story).
+- [x] Code complete and matching this approved spec (D1–D5 as confirmed; DEC-P6 execution
+      addendum records "implemented exactly as decided").
+- [x] Unit + component + E2E + fresh-checkout container tests written and passing in Tier-1 CI;
+      ruff/mypy-strict clean — Tier-1 **780/1 skipped**, integration **116/3 pre-existing
+      skips**, Vitest **53/53**, Playwright **8/8**, CI jobs `ui` + `demo-smoke` required by
+      the workflow meta-tests.
+- [x] **Eval thresholds:** no retrieval/generation change — the pinned Table 1 run, pinned
+      generation run, injection dry-run, and golden regressions pass **untouched** (asserted;
+      plus the `schema_valid` round-trip drift tripwire in `test_ui_trace_conformance.py`).
+      The Tier-2 rehearsal windows recorded evidence only.
+- [x] **Benchmark tables:** Tables 1 and 2 **NOT updated**. The "Graceful degradation" evidence
+      section IS updated: demo-video Release asset, 3 UI screenshots, measured bring-up
+      (545 s cold / 25 s warm / $0.21 + $0.17 windows), site URL, rehearsal reproducibility
+      stamp (code SHA `c0eb3b3` · v1.1 `98b3ece1…` · v0 `4c10ea97…` · pinned runs · A100 @ $0.89/h).
+- [x] `ui/README.md` (purpose/architecture/run/tests), `serving/README.md` + `infra/README.md`
+      updated per task; `docs/DECISIONS.md` DEC-P6-1..5 + execution addendum; TOOL_SCHEMA.md
+      P6 status note (wording only).
+- [x] Runs cleanly from scratch: fresh clone + `.env` from example → `make demo-up` → working
+      zero-GPU demo — CI-proven (`demo-smoke`) and locally verified (25 s warm).
+- [x] **30-second demo path:** `make demo-up` → UI opens → replay GS-08a with citations + trace
+      view, zero GPU (measured 25 s; the live path is the RUNBOOK's timed flow).
+- [x] `docs/RUNBOOK.md` complete with measured timings; teardown/rebuild documented;
+      **no 24/7 inference deployment exists** — `make gpu-nuke` verified 0 stray at the end of
+      BOTH windows (442900, 442925).
+- [x] `docs/PORTFOLIO.md` finalized with quantified bullets, incl. total project GPU spend
+      (≈ $12–17, itemized) against $0.00 standing inference — the "nothing inference-side runs
+      24/7" story, with the video showing the GPU stopped on camera.
 
 ---
 

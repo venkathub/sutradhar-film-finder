@@ -94,12 +94,19 @@ itself the demo of the degradation story. *Observed live in the 2026-07-11 rehea
 after `gpu-stop`, the still-running app flipped to the offline state on the next status
 poll, no restart needed.*
 
-### Demo-video recording script (Q2/DEC-P6-3 — the one remaining human step)
+### Demo video (Q2/DEC-P6-3 — RECORDED 2026-07-11)
 
-~3–5 min screen recording, then upload as a **GitHub Release asset** (< 2 GiB, no
-bandwidth cap) and set `DEMO_VIDEO_URL` (repo Actions variable + `.env`) — the offline
-payload and the static site pick it up automatically; until then no surface renders a
-video link (the no-dead-link posture).
+**Published:** [`p6-demo-v1` Release asset](https://github.com/venkathub/sutradhar-film-finder/releases/download/p6-demo-v1/sutradhar-demo.webm)
+(84 s, one-take Playwright screen capture via the committed recorder
+`ui/app/e2e/record_demo.mjs`; `DEMO_VIDEO_URL` set as the repo Actions variable + `.env`,
+so the offline payload and the static site link it automatically). The take: zero-GPU
+replay story → live GPU turns → **the GPU stopped on camera** (the UI degrading to
+"offline by design" on the next status poll — the teardown is the closing shot).
+
+To re-record (e.g. with narration over the same visuals): bring up the off-mode server
+(`E2E_MODE=off E2E_PORT=8766 uv run python tests/e2e/e2e_server.py`) + a live window
+(Path B), run `node e2e/record_demo.mjs` from `ui/app/`, then upload the new asset and
+update `DEMO_VIDEO_URL`. Suggested narration beats:
 
 1. **Zero-GPU story (~90 s):** `make demo-up` → offline notice ("offline by design") →
    replay browser → GS-08a: cards, citations, trace view, recorded latencies.
