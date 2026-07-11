@@ -145,6 +145,16 @@ Backs: GS-08 ("the one with Ajay Devgn" → "no, the original one" → "is there
   suite's wrapper executor decorates result *content* only — result *shapes* still round-trip the
   frozen schema (asserted by `test_injection_suite`). The v0 sha256 (`4c10ea97…`) is recorded in
   the serving-run reproducibility stamp (`evals/serving_runs/servewin-25c029d3.json`).
+- **Status note (P6, 2026-07-11 — wording only, no version bump):** v0 **renders the P6 trace
+  view unchanged** — the UI never calls tools; it renders calls the orchestrator already
+  validated. *Every* `TraceStep.tool`/`arguments` in every committed replay transcript
+  re-validates via `validate_emitted_call` before it can render
+  (`tests/test_ui_trace_conformance.py::test_ui_trace_tool_calls_validate`), the recorded
+  `schema_valid` verdicts round-trip against today's artifact (drift tripwire), and the UI's
+  tool labels + relationship-badge vocabulary are **byte-generated from the v0 JSON**
+  (`ui/app/scripts/gen_tool_labels.py`; drift gated in pytest and the tier-1 `ui` CI job) —
+  a tool name or edge label outside the artifact renders an explicit error state, never a
+  silent label. No new tool, no signature change, no v0.1.
 - Any signature/label change increments the version and is logged in `DECISIONS.md`; P4 synthetic data
   and P5 orchestration always target a single pinned version, recorded in the benchmark reproducibility
   stamp (`ROADMAP.md` §6.1).

@@ -1,0 +1,51 @@
+# GitHub Pages deploy (P6 task 9, DEC-P6-3): the static always-available surface.
+# Builds site/dist from committed evidence and deploys on merge to main via the
+# official Pages actions flow. Static + precomputed only — never a neural model;
+# the demo VIDEO is a GitHub Release asset (DEC-P6-3), not a site file.
+name: pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up uv (with cache)
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install locked environment
+        run: uv sync --frozen
+      - name: Build the site (benchmark page generated from docs/BENCHMARKS.md)
+        env:
+          SITE_BASE_URL: https://venkathub.github.io/sutradhar-film-finder/
+          DEMO_VIDEO_URL: ${{ vars.DEMO_VIDEO_URL || '' }}
+        run: make site-build
+      - name: Link-check + required-assets gate
+        run: uv run pytest tests/test_site.py
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

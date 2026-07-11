@@ -40,6 +40,47 @@ services:
       retries: 10
       start_period: 5s
 
+  app:
+    # P6 task 8 (DEC-P6-5): API + built UI in ONE image. Profile-gated so plain
+    # `make up` stays two-container on the low-spec laptop; `make demo-up` starts it.
+    # GPU endpoints pass through from the environment and are EMPTY by default —
+    # off is the first-class state; `make gpu-serve` exports flip it live, no rebuild.
+    profiles: ["demo"]
+    build:
+      context: ..
+      dockerfile: infra/app/Dockerfile
+    env_file:
+      - ../.env
+    environment:
+      # In-network hosts override the .env laptop values.
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      REDIS_URL: redis://redis:6379/0
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://localhost:8000/v1}
+      LLM_MODEL: ${LLM_MODEL:-google/gemma-4-E4B-it}
+      EMBED_BASE_URL: ${EMBED_BASE_URL:-}
+      RERANK_BASE_URL: ${RERANK_BASE_URL:-}
+      RETRIEVAL_RUN: ${RETRIEVAL_RUN:-}
+      GENERATION_RUN: ${GENERATION_RUN:-}
+      DEMO_VIDEO_URL: ${DEMO_VIDEO_URL:-}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8080/api/health')"
+      interval: 5s
+      timeout: 15s
+      retries: 20
+      start_period: 10s
+
   mlflow:
     # Self-hosted MLflow tracking server + model registry (P3, DEC-P3-2 option A):
     # backend store = a separate `mlflow` database in the same Postgres (created

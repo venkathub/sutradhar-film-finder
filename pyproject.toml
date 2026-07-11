@@ -57,6 +57,7 @@ dev = [
     # Type stubs for the DEC-P1-8 validator now that jsonschema is used in src (P3 driver).
     "types-jsonschema>=4.26",
     "fakeredis>=2.36.2",
+    "markdown>=3.6",
 ]
 # NOTE (P2 execution): P2_SPEC §2.7 planned a `gpu` dependency group here
 # (FlagEmbedding+torch for `uv sync --group gpu` on the instance). Dropped during task 6:

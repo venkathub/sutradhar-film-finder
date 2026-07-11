@@ -201,6 +201,33 @@ and `GET /api/replay/GS-08a` serves the committed pinned-run transcript — the 
 demonstrable with **zero GPU / zero DB** (integration-tested both states). This is the
 DEC-P0-4 posture at the API layer.
 
+**P6 rehearsal window (2026-07-11, instance 442900 — evidence capture only, no metric gates):**
+one timed create→demo→destroy cycle through the finished UI:
+
+| Evidence | Measured |
+|---|---|
+| `make gpu-serve` create → window UP (vLLM + embed/rerank sidecar, health-gated) | **545 s (~9.1 min)** cold |
+| exports → `make demo-up` live → first cited answer in the UI | **40 s** |
+| Live UI turns (GS-01 flow + backtrack + decoy, real model + seeded graph) | 4 turns, **p50 4252 / p95 5211 ms** — parity with the P5 window (4535/5395) |
+| Window total / cost | **832 s ≈ $0.21** at $0.89/h (DEC-0003; + $0.0028 amortized token cost) |
+| Teardown | destroy + `nuke` → **0 stray verified**; the running app auto-degraded to the offline state on the next status poll |
+
+UI screenshots (committed): `docs/evidence/p6/live-gs01-version-set.png` (all five versions,
+original flagged, HIGH tiers), `docs/evidence/p6/live-backtrack-trace-citations.png` (trace view
+open: validated v0 calls, tokens + amortized cost; citation disclosure with the Wikidata link +
+human-gate note), `docs/evidence/p6/live-full-story.png` (three turns incl. the output gate
+flagging an ungrounded title on the tool-less turn 2, and the honest no-match on the decoy).
+**Demo video (recorded 2026-07-11, follow-up window, instance 442925, ~$0.17):**
+[Release asset `p6-demo-v1`](https://github.com/venkathub/sutradhar-film-finder/releases/download/p6-demo-v1/sutradhar-demo.webm)
+— one-take Playwright capture (84 s): zero-GPU replay → live turns → **the GPU stopped on
+camera** (the UI degrading to "offline by design"); recorder committed at
+`ui/app/e2e/record_demo.mjs`.
+
+**Rehearsal reproducibility stamp:** code SHA `c0eb3b3` · prompt bundle **v1.1** `98b3ece1…` ·
+TOOL_SCHEMA **v0** sha256 `4c10ea97…` (consumed unchanged) · served `google/gemma-4-E4B-it`
+(vLLM, gemma4 parsers) · pinned runs: retrieval `20260702T135315Z-f6583183`, generation
+`20260704T093206Z-e9598564` · GPU A100-PCIE-40GB @ $0.89/h (DEC-0003).
+
 **Reproducibility stamp:** code SHA `46860625` · **prompt bundle v1.1** `98b3ece1…` (frozen v1
 bundle + spotlighting appendix, `evals/prompts/prompts.serving.lock.json`; pinned Table 2 columns
 stay under `78215ccc…`, DEC-P5-3) · TOOL_SCHEMA **v0** sha256 `4c10ea97…` (consumed unchanged, no

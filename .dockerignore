@@ -1,0 +1,18 @@
+# Build-context hygiene for the app image (infra/app/Dockerfile).
+.git
+.venv
+venv
+__pycache__
+**/__pycache__
+*.pyc
+node_modules
+**/node_modules
+ui/app/dist
+ui/app/test-results
+ui/app/playwright-report
+data
+mlruns
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.env

@@ -1,0 +1,438 @@
+/* Single clean theme (P6_SPEC non-goals: no dark/light theming, no i18n chrome). */
+:root {
+  --ink: #1d2733;
+  --ink-soft: #5b6b7c;
+  --paper: #f7f8fa;
+  --card: #ffffff;
+  --accent: #b3541e;
+  --line: #e3e7ec;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.app-header {
+  border-bottom: 2px solid var(--line);
+  padding-bottom: 1rem;
+}
+
+.mark {
+  margin: 0;
+  font-size: 1.9rem;
+  letter-spacing: 0.01em;
+  color: var(--accent);
+}
+
+.tagline {
+  margin: 0.35rem 0 0;
+  color: var(--ink-soft);
+}
+
+.app-main {
+  padding-top: 1.25rem;
+}
+
+.placeholder {
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+/* --- status pill --- */
+.status-pill {
+  display: inline-block;
+  margin-top: 0.6rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  background: var(--card);
+}
+
+.status-up {
+  border-color: #3c7a3f;
+  color: #3c7a3f;
+}
+
+/* --- turns --- */
+.turn-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.turn {
+  margin: 1rem 0;
+}
+
+.bubble {
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  padding: 0.6rem 0.9rem;
+  background: var(--card);
+  max-width: 46rem;
+}
+
+.bubble.user {
+  margin-left: auto;
+  background: #eef2f6;
+  width: fit-content;
+}
+
+.bubble.assistant {
+  margin-top: 0.5rem;
+}
+
+.answer-text {
+  margin: 0.3rem 0;
+  white-space: pre-wrap;
+}
+
+.intent-chip {
+  display: inline-block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 0.05rem 0.5rem;
+}
+
+.warnings {
+  color: #8a5a00;
+  font-size: 0.85rem;
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.turn-meta {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+/* --- composer + progress --- */
+.composer {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.composer input {
+  flex: 1;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+}
+
+.composer button {
+  padding: 0.55rem 1.1rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.composer button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.progress {
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.request-error {
+  color: #a33;
+}
+
+/* --- offline + replay --- */
+.offline-notice {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 0.4rem;
+  background: var(--card);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.offline-notice h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+}
+
+.offline-detail {
+  color: var(--ink-soft);
+  margin: 0 0 0.5rem;
+}
+
+.evidence-links {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.replay-browser h2 {
+  font-size: 1.1rem;
+  margin-bottom: 0.3rem;
+}
+
+.run-stamp {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  margin-top: 0;
+}
+
+.replay-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.6rem 0 1rem;
+}
+
+.fixture {
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.fixture.selected {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* --- version cards (task 4) --- */
+.version-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
+
+.version-card {
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--card);
+}
+
+.version-card.original {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.version-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.version-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.version-facts {
+  margin: 0.2rem 0 0.4rem;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+.version-cast {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 999px;
+  padding: 0.08rem 0.5rem;
+  margin-right: 0.35rem;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+}
+
+.badge-original {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 700;
+}
+
+.badge-rel {
+  border-color: #4a6a8a;
+  color: #4a6a8a;
+}
+
+.badge-unverified {
+  border-style: dashed;
+  font-style: italic;
+  text-transform: none;
+}
+
+.badge-error {
+  border-color: #a33;
+  color: #a33;
+  text-transform: none;
+}
+
+.badge-confidence.badge-high {
+  border-color: #3c7a3f;
+  color: #3c7a3f;
+}
+
+.badge-confidence.badge-medium {
+  border-color: #8a5a00;
+  color: #8a5a00;
+}
+
+.abstention {
+  border: 1px dashed var(--line);
+  border-radius: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--ink-soft);
+  font-style: italic;
+  margin: 0.5rem 0 0;
+}
+
+.low-confidence {
+  border: 1px solid #8a5a00;
+  border-radius: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  color: #8a5a00;
+  font-size: 0.85rem;
+  margin: 0.4rem 0;
+}
+
+/* --- citations (task 5) --- */
+.citations {
+  margin-top: 0.45rem;
+  font-size: 0.8rem;
+}
+
+.citations summary {
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.citation-list {
+  margin: 0.3rem 0 0;
+  padding-left: 1rem;
+}
+
+.citation-unlinked {
+  color: var(--ink-soft);
+}
+
+.citation-note {
+  color: var(--ink-soft);
+}
+
+/* --- attribution chrome (task 5, LICENSING.md obligations) --- */
+.attribution {
+  margin-top: 2.5rem;
+  border-top: 1px solid var(--line);
+  padding-top: 0.9rem;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.attribution-line {
+  margin: 0.25rem 0;
+}
+
+/* TMDB FAQ condition: the TMDB logo must be LESS PROMINENT than the
+   application's own primary mark (.mark is 1.9rem) — enforced by test. */
+.tmdb-logo {
+  height: 0.8rem;
+  vertical-align: baseline;
+}
+
+/* --- trace view (task 6) --- */
+.trace-view {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  border-top: 1px dashed var(--line);
+  padding-top: 0.4rem;
+}
+
+.trace-view summary {
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.trace-steps {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  list-style: none;
+}
+
+.trace-step {
+  margin: 0.25rem 0;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+.trace-step-no {
+  color: var(--ink-soft);
+}
+
+.trace-tool {
+  font-weight: 600;
+}
+
+.trace-args,
+.trace-summary {
+  color: var(--ink-soft);
+}
+
+.trace-valid {
+  color: #3c7a3f;
+  font-weight: 700;
+}
+
+.trace-invalid,
+.trace-error {
+  color: #a33;
+}
+
+.trace-latency {
+  float: right;
+  color: var(--ink-soft);
+}
+
+.trace-usage {
+  margin: 0.4rem 0 0;
+  color: var(--ink-soft);
+}

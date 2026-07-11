@@ -24,6 +24,13 @@ htmlcov/
 # Notebooks
 .ipynb_checkpoints/
 
+# Node (UI build toolchain — P6; build-time only, never deployed)
+node_modules/
+
+# Playwright E2E artifacts (failure traces/reports — debris, not evidence)
+test-results/
+playwright-report/
+
 # ML / model artifacts (registered to HF Hub, not committed)
 *.gguf
 *.safetensors
@@ -56,3 +63,9 @@ pgdata/
 .vscode/
 .DS_Store
 *.log
+
+# Vitest browser-mode failure screenshots (debris, not evidence)
+__screenshots__/
+
+# Playwright demo-video recordings (published as Release assets, never committed)
+demo-video/

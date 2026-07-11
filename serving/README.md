@@ -31,7 +31,8 @@ cut (DEC-P5-1). **The GPU-off experience works on a fresh clone with zero GPU an
 | `POST /api/chat` | GPU up → orchestrator turn (below). GPU off/error → the structured offline payload, **HTTP 200, never a 5xx** (DEC-P0-4 at the API layer) |
 | `GET /api/status` | cached degradation state (one health probe per ~30 s TTL, DEC-P5-5) |
 | `GET /api/health` | aggregate: api / db / redis / llm / embed / rerank (`EndpointStatus`-shaped) |
-| `GET /api/replay/{fixture}` | committed pinned-run transcript (e.g. `GS-08a`) — the zero-GPU Papanasam story; 404 lists available fixtures |
+| `GET /api/replays` | replay discovery (P6 task 1): the pinned run's id/model/prompt-hash + replayable fixture ids — what the UI replay browser lists |
+| `GET /api/replay/{fixture}` | committed pinned-run transcript (e.g. `GS-08a`) — the zero-GPU Papanasam story; 404 lists available fixtures. P6 task 3 adds an additive `turns` key: ChatResponse-shaped turns (via `degrade.replay_turns`) so replayed and live turns render through the same UI components |
 | `GET /api/metrics` | token/cost/latency summary (P5 task 10) |
 
 **One turn** (`sutradhar.serving.orchestrator`, the P3 driver loop lifted to live traffic):
@@ -44,6 +45,17 @@ INTENT preamble parsed) → state save. LLM off/error mid-turn → offline paylo
 persisted (clean retry). `search_by_plot` runs the real hybrid `Retriever` against the GPU
 sidecar when `EMBED_BASE_URL`/`RERANK_BASE_URL`/`RETRIEVAL_RUN` are set (`make gpu-serve`
 prints them); unconfigured → tool-error feedback while the graph tools keep answering.
+
+**Trace (P6 task 1, DEC-P6-4):** every tool call in the loop also becomes a `TraceStep` on
+`ChatResponse.trace[]` — `tool`/`arguments` as emitted, the `validate_emitted_call` outcome
+(`valid`/`validation_error`), a **bounded** `result_summary` (kind/count/ids — never the tool
+result blob; `versions[]`/`citations[]` already carry the user-facing content), and per-call
+`latency_ms`. Additive: pre-P6 consumers ignore it. The UI trace view renders exactly what the
+orchestrator already validated — no re-derived tool semantics.
+
+**Offline evidence (P6 task 1):** the GPU-off payload's `evidence` block links the benchmark
+doc, the replay route, and — when `DEMO_VIDEO_URL` is set (a GitHub Release asset, DEC-P6-3) —
+the recorded demo video; unset ⇒ the key is omitted, never a dead link.
 
 30-second demo (no GPU, no DB):
 
@@ -60,6 +72,9 @@ Tests: `tests/test_api.py` (HTTP surface, GPU-off + scripted GS-08a over HTTP),
 through the API path in `tests/integration/test_api_golden_regressions.py`.
 
 ### Results — live serving-benchmark window (2026-07-05, `servewin-25c029d3`)
+
+> **Demo paths:** the rehearsed zero-GPU, live-window, and rebuild-from-scratch flows —
+> with timings, costs, and the verified-teardown checklist — live in `docs/RUNBOOK.md` (P6).
 
 One `make serving-benchmark` run on an on-demand A100 (two ephemeral sessions, both destroyed;
 sealed to `evals/serving_runs/`, logged to MLflow `sutradhar/serving`). Full numbers +

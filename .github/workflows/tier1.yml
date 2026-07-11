@@ -34,7 +34,7 @@ jobs:
         run: uv run pytest
 
   integration:
-    name: compose stack (Postgres+pgvector, Redis)
+    name: compose stack (Postgres+pgvector, Redis) + UI E2E
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,15 +44,78 @@ jobs:
           enable-cache: true
       - name: Install locked environment
         run: uv sync --frozen
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: ui/app/package-lock.json
       - name: Seed .env from template
         run: cp .env.example .env
       - name: Bring up the stack
         run: docker compose -f infra/docker-compose.yml up -d --wait
       - name: Integration tests
         run: uv run pytest -m integration
+      - name: Build the UI
+        run: |
+          npm ci
+          npm run build
+        working-directory: ui/app
+      - name: Install Playwright chromium
+        run: npx playwright install chromium --with-deps
+        working-directory: ui/app
+      - name: UI E2E (seven named golden regressions on the rendered DOM)
+        run: npx playwright test
+        working-directory: ui/app
       - name: Tear down
         if: always()
         run: docker compose -f infra/docker-compose.yml down -v
+
+  ui:
+    name: ui · label drift · build · component tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24 # Active LTS (DEC-P6-1/Q3); build-time only, never deployed
+          cache: npm
+          cache-dependency-path: ui/app/package-lock.json
+      - name: Install pinned UI toolchain
+        run: npm ci
+        working-directory: ui/app
+      - name: Tool-label map drift gate (byte-derived from tool_schema.v0.json)
+        run: |
+          python3 ui/app/scripts/gen_tool_labels.py
+          git diff --exit-code ui/app/src/generated/tool_labels.json
+      - name: Type-check + build
+        run: npm run build
+        working-directory: ui/app
+      - name: Install Playwright chromium (Vitest Browser Mode; reused by E2E)
+        run: npx playwright install chromium --with-deps
+        working-directory: ui/app
+      - name: Component tests (Vitest 4 Browser Mode)
+        run: npm test
+        working-directory: ui/app
+
+  demo-smoke:
+    name: fresh-clone demo (make demo-up)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: One-command bring-up from a fresh checkout (zero GPU, zero secrets)
+        run: make demo-up
+      - name: Smoke the zero-GPU surface
+        run: |
+          curl -sf localhost:8080/api/health | grep -q '"api"'
+          curl -sf localhost:8080/ | grep -q "Sutradhar"
+          curl -sf localhost:8080/api/replay/GS-08a | grep -q '"turns"'
+          # GPU off is a structured 200, never a 5xx (DEC-P0-4 at the API layer).
+          curl -sf -X POST localhost:8080/api/chat \
+            -H 'content-type: application/json' \
+            -d '{"message":"papanasam?"}' | grep -q '"status": *"off"\|"status":"off"'
+      - name: Tear down
+        if: always()
+        run: make demo-down
 
   secret-guard:
     name: secret guard

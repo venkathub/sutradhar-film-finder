@@ -145,3 +145,43 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   proxy-URL endpoint-disambiguation bug — recomputing RAGAS answer_relevancy = **0.571 (12/12
   scored)** over the pinned base run. Sealed artifact + MANIFEST, MLflow `sutradhar/serving`, and
   the honest "what broke live" trail all committed.
+
+## P6 — Product UI, packaging & the always-available portfolio surface
+
+- **Shipped the product surface of the gating story** — a React 19 + TypeScript chat UI where
+  every language version renders as a card with the **original flagged**, typed relationship
+  badges whose vocabulary is **byte-generated from the frozen tool-schema artifact** (an edge or
+  tool name outside it renders an explicit error state, never a silent label), `relationship:
+  null` shown honestly as *"unverified relationship"*, per-claim citations (Wikidata/TMDB/IMDb
+  links; **Wikipedia pinned to the stored revision** via `?oldid=`), and a trace view rendering
+  only orchestrator-validated tool calls — 53 component tests in real chromium + a conformance
+  gate re-validating every trace step in every committed transcript against the frozen schema.
+- **One rendering path for live and replayed turns:** a server-side adapter shapes the pinned
+  benchmark transcripts into ChatResponse-shaped turns (versions reconstructed only from
+  recorded tool results, real recorded GPU latencies, per-call latency honestly 0.0) — so the
+  zero-GPU replay demo and the live GPU demo exercise the same components and the same tests.
+- **Made licensing attribution executable, not aspirational:** the TMDB FAQ notice + official
+  logo (measured in-browser as less prominent than the product mark — an explicit TMDB
+  condition), the Wikipedia CC BY-SA 4.0 label, and the IMDb courtesy line are enforced by a
+  Tier-1 test suite; removing any obligation fails CI.
+- **Proved the gating story on the rendered DOM:** 8 Playwright E2E golden regressions against
+  the real served app (real guardrails, seeded graph, scripted pinned tool flows) — version-set
+  recall 1.0 for the Drishyam franchise incl. sequel traversal, dub-never-remake wording,
+  sibling-vs-remake, false-merge, zero-invention on decoys (detector re-run over rendered
+  text), 3-turn backtracking through the real session store, and the GPU-off replay with trace
+  view.
+- **One-command demo, CI-proven from a fresh checkout:** a multi-stage image (node build → uv
+  runtime, same lockfiles as CI) behind `make demo-up` — fresh clone → containerized stack →
+  seeded graph → working chat UI in **25 s (measured)** with zero GPU and zero secrets; the
+  live flip is env exports, never a rebuild.
+- **Rehearsed the live interview demo and measured it:** one on-demand A100 window — 545 s
+  create→ready (vLLM + embed/rerank sidecar), 40 s exports→first cited answer, live UI latency
+  p50 4252 ms (parity with the P5 benchmark), **$0.21 total for the 13.9-minute window**,
+  teardown `nuke`-verified with the app auto-degrading to the offline state on camera.
+- **The capstone cost story: total on-demand GPU spend for the ENTIRE project ≈ $12–17**
+  (every window itemized: $0.34 validation, ~$1 extraction, $0.22 embedding, <$1 judge, ~$2
+  teacher, ~$4–8 train+benchmark + $1.5 resume, ~$3–4 serving benchmark, $0.38 across the two
+  P6 rehearsal/recording windows) **against $0.00 of standing inference infrastructure** —
+  nothing neural runs 24/7; a $0 GitHub Pages site (benchmark report generated from the single
+  source of truth, link-checked in CI) carries the standing evidence, and the demo video ends
+  with the GPU being destroyed on camera.

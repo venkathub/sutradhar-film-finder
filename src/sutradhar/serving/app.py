@@ -7,8 +7,11 @@ wiring the proven seams together —
                             payload (GPU off/error — **HTTP 200, never a 5xx**);
 - ``GET  /api/health``   — aggregate: api / db / redis / llm / embed / rerank;
 - ``GET  /api/status``   — the cached degradation state only (cheap, D5 TTL);
+- ``GET  /api/replays``  — replay discovery: pinned run id + replayable fixtures (P6);
 - ``GET  /api/replay/{fixture_id}`` — committed pinned-run transcripts (zero-GPU story);
 - ``GET  /api/metrics``  — lands with cost accounting (task 10).
+- ``GET  /``             — the built chat UI (static, same-origin; P6) when
+                            ``ui/app/dist`` exists — otherwise API-only mode.
 
 Wiring posture: everything is constructor-injectable for tests; production defaults come
 from ``Settings``. The DB engine is **lazy** — the GPU-off experience (offline payload +
@@ -31,6 +34,7 @@ from typing import Any
 
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text as sqltext
 from sqlalchemy.orm import Session
 
@@ -51,6 +55,7 @@ from sutradhar.serving.degrade import (
     OFFLINE_DETAIL,
     StatusCache,
     available_replays,
+    list_replays,
     load_replay,
     offline_payload,
 )
@@ -69,6 +74,7 @@ from sutradhar.toolcalls import load_tool_schema
 logger = logging.getLogger("sutradhar.serving")
 
 RETRIEVAL_RUNS_DIR = Path("evals/retrieval_runs")
+UI_DIST_DIR = Path("ui/app/dist")
 
 
 class _OfflineRetriever:
@@ -168,6 +174,7 @@ def create_app(
     tracer: Tracer | None = None,
     runs_dir: Path | None = None,
     metrics: MetricsAccumulator | None = None,
+    ui_dist: Path | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     llm = llm_client or LLMClient(settings)
@@ -180,6 +187,10 @@ def create_app(
     schema = load_tool_schema()
     counters = metrics or MetricsAccumulator()
     replay_kwargs: dict[str, Any] = {"runs_dir": runs_dir} if runs_dir else {}
+
+    def _offline(conversation_id: str | None, detail: str = OFFLINE_DETAIL) -> dict[str, Any]:
+        """offline_payload with the DEMO_VIDEO_URL evidence link wired in (P6 task 1)."""
+        return offline_payload(conversation_id, detail, demo_video=settings.demo_video_url)
 
     app = FastAPI(title="Sutradhar API", docs_url=None, redoc_url=None)
     app.state.status_cache = cache
@@ -212,9 +223,7 @@ def create_app(
         if status.status != "up":
             counters.record("off")
             return JSONResponse(
-                offline_payload(
-                    payload.conversation_id, f"{OFFLINE_DETAIL} (endpoint {status.status})"
-                )
+                _offline(payload.conversation_id, f"{OFFLINE_DETAIL} (endpoint {status.status})")
             )
         try:
             db = get_db()
@@ -243,7 +252,7 @@ def create_app(
             cache.invalidate()  # the endpoint died mid-turn; re-probe on the next request
             counters.record("aborted")
             return JSONResponse(
-                offline_payload(
+                _offline(
                     outcome.conversation_id,
                     f"{OFFLINE_DETAIL} (turn aborted: {outcome.detail})",
                 )
@@ -292,7 +301,7 @@ def create_app(
         status = cache.current()
         body: dict[str, Any] = {"status": status.status, "detail": status.detail}
         if status.status != "up":
-            body["evidence"] = offline_payload(None)["evidence"]
+            body["evidence"] = _offline(None)["evidence"]
         return body
 
     @app.get("/api/health")
@@ -305,6 +314,11 @@ def create_app(
             "embed": _provider_health("embeddings", settings.embed_base_url, settings.embed_model),
             "rerank": _provider_health("rerank", settings.rerank_base_url, settings.rerank_model),
         }
+
+    @app.get("/api/replays")
+    def api_replays() -> dict[str, Any]:
+        """Replay discovery (P6 task 1): the pinned run + the fixtures it can replay."""
+        return list_replays(**replay_kwargs)
 
     @app.get("/api/replay/{fixture_id}")
     def api_replay(fixture_id: str) -> JSONResponse:
@@ -319,6 +333,15 @@ def create_app(
                 status_code=404,
             )
         return JSONResponse(payload)
+
+    # Built UI served same-origin at / (P6 task 2, DEC-P6-5) — API routes above win
+    # (mounts match after routes). Missing dist ⇒ API-only mode, never a crash: the
+    # fresh-clone zero-node experience keeps working (`make ui-build` adds the UI).
+    dist = ui_dist if ui_dist is not None else UI_DIST_DIR
+    if (dist / "index.html").is_file():
+        app.mount("/", StaticFiles(directory=dist, html=True), name="ui")
+    else:
+        logger.info("ui dist not found at %s — API-only mode (run `make ui-build`)", dist)
 
     return app
 

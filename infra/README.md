@@ -21,11 +21,34 @@ without one):
 |---------|----------------|------|-------------|
 | `postgres` | `pgvector/pgvector:0.8.4-pg17` | `${POSTGRES_PORT:-5432}` | `pg_isready` |
 | `redis` | `redis:7-alpine` | `${REDIS_PORT:-6379}` | `redis-cli ping` |
+| `app` (profile `demo`) | multi-stage build (`infra/app/Dockerfile`) | `${API_PORT:-8080}` | `GET /api/health` |
 | `mlflow` (profile `mlflow`) | `ghcr.io/mlflow/mlflow:v3.14.0` + psycopg2 (`infra/mlflow/Dockerfile`) | `${MLFLOW_PORT:-5000}` | `GET /health` |
 
 Postgres data persists in the named volume `pgdata` (git-ignored). The pgvector tag was verified on
 Docker Hub on 2026-07-01 (P0_SPEC §2.7); pinned exactly for reproducibility. The Work/Version graph
 schema is applied on top with `make db-migrate` (P1; Alembic — see `data-pipeline/README.md`).
+
+### The app image + `make demo-up` (P6 task 8, DEC-P6-5)
+
+`infra/app/Dockerfile` builds ONE image = API + built UI: a `node:24` build stage (build-time
+only, never deployed) compiles `ui/app` to static assets; the official Astral uv multi-stage
+pattern (`uv sync --frozen --no-dev`, cache mounts, non-editable install) produces the venv; the
+final `python:3.12-slim` runtime carries only the venv + the runtime artifact tree (alembic,
+prompt bundles, pinned replay/retrieval runs, the offline seeding fixtures, `ui/app/dist`) —
+no uv, no node, no compilers, no baked-in endpoints or secrets (`tests/test_demo_stack.py`).
+
+```bash
+make demo-up    # fresh clone, zero GPU, zero secrets:
+                #   .env from template -> compose (demo profile) -> migrate -> seed-graph-ci
+                #   -> http://localhost:8080/ (offline notice + replay browser = the 30 s demo)
+make demo-down  # stop (pgdata volume kept)
+```
+
+**Live flip:** `make gpu-serve` prints `LLM_BASE_URL` / `EMBED_BASE_URL` / `RERANK_BASE_URL`;
+export them (+ `RETRIEVAL_RUN`) and rerun `make demo-up` — compose passes them through to the
+`app` service; the endpoints are env-driven and empty by default, so the flip is exports, never
+a rebuild. CI proves the fresh-checkout path in the tier-1 `demo-smoke` job. The snap-Docker
+`$HOME` staging workaround below applies to `demo-up` unchanged (stage the repo, run there).
 
 ### Snap-confined Docker workaround (repo outside `$HOME`)
 

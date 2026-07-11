@@ -28,7 +28,7 @@ def test_tier1_is_valid_yaml_with_expected_jobs() -> None:
     wf = _load(_TIER1)
     assert wf["name"] == "tier-1"
     jobs = wf["jobs"]
-    for job in ("lint-type-test", "integration", "secret-guard", "hf-auth"):
+    for job in ("lint-type-test", "integration", "ui", "demo-smoke", "secret-guard", "hf-auth"):
         assert job in jobs, f"tier-1 missing job {job!r}"
 
 
@@ -74,6 +74,21 @@ def test_no_secret_literals_in_tracked_files() -> None:
         pytest.skip("git not available")
     # git grep exits 1 when there are NO matches — that's what we want.
     assert proc.returncode == 1, f"possible secret literal committed:\n{proc.stdout}"
+
+
+def test_pages_workflow_deploys_static_surface_from_main_only() -> None:
+    """P6 task 9 (DEC-P6-3): the Pages flow builds site/dist and deploys on main;
+    no GPU/model step anywhere near it (it is a static generator run)."""
+    wf = _load(_WORKFLOWS / "pages.yml")
+    on = wf["on"] if "on" in wf else wf[True]
+    assert on["push"]["branches"] == ["main"]
+    text = (_WORKFLOWS / "pages.yml").read_text(encoding="utf-8")
+    assert "actions/upload-pages-artifact" in text
+    assert "actions/deploy-pages" in text
+    assert "site/dist" in text and "make site-build" in text
+    for job in wf["jobs"].values():
+        for step in job.get("steps", []):
+            assert not _UNSAFE.search(str(step.get("run", "")))
 
 
 def test_tier2_is_valid_yaml_with_eval_job() -> None:
