@@ -152,7 +152,7 @@ health + UI + replay smokes → down).
 | Value alternative (RTX 6000 Ada 48GB, teacher plan-B) | ~$0.99/h (never needed) |
 | P0 GPU validation cycle (create → smoke → destroy) | **$0.34 measured** |
 | One live interview demo (Path B) | est. $0.25–0.40; **rehearsal measured $0.21** (13.9 min window, 2026-07-11) |
-| Standing inference infrastructure | **$0.00 — none exists.** Static surface: GitHub Pages ($0). Langfuse VPS (observability only, DEC-P3-7): ₹799/mo, no model traffic |
+| Standing inference infrastructure | **$0.00 — none exists.** Static surface: GitHub Pages ($0). Langfuse VPS: **deleted 2026-07-11** (DEC-P3-7 amendment 3 — evidence committed, tracing no-ops when unset; `make langfuse-up` rebuilds from scratch on demand) → **standing cost $0.00/month, project-wide** |
 
 **The posture, in one line:** the GPU exists for minutes at a time — benchmark capture
 and live demos — and every window ends `destroy`-verified (`make gpu-nuke` → 0

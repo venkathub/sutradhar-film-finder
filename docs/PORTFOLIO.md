@@ -181,7 +181,9 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
 - **The capstone cost story: total on-demand GPU spend for the ENTIRE project ≈ $12–17**
   (every window itemized: $0.34 validation, ~$1 extraction, $0.22 embedding, <$1 judge, ~$2
   teacher, ~$4–8 train+benchmark + $1.5 resume, ~$3–4 serving benchmark, $0.38 across the two
-  P6 rehearsal/recording windows) **against $0.00 of standing inference infrastructure** —
+  P6 rehearsal/recording windows) **against $0.00 of standing infrastructure — now including
+  observability: the Langfuse VPS (₹799/mo) was deleted once its evidence was committed**
+  (tracing no-ops by design; one command rebuilds it from scratch if ever wanted) —
   nothing neural runs 24/7; a $0 GitHub Pages site (benchmark report generated from the single
   source of truth, link-checked in CI) carries the standing evidence, and the demo video ends
   with the GPU being destroyed on camera.

@@ -13,7 +13,9 @@ re-run, and converge from ANY intermediate state:
   it stopped: swap → Docker → Docker-in-LXC nesting gate (Essential VPS is LXC; if
   nesting is blocked we STOP with an escalation message, per DEC-P3-7 caveat a) →
   pinned-tag clone → secrets generated ONCE (headless init with pinned project keys) →
-  compose up → Caddy TLS (443 only) → signup disabled → backup cron → HTTPS health.
+  compose up → tunnel retirement (the P3 cloudflared workaround, superseded 2026-07-11
+  by the AIC platform public URL: ``<slug>-3000.aiccloud.online`` with edge TLS) →
+  ufw hardening → signup disabled → backup cron → HTTPS health through the public URL.
 
 No destructive operation runs without the explicit ``--recreate`` flag. All side effects
 go through injectable seams (``AicApi`` over an httpx client + an ``SshRunner``), so the
@@ -45,9 +47,14 @@ OS_IMAGE = "ubuntu-24.04"
 LANGFUSE_TAG = "v3.203.3"  # pinned release (verified on GitHub 2026-07-03)
 AIC_BASE_URL = "https://api.aiccloud.in"
 REMOTE_DIR = "/root/langfuse"
-TUNNEL_URL_GREP = (
-    "grep -oE 'https://[a-z0-9-]+[.]trycloudflare[.]com' /var/log/cloudflared.log | tail -1"
-)
+# AIC platform public URL (feature launched 2026-07; verified live 2026-07-11 via
+# GET /api/v1/vps/{id}/public-url → {"slug": "…", "base_domain": "aiccloud.online"}):
+# <slug>-PORT.<base_domain> routes HTTPS (wildcard TLS at the platform edge) to the
+# VPS port — Langfuse web is :3000, so the public host is f"{slug}-3000.{base}".
+# This REPLACES the P3 cloudflared quick tunnel (DEC-P3-7 amendment 2 workaround for
+# the blocked inbound 443/80): no on-box agent, no random trycloudflare URL, and the
+# slug survives reboots. HTTP(S)-only, which is all Langfuse needs.
+LANGFUSE_WEB_PORT = 3000
 LOCAL_ASSETS = Path(__file__).resolve().parent
 
 
@@ -101,6 +108,17 @@ class AicApi:
 
     def verify_checkout(self, payload: dict[str, Any]) -> dict[str, Any]:
         return dict(self._post("/api/v1/vps/checkout/verify", payload))
+
+    def public_url(self, vps_id: Any) -> dict[str, Any]:
+        """The platform public-URL record (verified live 2026-07-11):
+        {"slug": "3um6p", "base_domain": "aiccloud.online", "custom_domains": [...]}."""
+        return dict(self._get(f"/api/v1/vps/{vps_id}/public-url"))
+
+    def delete_vps(self, vps_id: Any) -> Any:
+        """Permanently delete a VPS (used by the P6 close-out teardown, 2026-07-11)."""
+        r = self.client.delete(f"{self.base_url}/api/v1/vps/{vps_id}", headers=self._headers())
+        r.raise_for_status()
+        return r.json() if r.content else {}
 
 
 @dataclass
@@ -198,7 +216,7 @@ class Step:
     optional: bool = False  # act failure => warn and continue (e.g. swap inside LXC)
 
 
-def _secrets_script(domain: str) -> str:
+def _secrets_script(public_host: str) -> str:
     """Generate the compose .env ONCE: every '# CHANGEME' secret rotated, headless-init
     org/project/user pinned so the instance is reproducible from scratch (DEC-P3-7)."""
     return (
@@ -210,7 +228,7 @@ def _secrets_script(domain: str) -> str:
         "PUB_KEY=pk-lf-$(openssl rand -hex 16) && SEC_KEY=sk-lf-$(openssl rand -hex 16) && "
         "INIT_PW=$(openssl rand -hex 12) && "
         "cat > .env << ENVEOF\n"
-        f"NEXTAUTH_URL=https://{domain}\n"
+        f"NEXTAUTH_URL=https://{public_host}\n"
         "NEXTAUTH_SECRET=$NEXTAUTH\n"
         "SALT=$PW_SALT\n"
         "ENCRYPTION_KEY=$ENC_KEY\n"
@@ -245,8 +263,13 @@ def _backup_script_b64() -> str:
     return base64.b64encode((LOCAL_ASSETS / "backup_langfuse.sh").read_bytes()).decode("ascii")
 
 
-def bootstrap_steps(domain: str, ssh_port: int = 22) -> list[Step]:
-    """The ordered, check-then-act phase-2 plan (see module doc)."""
+def bootstrap_steps(public_host: str, ssh_port: int = 22) -> list[Step]:
+    """The ordered, check-then-act phase-2 plan (see module doc).
+
+    ``public_host`` is the platform public URL host (``<slug>-3000.aiccloud.online``),
+    resolved laptop-side from the AIC API — TLS terminates at the platform edge, so the
+    box needs no Caddy, no ACME, and (since 2026-07-11) no cloudflared tunnel.
+    """
     compose = f"cd {REMOTE_DIR} && docker compose --env-file .env"
     return [
         Step(
@@ -322,7 +345,7 @@ def bootstrap_steps(domain: str, ssh_port: int = 22) -> list[Step]:
                 # A healed .env must reach the running containers: compose recreates
                 # only what changed (a passing health check can't see env drift).
                 "docker compose --env-file .env up -d; "
-                f"else {_secrets_script(domain)}; fi"
+                f"else {_secrets_script(public_host)}; fi"
             ],
         ),
         Step(
@@ -331,37 +354,30 @@ def bootstrap_steps(domain: str, ssh_port: int = 22) -> list[Step]:
             act=[f"{compose} up -d"],
         ),
         Step(
-            # Verified live 2026-07-03 (DEC-P3-7 amendment 2): the AIC edge firewall opens
-            # ONLY the managed SSH NAT — inbound 443/80 are blocked and unmodifiable, so
-            # Caddy + Let's Encrypt is impossible here. Public HTTPS rides an OUTBOUND
-            # cloudflared tunnel instead (quick tunnel until a domain exists; a named
-            # tunnel is the drop-in upgrade). systemd keeps it up across reboots.
-            name="cloudflared-tunnel",
-            check="systemctl is-active --quiet cloudflared-quick",
+            # Public HTTPS (revised 2026-07-11): the AIC platform public URL
+            # (<slug>-3000.aiccloud.online → VPS :3000, wildcard TLS at the edge)
+            # REPLACES the P3 cloudflared quick tunnel — the tunnel existed only
+            # because inbound 443/80 were blocked (DEC-P3-7 amendment 2). Retire the
+            # tunnel service if a previous bootstrap installed it (idempotent).
+            name="tunnel-retired",
+            check="! systemctl is-enabled --quiet cloudflared-quick 2>/dev/null",
             act=[
-                "test -x /usr/local/bin/cloudflared || (curl -fsSL -o /usr/local/bin/cloudflared"
-                " https://github.com/cloudflare/cloudflared/releases/latest/download/"
-                "cloudflared-linux-amd64 && chmod +x /usr/local/bin/cloudflared)",
-                "printf '[Unit]\\nDescription=cloudflared quick tunnel (langfuse)\\n"
-                "After=network-online.target\\n[Service]\\n"
-                "ExecStart=/usr/local/bin/cloudflared tunnel --no-autoupdate "
-                "--url http://localhost:3000 --logfile /var/log/cloudflared.log\\n"
-                "Restart=always\\nRestartSec=5\\n[Install]\\n"
-                "WantedBy=multi-user.target\\n' > /etc/systemd/system/cloudflared-quick.service",
-                "systemctl daemon-reload && systemctl enable --now cloudflared-quick",
+                "systemctl disable --now cloudflared-quick 2>/dev/null || true",
+                "rm -f /etc/systemd/system/cloudflared-quick.service "
+                "/usr/local/bin/cloudflared && systemctl daemon-reload",
             ],
         ),
         Step(
-            # 443/80 for Caddy/ACME + SSH ONLY; compose web (:3000), MinIO, ClickHouse
-            # etc. stay unreachable from outside (DEC-P3-7 hardening). Verified live
-            # 2026-07-03: AIC NATs an external port (e.g. 20036) to the container's
-            # INTERNAL sshd port 22 — allow BOTH 22 and the external ssh_port, otherwise
-            # ufw locks out our own session (recovered via API reinstall).
+            # SSH (internal 22 + the NAT'd external port) and the Langfuse web port
+            # for the platform proxy ONLY; MinIO, ClickHouse etc. stay unreachable
+            # (DEC-P3-7 hardening). 443/80 dropped with Caddy/ACME — TLS is the
+            # platform edge's job now. Verified live 2026-07-03: allow BOTH 22 and
+            # the external ssh_port or ufw locks out our own session.
             name="ufw-firewall",
             check="ufw status | grep -q 'Status: active'",
             act=[
                 f"apt-get install -y ufw && ufw allow 22/tcp && ufw allow {ssh_port}/tcp "
-                "&& ufw allow 443/tcp && ufw allow 80/tcp && ufw --force enable"
+                f"&& ufw allow {LANGFUSE_WEB_PORT}/tcp && ufw --force enable"
             ],
         ),
         Step(
@@ -390,15 +406,10 @@ def bootstrap_steps(domain: str, ssh_port: int = 22) -> list[Step]:
         ),
         Step(
             name="https-health",
-            # The tunnel URL is minted by cloudflared at start; health-check THROUGH it
-            # (end-to-end: edge -> tunnel -> web container), not just localhost.
-            check=(
-                f'URL=$({TUNNEL_URL_GREP}) && test -n "$URL" && curl -sf "$URL/api/public/health"'
-            ),
-            act=[
-                f"sleep 15 && URL=$({TUNNEL_URL_GREP}) && "
-                'test -n "$URL" && curl -sf "$URL/api/public/health"'
-            ],
+            # End-to-end through the PLATFORM edge (edge TLS -> proxy -> web container),
+            # not just localhost — the same posture the tunnel health-check had.
+            check=f'curl -sf "https://{public_host}/api/public/health"',
+            act=[f'sleep 15 && curl -sf "https://{public_host}/api/public/health"'],
             gate=True,
         ),
     ]
@@ -455,7 +466,7 @@ class BootstrapReport:
 
 def run_bootstrap(
     ssh: Any,
-    domain: str,
+    public_host: str,
     *,
     ssh_port: int = 22,
     recreate: bool = False,
@@ -469,7 +480,7 @@ def run_bootstrap(
             for cmd in step.act:
                 ssh.run(cmd)
             report.add(step.name, "configured")
-    for step in bootstrap_steps(domain, ssh_port):
+    for step in bootstrap_steps(public_host, ssh_port):
         rc, _ = ssh.run(step.check)
         if rc == 0:
             log(f"[phase2] {step.name}: already satisfied — skipping")
@@ -497,9 +508,8 @@ def run_bootstrap(
             continue
         report.add(step.name, "skipped-optional")
     rc, env_dump = ssh.run(f"grep -E 'LANGFUSE_INIT_PROJECT_(PUBLIC|SECRET)_KEY' {REMOTE_DIR}/.env")
-    _, tunnel = ssh.run(TUNNEL_URL_GREP)
     log("[phase2] bootstrap converged. For the laptop .env:")
-    log(f"  LANGFUSE_HOST={tunnel.strip() or 'https://' + domain + ' (tunnel URL missing)'}")
+    log(f"  LANGFUSE_HOST=https://{public_host}")
     for line in env_dump.strip().splitlines():
         log(f"  {line.replace('LANGFUSE_INIT_PROJECT_', 'LANGFUSE_')}")
     return report
@@ -531,7 +541,12 @@ def _local_ssh_public_keys() -> list[str]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--domain", default="", help="TLS domain (default: <ip>.sslip.io)")
+    parser.add_argument(
+        "--public-host",
+        default="",
+        help="Override the platform public host (default: <slug>-3000.aiccloud.online "
+        "resolved from the AIC public-url API; or a verified custom domain)",
+    )
     parser.add_argument(
         "--recreate", action="store_true", help="DESTRUCTIVE: wipe + redeploy langfuse"
     )
@@ -546,6 +561,14 @@ def main(argv: list[str] | None = None) -> int:
             ssh_public_keys=_local_ssh_public_keys(),
             payment_prompt=_default_payment_prompt,
         )
+        public_host = args.public_host
+        if not public_host and outcome.instance is not None:
+            # Platform public URL (2026-07-11): <slug>-3000.<base_domain> -> VPS :3000.
+            record = api.public_url(outcome.instance.get("id"))
+            public_host = (
+                f"{record['slug']}-{LANGFUSE_WEB_PORT}."
+                f"{record.get('base_domain', 'aiccloud.online')}"
+            )
     if outcome.status in ("needs-topup", "awaiting-payment", "dashboard-checkout"):
         print(f"stopping here ({outcome.status}) — re-run `make langfuse-up` afterwards")
         return 1
@@ -557,9 +580,8 @@ def main(argv: list[str] | None = None) -> int:
         ssh_info.get("host") or outcome.instance.get("ip_address") or outcome.instance.get("ip", "")
     )
     port = int(ssh_info.get("port") or outcome.instance.get("ssh_port", 22))
-    domain = args.domain or f"{host}.sslip.io"
     ssh = SubprocessSsh(host=host, port=port)
-    run_bootstrap(ssh, domain, ssh_port=port, recreate=args.recreate)
+    run_bootstrap(ssh, public_host, ssh_port=port, recreate=args.recreate)
     return 0
 
 

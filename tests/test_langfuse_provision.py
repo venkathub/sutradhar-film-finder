@@ -229,21 +229,28 @@ def test_destructive_wipe_requires_explicit_recreate_flag() -> None:
 
 
 def test_step_plan_pins_tag_and_hardening() -> None:
-    steps = {s.name: s for s in provision.bootstrap_steps("langfuse.example.com")}
+    steps = {s.name: s for s in provision.bootstrap_steps("3um6p-3000.aiccloud.online")}
     assert provision.LANGFUSE_TAG in " ".join(steps["langfuse-cloned-pinned"].act)
     assert "AUTH_DISABLE_SIGNUP=true" in " ".join(steps["signup-disabled"].act)
-    # Verified live 2026-07-03: AIC blocks inbound 443/80 — public HTTPS rides an
-    # outbound cloudflared tunnel; the health gate checks THROUGH the tunnel edge.
-    assert "cloudflared" in " ".join(steps["cloudflared-tunnel"].act)
-    assert "systemctl enable --now cloudflared-quick" in " ".join(steps["cloudflared-tunnel"].act)
-    assert "trycloudflare" in steps["https-health"].check
+    # Revised 2026-07-11: the AIC platform public URL (<slug>-3000.aiccloud.online,
+    # edge TLS) replaces the P3 cloudflared tunnel; the retired service is torn down
+    # idempotently and the health gate checks THROUGH the platform edge.
+    assert "systemctl disable --now cloudflared-quick" in " ".join(steps["tunnel-retired"].act)
+    assert "https://3um6p-3000.aiccloud.online/api/public/health" in steps["https-health"].check
+    assert "trycloudflare" not in steps["https-health"].check
+    # NEXTAUTH_URL now matches the stable public host (the tunnel URL was random).
+    assert "NEXTAUTH_URL=https://3um6p-3000.aiccloud.online" in " ".join(steps["secrets-once"].act)
     assert steps["docker-lxc-nesting"].gate and steps["https-health"].gate
     # LXC reality: swap is best-effort (host-managed), sshd is key-only, ufw allows 22
-    # AND the external NAT ssh port (lockout found + fixed live).
+    # AND the external NAT ssh port (lockout found + fixed live); the Langfuse web
+    # port is open for the platform proxy, 443/80 dropped with Caddy/ACME.
     assert steps["swap-4g"].optional is True
     assert "PasswordAuthentication no" in " ".join(steps["sshd-key-only"].act)
-    ufw = " ".join(provision.bootstrap_steps("d", ssh_port=20036)[9].act)
+    ufw = " ".join(
+        {s.name: s for s in provision.bootstrap_steps("d", ssh_port=20036)}["ufw-firewall"].act
+    )
     assert "ufw allow 22/tcp" in ufw and "ufw allow 20036/tcp" in ufw
+    assert "ufw allow 3000/tcp" in ufw and "443" not in ufw
     # Secrets are generated once and only when absent (check-then-act).
     assert "CHANGEME" in steps["secrets-once"].check
     assert "openssl rand" in " ".join(steps["secrets-once"].act)
