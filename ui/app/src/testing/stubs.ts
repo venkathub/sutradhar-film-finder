@@ -77,6 +77,7 @@ export function turnView(overrides: Partial<TurnView>): TurnView {
     warnings: [],
     trace: [],
     latencyMs: 100,
+    usage: null,
     replayed: false,
     ...overrides,
   };

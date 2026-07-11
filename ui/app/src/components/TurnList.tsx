@@ -4,6 +4,7 @@
 // plug into this same component — TurnView already carries their data.
 import type { TurnView } from "../lib/turns";
 import { displayAnswer } from "../lib/turns";
+import TraceView from "./TraceView";
 import VersionSet from "./VersionSet";
 
 export default function TurnList({ turns }: { turns: TurnView[] }) {
@@ -33,6 +34,11 @@ export default function TurnList({ turns }: { turns: TurnView[] }) {
                 ))}
               </ul>
             )}
+            <TraceView
+              trace={turn.trace}
+              usage={turn.usage}
+              replayed={turn.replayed}
+            />
             <span className="turn-meta">
               {turn.replayed ? "replayed · recorded GPU latency " : ""}
               {turn.latencyMs > 0 ? `${Math.round(turn.latencyMs)} ms` : ""}

@@ -50,8 +50,17 @@ Find-a-movie chat interface with version cards, per-claim citations, and a trace
   Sutradhar mark — a browser test asserts the heights), the Wikipedia **CC BY-SA 4.0**
   label, and the IMDb courtesy + non-commercial lines. Executable obligation gate:
   `tests/test_ui_attribution.py`.
-- **Coming in P6 task 6:** the trace view over `ChatResponse.trace[]` — `TurnView`
-  already carries its data.
+- **Trace view (task 6, DEC-P6-4):** `TraceView` renders `trace[]` for live AND replayed
+  turns (one component): tool + param labels from the **generated** map (a tool name
+  outside `tool_schema.v0` renders an explicit *"unknown tool"* error state, never a
+  silent label), arguments, ✓/✗ validation outcome with the fed-back error, the bounded
+  result summary (kind · count · abstained), per-call latency (suppressed on replay —
+  `0.0` was never measured), and the live turn's tokens + amortized GPU cost. Langfuse
+  stays the ops view: no trace ids or observability links render in the browser (D4).
+  Conformance gate: `tests/test_ui_trace_conformance.py::test_ui_trace_tool_calls_validate`
+  — every trace step in every committed replay fixture re-validates against the frozen
+  v0 artifact via `validate_emitted_call`, and recorded `schema_valid` verdicts
+  round-trip against today's artifact (drift detection).
 
 ## Run
 

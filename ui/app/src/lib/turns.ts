@@ -7,6 +7,7 @@ import type {
   IntentPayload,
   ReplayTurn,
   TraceStep,
+  Usage,
   VersionPayload,
 } from "./api";
 
@@ -19,6 +20,9 @@ export interface TurnView {
   warnings: string[];
   trace: TraceStep[];
   latencyMs: number;
+  /** Live turns carry tokens + cost (P6_SPEC §1.1); replayed turns: null —
+   * per-turn usage was not recorded in the pinned transcripts, never faked. */
+  usage: Usage | null;
   replayed: boolean;
 }
 
@@ -62,6 +66,7 @@ export function fromChatUp(userMessage: string, response: ChatUp): TurnView {
     warnings: response.warnings,
     trace: response.trace,
     latencyMs: response.latency_ms,
+    usage: response.usage,
     replayed: false,
   };
 }
@@ -76,6 +81,7 @@ export function fromReplayTurn(turn: ReplayTurn): TurnView {
     warnings: turn.warnings,
     trace: turn.trace,
     latencyMs: turn.latency_ms,
+    usage: null, // not recorded per turn in the pinned transcripts
     replayed: true,
   };
 }

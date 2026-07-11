@@ -379,3 +379,60 @@ body {
   height: 0.8rem;
   vertical-align: baseline;
 }
+
+/* --- trace view (task 6) --- */
+.trace-view {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  border-top: 1px dashed var(--line);
+  padding-top: 0.4rem;
+}
+
+.trace-view summary {
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.trace-steps {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  list-style: none;
+}
+
+.trace-step {
+  margin: 0.25rem 0;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+.trace-step-no {
+  color: var(--ink-soft);
+}
+
+.trace-tool {
+  font-weight: 600;
+}
+
+.trace-args,
+.trace-summary {
+  color: var(--ink-soft);
+}
+
+.trace-valid {
+  color: #3c7a3f;
+  font-weight: 700;
+}
+
+.trace-invalid,
+.trace-error {
+  color: #a33;
+}
+
+.trace-latency {
+  float: right;
+  color: var(--ink-soft);
+}
+
+.trace-usage {
+  margin: 0.4rem 0 0;
+  color: var(--ink-soft);
+}
