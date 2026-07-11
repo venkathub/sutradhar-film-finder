@@ -4,6 +4,7 @@
 // plug into this same component — TurnView already carries their data.
 import type { TurnView } from "../lib/turns";
 import { displayAnswer } from "../lib/turns";
+import VersionSet from "./VersionSet";
 
 export default function TurnList({ turns }: { turns: TurnView[] }) {
   return (
@@ -24,6 +25,7 @@ export default function TurnList({ turns }: { turns: TurnView[] }) {
               </span>
             )}
             <p className="answer-text">{displayAnswer(turn)}</p>
+            <VersionSet turn={turn} />
             {turn.warnings.length > 0 && (
               <ul className="warnings" data-testid="warnings">
                 {turn.warnings.map((warning, w) => (

@@ -114,7 +114,14 @@ def summarize_result(payload: dict[str, Any]) -> dict[str, Any]:
         return {"kind": "candidates", "count": len(ids), "ids": ids}
     if "results" in payload:  # search_by_plot
         ids = [str(r["work_id"]) for r in payload["results"]]
-        return {"kind": "results", "count": len(ids), "ids": ids}
+        # abstain rides along: the DEC-P2-5 calibrated-threshold honesty signal the
+        # UI must render as "low confidence", never as fabricated certainty.
+        return {
+            "kind": "results",
+            "count": len(ids),
+            "ids": ids,
+            "abstain": bool(payload.get("abstain", False)),
+        }
     if "versions" in payload:  # get_versions (original + versions) / refine_filter
         entries = ([payload["original"]] if payload.get("original") else []) + list(
             payload["versions"]

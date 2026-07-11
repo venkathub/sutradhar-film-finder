@@ -36,6 +36,17 @@ def _label(name: str) -> str:
     return text[:1].upper() + text[1:]
 
 
+def _badge(relationship: str) -> str:
+    """Deterministic relationship badge: ``is_X_of`` → ``"X"`` with spaces.
+
+    is_original_of → "original", is_official_dub_of → "official dub", …
+    The vocabulary itself comes from ``$defs.relationship`` in the artifact —
+    a value outside it never gets a badge (the UI renders an explicit error state).
+    """
+    trimmed = relationship.removeprefix("is_").removesuffix("_of")
+    return trimmed.replace("_", " ")
+
+
 def build_label_map(schema: dict[str, Any], schema_bytes: bytes) -> dict[str, Any]:
     """The label-map document — every field derived from the artifact, nothing invented."""
     tools: dict[str, Any] = {}
@@ -61,6 +72,14 @@ def build_label_map(schema: dict[str, Any], schema_bytes: bytes) -> dict[str, An
         ),
         "schema_version": schema["version"],
         "schema_sha256": hashlib.sha256(schema_bytes).hexdigest(),
+        # The typed-edge vocabulary (P6 task 4): badges derived from $defs.relationship —
+        # the five gate edges, never hand-listed. relationship=null is NOT here: the UI
+        # renders it as "unverified relationship" (an honesty state, not a vocabulary item).
+        "relationships": {
+            value: {"badge": _badge(value)} for value in schema["$defs"]["relationship"]["enum"]
+        },
+        # SourceId vocabulary (task 5 citations) from $defs.sources.
+        "source_types": list(schema["$defs"]["sources"]["items"]["properties"]["source"]["enum"]),
         "tools": tools,
     }
 

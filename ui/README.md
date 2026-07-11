@@ -29,10 +29,19 @@ Find-a-movie chat interface with version cards, per-claim citations, and a trace
   D2 progress states "parsing → searching the graph → composing"; mid-turn aborts render
   the offline state). `off` (the default) → `OfflineNotice` (evidence + demo-video link
   only when present) + `ReplayBrowser` over `GET /api/replays`.
-- **Coming in P6 tasks 4–6:** version-set cards (original flagged, typed relationship
-  badges, `null` → "unverified relationship", confidence tiers), per-claim citations +
-  attribution chrome (TMDB/Wikipedia/IMDb obligations), and the trace view over
-  `ChatResponse.trace[]` — `TurnView` already carries their data.
+- **Version-set cards (task 4 — the gating-story component):** `VersionCard` renders
+  title/year/language/lead cast, the **ORIGINAL flag**, the typed relationship badge, and
+  the HIGH/MEDIUM confidence tier. The badge vocabulary is **generated from
+  `$defs.relationship` in the v0 artifact** (five edges, never hand-listed);
+  `relationship: null` renders honestly as *"unverified relationship"* and a value
+  outside the vocabulary renders an explicit error badge — never a silent or guessed
+  label. `VersionSet` adds the honesty states: a `NO_MATCH` answer (the prompt-contract
+  token) renders the abstention callout with **zero cards**, and a `search_by_plot`
+  step with `abstain: true` (DEC-P2-5) banners the cards as *"low confidence"*, never
+  fabricated certainty.
+- **Coming in P6 tasks 5–6:** per-claim citations + attribution chrome
+  (TMDB/Wikipedia/IMDb obligations), and the trace view over `ChatResponse.trace[]` —
+  `TurnView` already carries their data.
 
 ## Run
 

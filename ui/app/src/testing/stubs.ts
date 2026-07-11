@@ -7,7 +7,80 @@ import type {
   ReplayList,
   ReplayTurn,
   StatusResponse,
+  VersionPayload,
 } from "../lib/api";
+import type { TurnView } from "../lib/turns";
+
+export function version(overrides: Partial<VersionPayload>): VersionPayload {
+  return {
+    version_id: "v-0000",
+    title: "Drishyam",
+    language: "ml",
+    year: 2013,
+    relationship: "is_original_of",
+    is_original: true,
+    cast_lead: ["Mohanlal"],
+    sources: [{ source: "wikidata", ref: "Q15401703" }],
+    confidence: "HIGH",
+    ...overrides,
+  };
+}
+
+/** The GS-01 gate set: the Malayalam original + all four Indian remakes. */
+export const DRISHYAM_SET: VersionPayload[] = [
+  version({}),
+  version({
+    version_id: "v-te",
+    title: "Drushyam",
+    language: "te",
+    year: 2014,
+    relationship: "is_remake_of",
+    is_original: false,
+    cast_lead: ["Venkatesh"],
+  }),
+  version({
+    version_id: "v-kn",
+    title: "Drishya",
+    language: "kn",
+    year: 2014,
+    relationship: "is_remake_of",
+    is_original: false,
+    cast_lead: ["Ravichandran"],
+  }),
+  version({
+    version_id: "v-ta",
+    title: "Papanasam",
+    language: "ta",
+    year: 2015,
+    relationship: "is_remake_of",
+    is_original: false,
+    cast_lead: ["Kamal Haasan"],
+  }),
+  version({
+    version_id: "v-hi",
+    title: "Drishyam (Hindi)",
+    language: "hi",
+    year: 2015,
+    relationship: "is_remake_of",
+    is_original: false,
+    cast_lead: ["Ajay Devgn"],
+  }),
+];
+
+export function turnView(overrides: Partial<TurnView>): TurnView {
+  return {
+    user: "which movie is papanasam a remake of?",
+    answer: 'INTENT: {"intent": "list_versions", "slots": {}}\nFive versions.',
+    intent: { intent: "list_versions", slots: {} },
+    versions: [],
+    citations: [],
+    warnings: [],
+    trace: [],
+    latencyMs: 100,
+    replayed: false,
+    ...overrides,
+  };
+}
 
 export const OFF_STATUS: StatusResponse = {
   status: "off",

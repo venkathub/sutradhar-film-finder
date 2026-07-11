@@ -2,6 +2,31 @@
   "$comment": "GENERATED from docs/phases/tool_schema.v0.json — do not edit by hand. Regenerate with `make ui-gen` (ui/app/scripts/gen_tool_labels.py).",
   "schema_version": "v0",
   "schema_sha256": "4c10ea97f1283d3687103594f0deb0d50f7a383cb5df269d25a5042312f3aec5",
+  "relationships": {
+    "is_original_of": {
+      "badge": "original"
+    },
+    "is_remake_of": {
+      "badge": "remake"
+    },
+    "is_official_dub_of": {
+      "badge": "official dub"
+    },
+    "is_unofficial_remake_of": {
+      "badge": "unofficial remake"
+    },
+    "is_sequel_of": {
+      "badge": "sequel"
+    }
+  },
+  "source_types": [
+    "wikidata",
+    "tmdb",
+    "imdb",
+    "wikipedia",
+    "human",
+    "rule"
+  ],
   "tools": {
     "get_versions": {
       "label": "Get versions",

@@ -546,7 +546,12 @@ def test_summarize_result_covers_all_v0_shapes() -> None:
         "kind": "results",
         "count": 1,
         "ids": [WORK_ID],
+        "abstain": False,
     }
+    # DEC-P2-5: the abstention signal rides the summary so the UI can render
+    # "low confidence" instead of fabricated certainty.
+    abstained = {"results": [{"work_id": WORK_ID, "score": 0.2}], "abstain": True}
+    assert summarize_result(abstained)["abstain"] is True
     assert summarize_result({"work_id": WORK_ID, "canonical_title": "Drishyam"}) == {
         "kind": "work",
         "count": 1,
