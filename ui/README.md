@@ -78,12 +78,21 @@ API-only mode (fresh clone with zero node keeps working — the mount is conditi
 
 ```bash
 make ui-test                          # Vitest 4 Browser Mode (headless chromium)
+make ui-e2e                           # Playwright E2E: the seven named golden regressions (needs `make up`)
 uv run pytest tests/test_ui_labels.py # label-map drift gate (Tier-1)
 ```
 
 - Component tests run in a **real browser** (Vitest Browser Mode, Playwright provider —
-  the same chromium install the task-7 Playwright E2E suite reuses; one browser
-  dependency). First run: `cd ui/app && npx playwright install chromium`.
+  the same chromium install the Playwright E2E suite reuses; one browser dependency).
+  First run: `cd ui/app && npx playwright install chromium`.
+- **E2E (task 7):** `ui/app/e2e/*.spec.ts` assert the seven §4 golden regressions on the
+  rendered DOM — GS-01/GS-06 version-set recall, GS-02 zero-invention (detector re-run
+  over rendered text), GS-04 dub-never-remake, GS-05 sibling-not-chain, GS-10 no false
+  merge, GS-08 three-turn backtracking through the real session store, and the GPU-off
+  replay with trace view. The harness (`tests/e2e/e2e_server.py`) serves the REAL app
+  (built UI, real guardrails, v1.1 bundle, seeded graph in a held/never-committed
+  transaction) with a message-keyed scripted graph model driving the pinned expected
+  tool flows — no LLM, no GPU; an off-mode server carries the degradation story.
 - Components take an injected `Api` (see `src/testing/stubs.ts`) — no fetch-mocking
   framework; tests stub the four endpoints with plain objects.
 - Static-mount behaviour (index served at `/`, API routes win, dist-absent = API-only

@@ -157,6 +157,9 @@ ui-dev: ui-gen ## P6: Vite dev server (/api proxied to localhost:$${API_PORT:-80
 ui-test: ## P6: UI component tests (Vitest 4 Browser Mode, headless chromium)
 	cd ui/app && npm test
 
+ui-e2e: ui-build ## P6: Playwright E2E — the seven named golden regressions on the rendered DOM (needs `make up`)
+	cd ui/app && npx playwright test
+
 hf-check: ## Verify Hugging Face Hub auth (whoami via HF_TOKEN)
 	uv run python -m sutradhar.serving.hf_check
 

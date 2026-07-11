@@ -16,6 +16,7 @@ export default defineConfig({
     },
   },
   test: {
+    include: ["src/**/*.test.{ts,tsx}"], // e2e/*.spec.ts belongs to Playwright, not Vitest
     browser: {
       enabled: true,
       headless: true,

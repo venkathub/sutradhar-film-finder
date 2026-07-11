@@ -13,7 +13,7 @@ Integration tier (live Postgres, DEC-P2-6 posture; skipped cleanly when the DB i
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -25,7 +25,6 @@ from sqlalchemy.orm import Session
 from sutradhar.config import Settings
 from sutradhar.evals.driver import (
     RecordedPlotSearch,
-    ToolExecutor,
     build_executor,
     load_retrieval_run,
 )
@@ -41,11 +40,25 @@ from sutradhar.pipeline.tmdb import enrich_tmdb, parse_movie
 from sutradhar.pipeline.wikidata import ingest_spine, parse_entity
 from sutradhar.serving.app import create_app
 from sutradhar.serving.degrade import StatusCache
-from sutradhar.serving.llm_client import ChatResult, EndpointStatus, ToolCall
+from sutradhar.serving.llm_client import EndpointStatus
 from sutradhar.serving.sessions import InMemorySessionStore
-from sutradhar.toolcalls import load_tool_schema, validate_emitted_call
+from sutradhar.toolcalls import load_tool_schema
 
 from .ci_review_pass import apply_ci_review_pass
+from .scripted_model import (
+    RecordingExecutor,
+    ScriptedGraphModel,
+    StepFn,
+)
+from .scripted_model import (
+    call as _call,
+)
+from .scripted_model import (
+    first_work_id as _first_work_id,
+)
+from .scripted_model import (
+    version_ids as _version_ids,
+)
 
 pytestmark = pytest.mark.integration
 
@@ -123,116 +136,16 @@ def reviewed(session: Session) -> Session:
     return session
 
 
-# --- Scripted id-binding model (reads real ids from prior tool results) ---
+# --- Scripted id-binding model: shared with the E2E server (P6 task 7 extraction) ---
 
 
-def _tool_results(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Tool results the model has seen — spotlight-marked, so undo the datamark to parse."""
-    out = []
-    for m in messages:
-        if m.get("role") != "tool":
-            continue
-        content = m["content"]
-        # Strip the provenance-notice first line + restore datamarked spaces (guardrails).
-        body = content.split("\n", 1)[1] if content.startswith("[TOOL RESULT") else content
-        out.append(json.loads(body.replace("\u02c6", " ")))
-    return out
-
-
-def _first_work_id(messages: list[dict[str, Any]]) -> str:
-    for result in _tool_results(messages):
-        for candidate in result.get("candidates", []):
-            return str(candidate["work_id"])
-    raise AssertionError("no resolve_title candidate to bind a work_id from")
-
-
-def _version_ids(messages: list[dict[str, Any]]) -> list[str]:
-    for result in _tool_results(messages):
-        if "versions" in result and "original" in result:  # get_versions shape
-            ids = [result["original"]["version_id"]] if result["original"] else []
-            ids += [v["version_id"] for v in result["versions"]]
-            return [str(i) for i in ids]
-    raise AssertionError("no get_versions result to bind version ids from")
-
-
-def _call(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "id": f"call_{name}",
-        "type": "function",
-        "function": {"name": name, "arguments": json.dumps(arguments)},
-    }
-
-
-StepFn = Callable[[int, list[dict[str, Any]]], "list[dict[str, Any]] | str"]
-
-
-class _ScriptedGraphModel:
-    """Drives a fixed tool plan; ``step_fn`` returns tool calls or a final prose answer."""
-
-    def __init__(self, step_fn: StepFn) -> None:
-        self._step_fn = step_fn
-        self._step = 0
-
-    def chat(self, messages: list[dict[str, Any]], **_: Any) -> ChatResult:
-        emitted = self._step_fn(self._step, messages)
-        self._step += 1
-        if isinstance(emitted, str):
-            return ChatResult(
-                status="up",
-                message={"role": "assistant", "content": emitted},
-                content=emitted,
-                tool_calls=(),
-                finish_reason="stop",
-                usage={"prompt_tokens": 10, "completion_tokens": 5},
-                latency_ms=11.0,
-                detail="ok",
-            )
-        tool_calls = tuple(
-            ToolCall(
-                id=c["id"],
-                name=c["function"]["name"],
-                arguments_raw=c["function"]["arguments"],
-                arguments=json.loads(c["function"]["arguments"]),
-            )
-            for c in emitted
-        )
-        return ChatResult(
-            status="up",
-            message={"role": "assistant", "content": None, "tool_calls": emitted},
-            content=None,
-            tool_calls=tool_calls,
-            finish_reason="tool_calls",
-            usage={"prompt_tokens": 10, "completion_tokens": 5},
-            latency_ms=11.0,
-            detail="ok",
-        )
-
-
-class _RecordingExecutor:
-    """Wraps the repository executor, capturing every (tool, args, result) for assertions
-    and validating each call against v0 (the emitted-tool-calls-validate test)."""
-
-    def __init__(self, inner: ToolExecutor) -> None:
-        self._inner = inner
-        self.calls: list[tuple[str, dict[str, Any]]] = []
-        self.results: list[tuple[str, dict[str, Any]]] = []
-        self.validation_errors: list[list[str]] = []
-
-    def __call__(self, tool: str, args: dict[str, Any]) -> dict[str, Any]:
-        self.calls.append((tool, args))
-        self.validation_errors.append(validate_emitted_call(SCHEMA, tool, args))
-        result = self._inner(tool, args)
-        self.results.append((tool, result))
-        return result
-
-
-def _client(reviewed: Session, step_fn: StepFn) -> tuple[TestClient, _RecordingExecutor]:
+def _client(reviewed: Session, step_fn: StepFn) -> tuple[TestClient, RecordingExecutor]:
     plot_search = RecordedPlotSearch(load_retrieval_run(REPO_ROOT / "evals" / "retrieval_runs"))
     fixture_ref = {"fixture_id": ""}
-    recorder = _RecordingExecutor(build_executor(reviewed, plot_search, fixture_ref))
+    recorder = RecordingExecutor(build_executor(reviewed, plot_search, fixture_ref), SCHEMA)
     app = create_app(
         Settings(_env_file=None),
-        llm_client=_ScriptedGraphModel(step_fn),  # type: ignore[arg-type]  # duck-typed .chat
+        llm_client=ScriptedGraphModel(step_fn),  # type: ignore[arg-type]  # duck-typed .chat
         status_cache=StatusCache(lambda: UP),
         session_store=InMemorySessionStore(3600),
         session_factory=lambda: reviewed,  # single seeded session; close() is a no-op below

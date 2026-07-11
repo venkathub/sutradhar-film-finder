@@ -34,7 +34,7 @@ jobs:
         run: uv run pytest
 
   integration:
-    name: compose stack (Postgres+pgvector, Redis)
+    name: compose stack (Postgres+pgvector, Redis) + UI E2E
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,12 +44,28 @@ jobs:
           enable-cache: true
       - name: Install locked environment
         run: uv sync --frozen
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: ui/app/package-lock.json
       - name: Seed .env from template
         run: cp .env.example .env
       - name: Bring up the stack
         run: docker compose -f infra/docker-compose.yml up -d --wait
       - name: Integration tests
         run: uv run pytest -m integration
+      - name: Build the UI
+        run: |
+          npm ci
+          npm run build
+        working-directory: ui/app
+      - name: Install Playwright chromium
+        run: npx playwright install chromium --with-deps
+        working-directory: ui/app
+      - name: UI E2E (seven named golden regressions on the rendered DOM)
+        run: npx playwright test
+        working-directory: ui/app
       - name: Tear down
         if: always()
         run: docker compose -f infra/docker-compose.yml down -v
