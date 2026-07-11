@@ -967,6 +967,26 @@ sshd, ufw active, backups cron'd; laptop traced the full generation dry-run to i
 (run `20260703T012339Z-e7fff041`, GS-08c trace exported + committed, MLflow run `c2fb0eab…`).
 Standing cost unchanged (₹799/mo); tunnel adds ₹0.
 
+**Amendment 3 (2026-07-11, post-P6 close-out — VPS DELETED; bootstrap modernized).**
+With P6 sealed, the box's job is done: the standing evidence is the **committed** trace
+exports (`evals/generation_runs/*.trace.json` + `.png` for both pinned runs) — verified
+in-repo before deletion — and tracing **no-ops cleanly** with `LANGFUSE_*` unset (DEC-P3-6),
+so nothing breaks. `sutradhar-obs-01` (id `31767d47…`) deleted via the API
+(`AicApi.delete_vps`, response `{'ok': true}`, 0 instances remaining) → **standing cost is
+now $0.00/month across the entire project** (the prepaid remainder to 2026-08-02 is
+forfeited; the saving is every renewal after). Two rebuild paths stand ready if live tracing
+is ever wanted again: `make langfuse-up` (the idempotent from-scratch bootstrap, ~30 min)
+or the Langfuse Cloud free tier (the documented fallback — same three env vars).
+**Bootstrap modernized in the same change:** AIC Cloud launched platform **public URLs**
+(`<slug>-PORT.aiccloud.online`, wildcard TLS at the edge, slug permanent per VPS, verified
+live via `GET /api/v1/vps/{id}/public-url`) — this removes the entire reason the Amendment-2
+cloudflared quick tunnel existed (blocked inbound 443/80). `provision.py` now: resolves the
+public host laptop-side from the API (`https://<slug>-3000.aiccloud.online`), sets a **stable**
+`NEXTAUTH_URL` (the tunnel URL was random — a latent wart, now fixed), health-gates through
+the platform edge, opens ufw `3000` for the proxy (443/80 dropped with Caddy/ACME), and
+idempotently retires a previously-installed tunnel service (`tunnel-retired` step). Mock-tested
+as before (13/13); the flow is exercised for real only at the next `make langfuse-up`.
+
 **Amendment (2026-07-03, P3 task 13 — judge FROZEN, DEC-P3-1).** Human-agreement validation
 executed: 30-item blind worksheet (6 coherence + 24 faithfulness, 15 deterministic foils) from
 the committed dry-run transcripts, labelled by the user (one label corrected on review —
