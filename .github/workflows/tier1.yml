@@ -97,6 +97,26 @@ jobs:
         run: npm test
         working-directory: ui/app
 
+  demo-smoke:
+    name: fresh-clone demo (make demo-up)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: One-command bring-up from a fresh checkout (zero GPU, zero secrets)
+        run: make demo-up
+      - name: Smoke the zero-GPU surface
+        run: |
+          curl -sf localhost:8080/api/health | grep -q '"api"'
+          curl -sf localhost:8080/ | grep -q "Sutradhar"
+          curl -sf localhost:8080/api/replay/GS-08a | grep -q '"turns"'
+          # GPU off is a structured 200, never a 5xx (DEC-P0-4 at the API layer).
+          curl -sf -X POST localhost:8080/api/chat \
+            -H 'content-type: application/json' \
+            -d '{"message":"papanasam?"}' | grep -q '"status": *"off"\|"status":"off"'
+      - name: Tear down
+        if: always()
+        run: make demo-down
+
   secret-guard:
     name: secret guard
     runs-on: ubuntu-latest
