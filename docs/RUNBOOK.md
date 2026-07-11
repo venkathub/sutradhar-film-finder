@@ -1,10 +1,10 @@
 # Sutradhar Runbook — demo paths, timings, teardown
 
-> **P6 task 10.** Three rehearsed paths: the zero-GPU demo (the default), the timed live
-> interview demo (risk R4), and rebuild-from-scratch. **Nothing inference-side runs 24/7**
-> (CLAUDE.md): every live path below ends with a verified teardown. Timing slots marked
-> *"— measured in task 11"* are filled by the one GPU rehearsal window; everything else is
-> previously recorded evidence, never an estimate dressed as a measurement.
+> **P6 task 10/11.** Three rehearsed paths: the zero-GPU demo (the default), the timed live
+> interview demo (risk R4 — **rehearsed 2026-07-11**, timings measured below), and
+> rebuild-from-scratch. **Nothing inference-side runs 24/7** (CLAUDE.md): every live path
+> below ends with a verified teardown. All timings are measurements, never estimates
+> dressed as measurements.
 
 ---
 
@@ -34,7 +34,8 @@ What you see and say:
    the proof.
 
 Target: **< 1 min** from a warm laptop (image built once); first-ever run adds the image
-build. Warm-laptop bring-up time: **— measured in task 11**.
+build. Warm-laptop bring-up measured in the 2026-07-11 rehearsal: **25 s**
+(`demo-up` end to end: compose `--wait` + migrate + reseed → UI 200).
 
 Teardown: `make demo-down` (pgdata volume kept).
 
@@ -78,16 +79,37 @@ make gpu-stop                               # destroys the tagged instance
 make gpu-nuke                               # verify: 0 stray instances
 ```
 
-| Timing | Recorded evidence | This rehearsal |
+| Timing | Recorded evidence | Rehearsal window (2026-07-11, instance 442900) |
 |---|---|---|
-| create → `/health` 200 (cold) | ~5.5 min (P0 validation, 2026-07-01; incl. vLLM install + weight load + compile) | — measured in task 11 |
-| warm compile cache | ~100 s (P0 validation) | — measured in task 11 |
-| exports → first cited answer in the UI | n/a (new path) | — measured in task 11 |
-| full window cost (create → demo → destroy) | $0.34 for the P0 create→smoke→destroy cycle | — measured in task 11 |
+| create → serve window UP (vLLM **+ embed/rerank sidecar**, health-gated) | ~5.5 min LLM-only (P0 validation, 2026-07-01) | **545 s (~9.1 min)** cold — the sidecar adds ~3.5 min over the P0 LLM-only number |
+| exports → app live → first cited answer in the UI | n/a (new path) | **40 s** (compose `--wait` + status probe + the first 5.4 s live turn) |
+| live turn latency (4 turns through the UI) | P5 window: p50 4535 / p95 5395 ms | **p50 4252 / p95 5211 ms** — parity with the P5 capture |
+| full window cost (create → demo → destroy) | $0.34 for the P0 create→smoke→destroy cycle | **832 s total ≈ $0.21** at $0.89/h (+ $0.0028 amortized token cost, 41.4k tokens / 4 turns) |
+| warm compile cache | ~100 s (P0 validation) | not exercised — ephemeral create (never a warm box) is the standard path |
+| teardown | — | `nuke` → instance 442900 destroyed, **0 stray verified**; the still-running app degraded to the offline state automatically (the failure-mode story, observed live) |
 
 Failure mode: if the GPU dies mid-demo, the app **degrades to Path A automatically**
 (structured offline payload + replay browser, HTTP 200, state not corrupted) — which is
-itself the demo of the degradation story.
+itself the demo of the degradation story. *Observed live in the 2026-07-11 rehearsal:
+after `gpu-stop`, the still-running app flipped to the offline state on the next status
+poll, no restart needed.*
+
+### Demo-video recording script (Q2/DEC-P6-3 — the one remaining human step)
+
+~3–5 min screen recording, then upload as a **GitHub Release asset** (< 2 GiB, no
+bandwidth cap) and set `DEMO_VIDEO_URL` (repo Actions variable + `.env`) — the offline
+payload and the static site pick it up automatically; until then no surface renders a
+video link (the no-dead-link posture).
+
+1. **Zero-GPU story (~90 s):** `make demo-up` → offline notice ("offline by design") →
+   replay browser → GS-08a: cards, citations, trace view, recorded latencies.
+2. **Live story (~2 min):** `make gpu-serve` (cut the ~9 min wait) → exports →
+   `make demo-up` → *"which movie is Papanasam a remake of?"* → all five versions,
+   original flagged → click a Wikidata citation → *"Kaithi"* decoy → honest no-match →
+   *"no, the original one"* backtrack → open the trace view (validated calls, tokens,
+   amortized cost).
+3. **STOP on camera (~20 s):** `make gpu-stop` → `make gpu-nuke` → *"no stray sutradhar
+   instances found"*. The cost story, ended the way it always ends.
 
 ## Path C — Rebuild from scratch (the "volume deleted" posture)
 
@@ -122,7 +144,7 @@ health + UI + replay smokes → down).
 | A100-PCIE-40GB (JarvisLabs, per-minute billing) | **$0.89/h** (₹84.24/h recorded 2026-07-01) |
 | Value alternative (RTX 6000 Ada 48GB, teacher plan-B) | ~$0.99/h (never needed) |
 | P0 GPU validation cycle (create → smoke → destroy) | **$0.34 measured** |
-| One live interview demo (Path B) | est. $0.25–0.40; **rehearsal cost measured in task 11** |
+| One live interview demo (Path B) | est. $0.25–0.40; **rehearsal measured $0.21** (13.9 min window, 2026-07-11) |
 | Standing inference infrastructure | **$0.00 — none exists.** Static surface: GitHub Pages ($0). Langfuse VPS (observability only, DEC-P3-7): ₹799/mo, no model traffic |
 
 **The posture, in one line:** the GPU exists for minutes at a time — benchmark capture

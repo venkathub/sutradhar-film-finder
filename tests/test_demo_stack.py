@@ -58,8 +58,8 @@ def test_makefile_demo_targets() -> None:
 
 
 def test_runbook_has_the_three_rehearsed_paths() -> None:
-    """P6 task 10: the RUNBOOK names all three paths + the verified teardown; the
-    task-11 rehearsal must fill the measured slots (this assertion flips then)."""
+    """P6 task 10/11: the RUNBOOK names all three paths + the verified teardown, and
+    the task-11 rehearsal filled the measured timing slots (2026-07-11 window)."""
     runbook = (REPO_ROOT / "docs" / "RUNBOOK.md").read_text(encoding="utf-8")
     for required in (
         "Path A — Zero-GPU demo",
@@ -70,7 +70,11 @@ def test_runbook_has_the_three_rehearsed_paths() -> None:
         "make gpu-stop",
         "make gpu-nuke",
         "DEC-0003",
+        # The rehearsal measurements (task 11) — never estimates dressed as measurements.
+        "545 s",
+        "p50 4252",
+        "$0.21",
+        "0 stray verified",
     ):
         assert required in runbook, f"RUNBOOK missing {required!r}"
-    # Honesty: unmeasured timings are marked pending, never invented (until task 11).
-    assert "measured in task 11" in runbook
+    assert "measured in task 11" not in runbook  # every slot was filled by the window
