@@ -21,11 +21,7 @@
 >
 > _History: APPROVED 2026-07-10 (grooming: D1–D5 and Q1–Q5 confirmed with the recommended
 > options; logged as DEC-P6-1..5; §8 web-research pass same day). EXECUTED 2026-07-11 —
-> deviations discovered live are recorded in the close-out notes: the cold bring-up runs
-> ~9 min (not the P0 ~5.5 min — the embed/rerank sidecar adds ~3.5 min); the demo video is a
-> silent Playwright screen capture (recorder committed at `ui/app/e2e/record_demo.mjs`,
-> narrated re-record optional per the RUNBOOK script); GS-06's rendered franchise exposes the
-> sequel work's own original/remakes per v0 semantics (the E2E asserts the precise labels)._
+> deviations discovered live are recorded in the close-out block immediately below._
 >
 > P6 packages everything the previous phases proved into the product and portfolio surface:
 > the chat UI (versions with the original flagged, per-claim citations, trace view, graceful
@@ -38,6 +34,52 @@
 > **Standing FT verdict: CUT (DEC-P4-9)** — the UI demos the well-prompted base
 > `google/gemma-4-E4B-it` under the v1.1 serving prompt bundle; if P4.1 ever flips to KEEP,
 > that is an env/config change invisible to everything P6 builds. P6 does not wait on P4.1.
+>
+> ---
+>
+> ### Execution close-out (2026-07-11) — deviations discovered live, all logged
+>
+> The §1–§8 design body below is the **as-designed** record; what actually shipped diverged in
+> the following ways (each already recorded in RUNBOOK/DECISIONS/BENCHMARKS — consolidated here
+> for traceability, the P3/P4/P5 close-out convention):
+>
+> 1. **Demo video = an automated Playwright recording, not a hand-recorded narration**
+>    (refines §1.6 / §2.6 / §7-Q2's "~3–5 min" wording): a committed recorder
+>    (`ui/app/e2e/record_demo.mjs`, `context.recordVideo`) captures ONE continuous 84 s take —
+>    zero-GPU replay story → live GPU turns → teardown — and the **"GPU stopped on camera"**
+>    beat is realized *in-product*: the recorder itself fires `gpu-nuke` mid-take and the UI
+>    degrades to "offline by design" on its next status poll (no terminal footage needed).
+>    Published as Release asset **`p6-demo-v1`**:
+>    <https://github.com/venkathub/sutradhar-film-finder/releases/download/p6-demo-v1/sutradhar-demo.webm>
+>    (WebM, 5.2 MB; verified frame-by-frame before publishing); `DEMO_VIDEO_URL` set as the
+>    repo Actions variable + `.env`. A narrated re-record over the same recorder stays optional
+>    (script in the RUNBOOK). Q2's turn-order also differed: the recorded backtrack is
+>    "no, the original one" (the pinned GS-08a flow), not "no, the newer one".
+> 2. **Two GPU windows, not one** (refines §1.6's "one short rehearsal window"): the timing
+>    rehearsal (instance 442900, 832 s, **$0.21**) and the video-recording follow-up
+>    (instance 442925, 689 s, **$0.17**) — total **$0.38**, inside the ~$0.5–1 envelope;
+>    teardown `nuke`-verified 0 stray after each.
+> 3. **Cold bring-up ≈ 9 min, not the P0 ~5.5 min** — the P5 serve session boots vLLM **plus**
+>    the embed/rerank sidecar (health-gated together); measured 545 s / 530 s across the two
+>    windows. §2.6's "resume→ready" was **not exercised**: `jarvis.py` is ephemeral-create by
+>    design (never a warm box), recorded as n/a in the RUNBOOK table.
+> 4. **§4's "seven named tests" ship as 8 Playwright specs** — GS-01 and GS-06 are separate
+>    tests (the spec names them jointly); coverage identical, names per §4.
+> 5. **E2E harness placement** (refines §4's "against the containerized app"): the Playwright
+>    suite drives a locally-served real app (`tests/e2e/e2e_server.py` — real guardrails,
+>    seeded graph in a held transaction, message-keyed scripted model) in Tier-1; the
+>    **containerized** app is smoked by the fresh-checkout `demo-smoke` CI job. One suite, two
+>    proofs, no GPU in either.
+> 6. **GS-06 rendered-franchise semantics**: the sequel work's own original carries an
+>    ORIGINAL flag and its remakes badge "remake" *relative to the sequel* (v0
+>    `include_sequels` semantics) — the E2E asserts the precise per-card labels rather than a
+>    single-original assumption.
+> 7. **Live guardrail bonus captured**: on the tool-less backtrack turn the output gate visibly
+>    flagged the ungrounded title in the UI (`[unverified — not in tool results]` + warning) —
+>    committed in `docs/evidence/p6/live-full-story.png` and visible in the video.
+> 8. **Task-5/12 sequencing**: the LICENSING.md TMDB-prominence + IMDb-courtesy rows landed
+>    with task 5 (the first surface displaying the data), the distribution rows at task 12 —
+>    §5's close-out list assigned all four to task 12.
 
 ---
 
