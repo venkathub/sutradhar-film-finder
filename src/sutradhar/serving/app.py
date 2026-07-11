@@ -10,6 +10,8 @@ wiring the proven seams together —
 - ``GET  /api/replays``  — replay discovery: pinned run id + replayable fixtures (P6);
 - ``GET  /api/replay/{fixture_id}`` — committed pinned-run transcripts (zero-GPU story);
 - ``GET  /api/metrics``  — lands with cost accounting (task 10).
+- ``GET  /``             — the built chat UI (static, same-origin; P6) when
+                            ``ui/app/dist`` exists — otherwise API-only mode.
 
 Wiring posture: everything is constructor-injectable for tests; production defaults come
 from ``Settings``. The DB engine is **lazy** — the GPU-off experience (offline payload +
@@ -32,6 +34,7 @@ from typing import Any
 
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text as sqltext
 from sqlalchemy.orm import Session
 
@@ -71,6 +74,7 @@ from sutradhar.toolcalls import load_tool_schema
 logger = logging.getLogger("sutradhar.serving")
 
 RETRIEVAL_RUNS_DIR = Path("evals/retrieval_runs")
+UI_DIST_DIR = Path("ui/app/dist")
 
 
 class _OfflineRetriever:
@@ -170,6 +174,7 @@ def create_app(
     tracer: Tracer | None = None,
     runs_dir: Path | None = None,
     metrics: MetricsAccumulator | None = None,
+    ui_dist: Path | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     llm = llm_client or LLMClient(settings)
@@ -328,6 +333,15 @@ def create_app(
                 status_code=404,
             )
         return JSONResponse(payload)
+
+    # Built UI served same-origin at / (P6 task 2, DEC-P6-5) — API routes above win
+    # (mounts match after routes). Missing dist ⇒ API-only mode, never a crash: the
+    # fresh-clone zero-node experience keeps working (`make ui-build` adds the UI).
+    dist = ui_dist if ui_dist is not None else UI_DIST_DIR
+    if (dist / "index.html").is_file():
+        app.mount("/", StaticFiles(directory=dist, html=True), name="ui")
+    else:
+        logger.info("ui dist not found at %s — API-only mode (run `make ui-build`)", dist)
 
     return app
 

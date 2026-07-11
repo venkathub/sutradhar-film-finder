@@ -1,0 +1,77 @@
+{
+  "$comment": "GENERATED from docs/phases/tool_schema.v0.json — do not edit by hand. Regenerate with `make ui-gen` (ui/app/scripts/gen_tool_labels.py).",
+  "schema_version": "v0",
+  "schema_sha256": "4c10ea97f1283d3687103594f0deb0d50f7a383cb5df269d25a5042312f3aec5",
+  "tools": {
+    "get_versions": {
+      "label": "Get versions",
+      "description": "All gate-visible Versions of a Work with typed relationship labels and the original flagged. scope maps to version.country; include_sequels walks work-level is_sequel_of edges transitively; a sequel work's own original is labelled is_sequel_of relative to the queried work; a version with no verified edge carries relationship=null.",
+      "params": {
+        "include_sequels": {
+          "label": "Include sequels",
+          "required": false
+        },
+        "scope": {
+          "label": "Scope",
+          "required": false
+        },
+        "work_id": {
+          "label": "Work id",
+          "required": true
+        }
+      }
+    },
+    "get_work": {
+      "label": "Get work",
+      "description": "Canonical Work node + metadata, incl. the literary source_work when one exists (GS-05).",
+      "params": {
+        "work_id": {
+          "label": "Work id",
+          "required": true
+        }
+      }
+    },
+    "refine_filter": {
+      "label": "Refine filter",
+      "description": "Narrow a conversational version set (GS-08 backtracking). era resolves against the set's original version's year: newer = strictly later, older = strictly earlier, original = the is_original flag.",
+      "params": {
+        "by": {
+          "label": "By",
+          "required": true
+        },
+        "version_set": {
+          "label": "Version set",
+          "required": true
+        }
+      }
+    },
+    "resolve_title": {
+      "label": "Resolve title",
+      "description": "Resolve a (possibly transliterated / misspelled / code-mixed) title to candidate Works/Versions. score = rapidfuzz-normalized 0-1 over the match-key index (exact key hit = 1.0); ambiguous = candidates span more than one Work.",
+      "params": {
+        "language": {
+          "label": "Language",
+          "required": false
+        },
+        "title": {
+          "label": "Title",
+          "required": true
+        }
+      }
+    },
+    "search_by_plot": {
+      "label": "Search by plot",
+      "description": "Semantic retrieval of Works from a plot/story description (P2 implements; schema frozen now). abstain=true below the calibrated NO_MATCH threshold (GS-02).",
+      "params": {
+        "description": {
+          "label": "Description",
+          "required": true
+        },
+        "top_k": {
+          "label": "Top k",
+          "required": false
+        }
+      }
+    }
+  }
+}

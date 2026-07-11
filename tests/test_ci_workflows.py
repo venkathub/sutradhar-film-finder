@@ -28,7 +28,7 @@ def test_tier1_is_valid_yaml_with_expected_jobs() -> None:
     wf = _load(_TIER1)
     assert wf["name"] == "tier-1"
     jobs = wf["jobs"]
-    for job in ("lint-type-test", "integration", "secret-guard", "hf-auth"):
+    for job in ("lint-type-test", "integration", "ui", "secret-guard", "hf-auth"):
         assert job in jobs, f"tier-1 missing job {job!r}"
 
 

@@ -390,6 +390,45 @@ def test_chat_response_carries_trace_over_http() -> None:
     assert all(s["latency_ms"] >= 0 for s in body["trace"])
 
 
+# --- P6 task 2: built UI served same-origin (static mount) ---
+
+
+def _ui_client(tmp_path: Any, *, with_dist: bool) -> TestClient:
+    dist = tmp_path / "dist"
+    if with_dist:
+        dist.mkdir()
+        (dist / "index.html").write_text("<!doctype html><h1>Sutradhar</h1>", encoding="utf-8")
+        (dist / "assets").mkdir()
+        (dist / "assets" / "app.js").write_text("// built", encoding="utf-8")
+    app = create_app(
+        Settings(_env_file=None),
+        llm_client=_llm(_ScriptedModel([])),
+        status_cache=StatusCache(lambda: OFF),
+        session_store=InMemorySessionStore(3600),
+        session_factory=lambda: _StubDb(),
+        make_executor=_executor,
+        prompt_artifacts=ARTIFACTS,
+        ui_dist=dist,
+    )
+    return TestClient(app, raise_server_exceptions=False)
+
+
+def test_ui_static_mount_serves_index_and_assets(tmp_path: Any) -> None:
+    client = _ui_client(tmp_path, with_dist=True)
+    root = client.get("/")
+    assert root.status_code == 200 and "Sutradhar" in root.text  # html=True serves index
+    assert client.get("/assets/app.js").status_code == 200
+    # API routes registered before the mount still win (same-origin, no CORS).
+    assert client.get("/api/status").json()["status"] == "off"
+
+
+def test_ui_dist_absent_is_api_only_mode(tmp_path: Any) -> None:
+    """Fresh clone without a node build: API works, / is a 404, never a crash."""
+    client = _ui_client(tmp_path, with_dist=False)
+    assert client.get("/").status_code == 404
+    assert client.get("/api/status").json()["status"] == "off"
+
+
 # --- Health aggregate ---
 
 

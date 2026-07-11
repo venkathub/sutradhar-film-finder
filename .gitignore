@@ -24,6 +24,9 @@ htmlcov/
 # Notebooks
 .ipynb_checkpoints/
 
+# Node (UI build toolchain — P6; build-time only, never deployed)
+node_modules/
+
 # ML / model artifacts (registered to HF Hub, not committed)
 *.gguf
 *.safetensors

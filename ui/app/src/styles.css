@@ -1,0 +1,57 @@
+/* Single clean theme (P6_SPEC non-goals: no dark/light theming, no i18n chrome). */
+:root {
+  --ink: #1d2733;
+  --ink-soft: #5b6b7c;
+  --paper: #f7f8fa;
+  --card: #ffffff;
+  --accent: #b3541e;
+  --line: #e3e7ec;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.app-header {
+  border-bottom: 2px solid var(--line);
+  padding-bottom: 1rem;
+}
+
+.mark {
+  margin: 0;
+  font-size: 1.9rem;
+  letter-spacing: 0.01em;
+  color: var(--accent);
+}
+
+.tagline {
+  margin: 0.35rem 0 0;
+  color: var(--ink-soft);
+}
+
+.app-main {
+  padding-top: 1.25rem;
+}
+
+.placeholder {
+  color: var(--ink-soft);
+  font-style: italic;
+}

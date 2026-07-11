@@ -9,7 +9,7 @@ COMPOSE ?= docker compose -f infra/docker-compose.yml
 
 .DEFAULT_GOAL := help
 .PHONY: help setup fmt lint typecheck test test-int check up down down-v mlflow-up mlflow-down mlflow-backfill mlflow-log-serving db-migrate ingest-spine enrich-tmdb load-akas fetch-plots rekey-titles build-graph ingest-training resolve-conflicts export-training-entities ft-snapshot build-ft-scaffold validate-dataset teach-dataset gpu-teacher ft-dryrun gpu-finetune ft-verdict extract-candidates review-candidates graph-report golden-validate graph-demo ingest-seed \
-        smoke hf-check gpu-validate gpu-serve gpu-stop gpu-nuke api-up serving-benchmark injection-eval
+        smoke hf-check gpu-validate gpu-serve gpu-stop gpu-nuke api-up serving-benchmark injection-eval ui-install ui-gen ui-build ui-dev ui-test
 
 help: ## List available targets
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -141,6 +141,21 @@ smoke: ## LLM connectivity smoke test (green whether the GPU endpoint is up or o
 
 api-up: ## P5: serve the orchestration API (GPU-off experience works with zero GPU/DB)
 	uv run uvicorn --factory sutradhar.serving.app:create_app --host 0.0.0.0 --port $${API_PORT:-8080}
+
+ui-install: ## P6: install the pinned UI toolchain (npm ci; Node 24 LTS, build-time only)
+	cd ui/app && npm ci
+
+ui-gen: ## P6: regenerate the v0 tool-label map (byte-derived from tool_schema.v0.json)
+	python3 ui/app/scripts/gen_tool_labels.py
+
+ui-build: ui-gen ## P6: type-check + build the UI to ui/app/dist (served by the API at /)
+	cd ui/app && npm run build
+
+ui-dev: ui-gen ## P6: Vite dev server (/api proxied to localhost:$${API_PORT:-8080})
+	cd ui/app && npm run dev
+
+ui-test: ## P6: UI component tests (Vitest 4 Browser Mode, headless chromium)
+	cd ui/app && npm test
 
 hf-check: ## Verify Hugging Face Hub auth (whoami via HF_TOKEN)
 	uv run python -m sutradhar.serving.hf_check

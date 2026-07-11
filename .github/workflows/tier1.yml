@@ -54,6 +54,33 @@ jobs:
         if: always()
         run: docker compose -f infra/docker-compose.yml down -v
 
+  ui:
+    name: ui · label drift · build · component tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24 # Active LTS (DEC-P6-1/Q3); build-time only, never deployed
+          cache: npm
+          cache-dependency-path: ui/app/package-lock.json
+      - name: Install pinned UI toolchain
+        run: npm ci
+        working-directory: ui/app
+      - name: Tool-label map drift gate (byte-derived from tool_schema.v0.json)
+        run: |
+          python3 ui/app/scripts/gen_tool_labels.py
+          git diff --exit-code ui/app/src/generated/tool_labels.json
+      - name: Type-check + build
+        run: npm run build
+        working-directory: ui/app
+      - name: Install Playwright chromium (Vitest Browser Mode; reused by E2E)
+        run: npx playwright install chromium --with-deps
+        working-directory: ui/app
+      - name: Component tests (Vitest 4 Browser Mode)
+        run: npm test
+        working-directory: ui/app
+
   secret-guard:
     name: secret guard
     runs-on: ubuntu-latest
