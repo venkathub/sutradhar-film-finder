@@ -39,9 +39,19 @@ Find-a-movie chat interface with version cards, per-claim citations, and a trace
   token) renders the abstention callout with **zero cards**, and a `search_by_plot`
   step with `abstain: true` (DEC-P2-5) banners the cards as *"low confidence"*, never
   fabricated certainty.
-- **Coming in P6 tasks 5–6:** per-claim citations + attribution chrome
-  (TMDB/Wikipedia/IMDb obligations), and the trace view over `ChatResponse.trace[]` —
-  `TurnView` already carries their data.
+- **Citations + attribution chrome (task 5):** `lib/citations.ts` builds per-claim
+  provenance links per `SourceId` — Wikidata QID → entity URL, TMDB (prefix-stripped) →
+  movie URL, IMDb tt-id → title URL, **Wikipedia → page URL pinned to the stored
+  revision (`?oldid=`)**, `rule` → unlinked note naming the deterministic rule, `human`
+  → verification-gate note; unknown source types render an explicit error (the source
+  vocabulary is the generated `source_types`). Every card exposes a "N sources"
+  disclosure. `Footer.tsx` renders the LICENSING.md obligations on every screen: the
+  **official TMDB logo** + exact FAQ notice (logo *measured* less prominent than the
+  Sutradhar mark — a browser test asserts the heights), the Wikipedia **CC BY-SA 4.0**
+  label, and the IMDb courtesy + non-commercial lines. Executable obligation gate:
+  `tests/test_ui_attribution.py`.
+- **Coming in P6 task 6:** the trace view over `ChatResponse.trace[]` — `TurnView`
+  already carries its data.
 
 ## Run
 

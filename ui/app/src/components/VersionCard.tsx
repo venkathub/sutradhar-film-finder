@@ -4,6 +4,7 @@
 // relationship" (never a guessed label); a value OUTSIDE the artifact renders
 // an explicit error badge, never a silent invention.
 import type { VersionPayload } from "../lib/api";
+import { sourceLink } from "../lib/citations";
 import toolLabels from "../generated/tool_labels.json";
 
 const RELATIONSHIPS: Record<string, { badge: string }> = toolLabels.relationships;
@@ -92,6 +93,36 @@ export default function VersionCard({ version }: { version: VersionPayload }) {
         <p className="version-cast" data-testid="version-cast">
           {version.cast_lead.join(", ")}
         </p>
+      )}
+      {version.sources.length > 0 && (
+        <details className="citations" data-testid="citations">
+          <summary>
+            {version.sources.length}{" "}
+            {version.sources.length === 1 ? "source" : "sources"}
+          </summary>
+          <ul className="citation-list">
+            {version.sources.map((source, i) => {
+              const link = sourceLink(source);
+              return (
+                <li key={i} data-testid="citation">
+                  {link.href ? (
+                    <a href={link.href} target="_blank" rel="noreferrer">
+                      {link.label}
+                    </a>
+                  ) : (
+                    <span className="citation-unlinked">{link.label}</span>
+                  )}
+                  {link.note && (
+                    <span className="citation-note" title={link.note}>
+                      {" "}
+                      — {link.note}
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </details>
       )}
     </article>
   );

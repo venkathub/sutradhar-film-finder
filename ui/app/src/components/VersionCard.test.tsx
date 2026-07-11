@@ -89,3 +89,31 @@ test("facts line: language display name + year; cast rendered", async () => {
     .element(screen.getByTestId("version-cast"))
     .toHaveTextContent("Mohanlal");
 });
+
+test("per-claim citations: wikidata source renders a clickable entity link", async () => {
+  const screen = await render(<VersionCard version={version({})} />);
+  const citations = screen.getByTestId("citations");
+  await expect.element(citations).toHaveTextContent("1 source");
+  await citations.getByText("1 source").click(); // open the disclosure
+  await expect
+    .element(citations.getByRole("link", { name: "Wikidata Q15401703" }))
+    .toHaveAttribute("href", "https://www.wikidata.org/wiki/Q15401703");
+});
+
+test("rule source renders unlinked with the named-rule note", async () => {
+  const screen = await render(
+    <VersionCard
+      version={version({
+        sources: [{ source: "rule", ref: "dub-track-rule", field: "edge_type" }],
+      })}
+    />,
+  );
+  const citations = screen.getByTestId("citations");
+  await citations.getByText("1 source").click();
+  await expect
+    .element(citations.getByTestId("citation"))
+    .toHaveTextContent('documented rule "dub-track-rule"');
+  expect(
+    (await citations.getByTestId("citation").element()).querySelector("a"),
+  ).toBeNull(); // deliberately unlinked
+});

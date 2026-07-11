@@ -335,3 +335,47 @@ body {
   font-size: 0.85rem;
   margin: 0.4rem 0;
 }
+
+/* --- citations (task 5) --- */
+.citations {
+  margin-top: 0.45rem;
+  font-size: 0.8rem;
+}
+
+.citations summary {
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.citation-list {
+  margin: 0.3rem 0 0;
+  padding-left: 1rem;
+}
+
+.citation-unlinked {
+  color: var(--ink-soft);
+}
+
+.citation-note {
+  color: var(--ink-soft);
+}
+
+/* --- attribution chrome (task 5, LICENSING.md obligations) --- */
+.attribution {
+  margin-top: 2.5rem;
+  border-top: 1px solid var(--line);
+  padding-top: 0.9rem;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.attribution-line {
+  margin: 0.25rem 0;
+}
+
+/* TMDB FAQ condition: the TMDB logo must be LESS PROMINENT than the
+   application's own primary mark (.mark is 1.9rem) — enforced by test. */
+.tmdb-logo {
+  height: 0.8rem;
+  vertical-align: baseline;
+}

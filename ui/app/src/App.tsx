@@ -5,9 +5,11 @@
 import { useEffect, useState } from "react";
 import OfflineNotice from "./components/OfflineNotice";
 import ChatPanel from "./components/ChatPanel";
+import Footer from "./components/Footer";
 import ReplayBrowser from "./components/ReplayBrowser";
 import type { Api, StatusResponse } from "./lib/api";
 import { httpApi } from "./lib/api";
+import "./styles.css"; // imported here (not main.tsx) so component tests measure real styles
 
 const STATUS_POLL_MS = 30_000; // matches the server-side StatusCache TTL
 
@@ -63,6 +65,7 @@ export default function App({ api = httpApi }: { api?: Api }) {
           </>
         )}
       </main>
+      <Footer />
     </div>
   );
 }
