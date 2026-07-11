@@ -55,3 +55,176 @@ body {
   color: var(--ink-soft);
   font-style: italic;
 }
+
+/* --- status pill --- */
+.status-pill {
+  display: inline-block;
+  margin-top: 0.6rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  background: var(--card);
+}
+
+.status-up {
+  border-color: #3c7a3f;
+  color: #3c7a3f;
+}
+
+/* --- turns --- */
+.turn-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.turn {
+  margin: 1rem 0;
+}
+
+.bubble {
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  padding: 0.6rem 0.9rem;
+  background: var(--card);
+  max-width: 46rem;
+}
+
+.bubble.user {
+  margin-left: auto;
+  background: #eef2f6;
+  width: fit-content;
+}
+
+.bubble.assistant {
+  margin-top: 0.5rem;
+}
+
+.answer-text {
+  margin: 0.3rem 0;
+  white-space: pre-wrap;
+}
+
+.intent-chip {
+  display: inline-block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 0.05rem 0.5rem;
+}
+
+.warnings {
+  color: #8a5a00;
+  font-size: 0.85rem;
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.turn-meta {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+/* --- composer + progress --- */
+.composer {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.composer input {
+  flex: 1;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+}
+
+.composer button {
+  padding: 0.55rem 1.1rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.composer button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.progress {
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.request-error {
+  color: #a33;
+}
+
+/* --- offline + replay --- */
+.offline-notice {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 0.4rem;
+  background: var(--card);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.offline-notice h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+}
+
+.offline-detail {
+  color: var(--ink-soft);
+  margin: 0 0 0.5rem;
+}
+
+.evidence-links {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.replay-browser h2 {
+  font-size: 1.1rem;
+  margin-bottom: 0.3rem;
+}
+
+.run-stamp {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  margin-top: 0;
+}
+
+.replay-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.6rem 0 1rem;
+}
+
+.fixture {
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.fixture.selected {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}

@@ -119,7 +119,11 @@ def summarize_result(payload: dict[str, Any]) -> dict[str, Any]:
         entries = ([payload["original"]] if payload.get("original") else []) + list(
             payload["versions"]
         )
-        ids = [str(e["version_id"]) for e in entries]
+        ids = []
+        for entry in entries:  # dedupe: recorded payloads may list the original twice;
+            vid = str(entry["version_id"])  # the count must match the SURFACED set
+            if vid not in ids:
+                ids.append(vid)
         return {"kind": "versions", "count": len(ids), "ids": ids}
     if "work_id" in payload:  # get_work
         return {"kind": "work", "count": 1, "ids": [str(payload["work_id"])]}

@@ -32,7 +32,7 @@ cut (DEC-P5-1). **The GPU-off experience works on a fresh clone with zero GPU an
 | `GET /api/status` | cached degradation state (one health probe per ~30 s TTL, DEC-P5-5) |
 | `GET /api/health` | aggregate: api / db / redis / llm / embed / rerank (`EndpointStatus`-shaped) |
 | `GET /api/replays` | replay discovery (P6 task 1): the pinned run's id/model/prompt-hash + replayable fixture ids — what the UI replay browser lists |
-| `GET /api/replay/{fixture}` | committed pinned-run transcript (e.g. `GS-08a`) — the zero-GPU Papanasam story; 404 lists available fixtures |
+| `GET /api/replay/{fixture}` | committed pinned-run transcript (e.g. `GS-08a`) — the zero-GPU Papanasam story; 404 lists available fixtures. P6 task 3 adds an additive `turns` key: ChatResponse-shaped turns (via `degrade.replay_turns`) so replayed and live turns render through the same UI components |
 | `GET /api/metrics` | token/cost/latency summary (P5 task 10) |
 
 **One turn** (`sutradhar.serving.orchestrator`, the P3 driver loop lifted to live traffic):

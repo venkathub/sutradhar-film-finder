@@ -1,10 +1,12 @@
-// Scaffold smoke (P6 task 2): the shell renders in a REAL browser (Vitest 4
-// Browser Mode, Playwright chromium) and the tool-label map is the generated
-// v0 artifact — exactly the five tools, nothing hand-added.
+// App shell + mode switch (P6 tasks 2–3): the shell renders in a REAL browser
+// (Vitest 4 Browser Mode, Playwright chromium); /api/status picks the mode —
+// GPU off (the default) shows the offline notice + replay browser, up shows
+// the chat panel. The tool-label map stays the generated v0 artifact.
 import { expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import App from "./App";
 import toolLabels from "./generated/tool_labels.json";
+import { OFF_STATUS, REPLAY_LIST, UP_STATUS, stubApi } from "./testing/stubs";
 
 const V0_TOOLS = [
   "get_versions",
@@ -14,14 +16,29 @@ const V0_TOOLS = [
   "search_by_plot",
 ];
 
-test("renders the Sutradhar mark and shell", async () => {
-  const screen = await render(<App />);
+test("off mode (the default): mark, offline notice, replay browser", async () => {
+  const api = stubApi({
+    getStatus: () => Promise.resolve(OFF_STATUS),
+    getReplays: () => Promise.resolve(REPLAY_LIST),
+  });
+  const screen = await render(<App api={api} />);
   await expect
     .element(screen.getByRole("heading", { name: "Sutradhar" }))
     .toBeVisible();
+  await expect.element(screen.getByTestId("offline-notice")).toBeVisible();
+  await expect.element(screen.getByTestId("replay-browser")).toBeVisible();
   await expect
-    .element(screen.getByTestId("scaffold-placeholder"))
-    .toBeVisible();
+    .element(screen.getByTestId("status-pill"))
+    .toHaveTextContent("offline by design");
+});
+
+test("up mode: chat panel instead of the offline state", async () => {
+  const api = stubApi({ getStatus: () => Promise.resolve(UP_STATUS) });
+  const screen = await render(<App api={api} />);
+  await expect.element(screen.getByTestId("chat-panel")).toBeVisible();
+  await expect
+    .element(screen.getByTestId("status-pill"))
+    .toHaveTextContent("live (GPU window up)");
 });
 
 test("tool-label map carries exactly the five v0 tools", () => {

@@ -340,6 +340,10 @@ def test_replay_serves_pinned_gs08a() -> None:
     assert body["messages"] and body["answers"]
     assert body["calls"] and all("tool" in c for c in body["calls"])
     assert body["latencies_ms"]  # real GPU latencies, replayable with zero GPU
+    # P6 task 3: ChatResponse-shaped turns for the UI (one rendering path, §2.2).
+    assert len(body["turns"]) == len(body["answers"])
+    assert body["turns"][0]["message"] == "the Drishyam with Ajay Devgn"
+    assert body["turns"][1]["versions"] and body["turns"][1]["versions"][0]["is_original"]
 
 
 def test_replay_unknown_fixture_404_lists_available() -> None:
