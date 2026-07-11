@@ -16,7 +16,7 @@ import pytest
 
 from sutradhar.config import Settings
 from sutradhar.serving.llm_client import LLMClient
-from sutradhar.serving.orchestrator import Orchestrator, collect_titles
+from sutradhar.serving.orchestrator import Orchestrator, collect_titles, summarize_result
 from sutradhar.serving.schemas import ChatResponse, TurnAborted
 from sutradhar.serving.sessions import (
     InMemorySessionStore,
@@ -435,3 +435,122 @@ def test_collect_titles_walks_nested_results() -> None:
         }
     )
     assert titles == ["Drishyam", "Papanasam", "Drushyam", "Drishya"]
+
+
+# --- P6 task 1: TraceStep assembly (P6_SPEC §2.2, DEC-P6-4) ---
+
+
+def test_trace_happy_path_one_bounded_step_per_call() -> None:
+    model = _ScriptedModel(list(TURN1_SCRIPT))
+    orch, _ = _orchestrator(model)
+    out = orch.run_turn(None, "which movie is papanasam a remake of?")
+    assert isinstance(out, ChatResponse)
+
+    assert [(s.step, s.tool) for s in out.trace] == [(1, "resolve_title"), (2, "get_versions")]
+    assert all(s.valid and s.validation_error is None for s in out.trace)
+    assert out.trace[0].arguments == {"title": "Papanasam"}
+    assert out.trace[0].result_summary == {"kind": "candidates", "count": 1, "ids": [WORK_ID]}
+    assert out.trace[1].result_summary == {
+        "kind": "versions",
+        "count": 3,
+        "ids": [V_ML, V_TA, V_HI],
+    }
+    assert all(s.latency_ms >= 0 for s in out.trace)
+
+    # BOUNDED: the trace never carries the tool-result blob — no titles, cast, sources.
+    dumped = json.dumps(out.model_dump(mode="json")["trace"], ensure_ascii=False)
+    for leaked in ("Drishyam", "Mohanlal", "wikidata", "Q15401703"):
+        assert leaked not in dumped
+
+
+def test_trace_records_invalid_calls_with_validation_error() -> None:
+    model = _ScriptedModel(
+        [
+            _response(tool_calls=[_tool_call("c1", "delete_database", {"x": 1})]),
+            _response(
+                tool_calls=[
+                    _tool_call("c2", "resolve_title", {"title": "Papanasam", "invented": True})
+                ]
+            ),
+            _response(content=ANSWER_T1),
+        ]
+    )
+    orch, _ = _orchestrator(model)
+    out = orch.run_turn(None, "papanasam?")
+    assert isinstance(out, ChatResponse)
+
+    hallucinated, invented = out.trace
+    assert hallucinated.tool == "delete_database" and hallucinated.valid is False
+    assert hallucinated.validation_error and "hallucinated tool" in hallucinated.validation_error
+    assert hallucinated.result_summary["kind"] == "error"
+    assert invented.valid is False
+    assert invented.validation_error and "invented" in invented.validation_error
+
+
+def test_trace_malformed_json_arguments_render_as_none() -> None:
+    model = _ScriptedModel(
+        [
+            _response(tool_calls=[_tool_call("c1", "resolve_title", "{not json")]),
+            _response(content=ANSWER_T1),
+        ]
+    )
+    orch, _ = _orchestrator(model)
+    out = orch.run_turn(None, "papanasam?")
+    assert isinstance(out, ChatResponse)
+    (step,) = out.trace
+    assert step.arguments is None and step.valid is False
+    assert step.validation_error is not None
+
+
+def test_trace_execution_error_summary() -> None:
+    from sutradhar.evals.driver import ToolExecutionError
+
+    def execute(tool: str, args: dict[str, Any]) -> dict[str, Any]:
+        raise ToolExecutionError("plot search unavailable — embeddings endpoint off")
+
+    model = _ScriptedModel(
+        [
+            _response(tool_calls=[_tool_call("c1", "search_by_plot", {"description": "x"})]),
+            _response(content=ANSWER_T1),
+        ]
+    )
+    orch = Orchestrator(
+        _client(model),
+        InMemorySessionStore(3600),
+        execute,
+        system_prompt=SYSTEM_PROMPT,
+        prompt_hash=PROMPT_HASH,
+    )
+    out = orch.run_turn(None, "wo film …")
+    assert isinstance(out, ChatResponse)
+    (step,) = out.trace
+    assert step.valid is True  # the CALL was valid; the execution failed
+    assert step.result_summary["kind"] == "error"
+    assert "plot search unavailable" in step.result_summary["error"]
+
+
+def test_summarize_result_covers_all_v0_shapes() -> None:
+    assert summarize_result(RESOLVE_RESULT) == {
+        "kind": "candidates",
+        "count": 1,
+        "ids": [WORK_ID],
+    }
+    assert summarize_result(GET_VERSIONS_RESULT) == {
+        "kind": "versions",
+        "count": 3,
+        "ids": [V_ML, V_TA, V_HI],
+    }
+    assert summarize_result(REFINE_RESULT) == {"kind": "versions", "count": 1, "ids": [V_ML]}
+    plot_result = {"results": [{"work_id": WORK_ID, "score": 0.9}], "abstain": False}
+    assert summarize_result(plot_result) == {
+        "kind": "results",
+        "count": 1,
+        "ids": [WORK_ID],
+    }
+    assert summarize_result({"work_id": WORK_ID, "canonical_title": "Drishyam"}) == {
+        "kind": "work",
+        "count": 1,
+        "ids": [WORK_ID],
+    }
+    long_error = summarize_result({"error": "x" * 999})
+    assert long_error["kind"] == "error" and len(long_error["error"]) == 200

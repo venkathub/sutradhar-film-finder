@@ -169,6 +169,14 @@ class Settings(BaseSettings):
     # serve-session hold TTL (DEC-P5-4): bounded live window, then destroy-in-finally.
     serve_hold_minutes: int = Field(default=60, validation_alias="SERVE_HOLD_MINUTES")
 
+    # --- P6 UI & portfolio surface (P6_SPEC §2.2) ---
+    # Recorded demo video (GitHub Release asset, DEC-P6-3). Unset ⇒ the offline
+    # payload omits the link; set after the P6 task-11 rehearsal window.
+    demo_video_url: str | None = Field(default=None, validation_alias="DEMO_VIDEO_URL")
+    # Canonical URL of the static always-available surface (GitHub Pages, DEC-P6-3).
+    # Docs/link-check use only — the app never depends on it.
+    site_base_url: str | None = Field(default=None, validation_alias="SITE_BASE_URL")
+
     def require(self, field: str) -> str:
         """Return ``field``'s value or raise a clear, var-named :class:`ConfigError`.
 

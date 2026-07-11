@@ -52,6 +52,27 @@ class Citation(BaseModel):
     sources: list[dict[str, Any]]
 
 
+class TraceStep(BaseModel):
+    """One validated tool call in the turn's agent loop (P6_SPEC §2.2, DEC-P6-4).
+
+    The trace shows what the orchestrator already validated — ``tool``/``arguments``
+    are the model's emitted call, ``valid``/``validation_error`` the
+    ``validate_emitted_call`` outcome, and ``result_summary`` a BOUNDED digest
+    (kind/count/ids), never the full tool-result blob: the versions/citations fields
+    already carry the user-facing content.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    step: int  # 1-based, across all rounds of the turn
+    tool: str  # as emitted by the model; valid=false when it is not a v0 tool
+    arguments: dict[str, Any] | None  # None when the emitted JSON did not parse
+    valid: bool
+    validation_error: str | None = None  # populated when valid=false (fed-back call)
+    result_summary: dict[str, Any]
+    latency_ms: float
+
+
 class Usage(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -75,6 +96,7 @@ class ChatResponse(BaseModel):
     usage: Usage = Usage()
     latency_ms: float = 0.0
     tool_calls: int = 0
+    trace: list[TraceStep] = []  # P6 additive extension — existing consumers ignore it
     trace_id: str | None = None
 
 

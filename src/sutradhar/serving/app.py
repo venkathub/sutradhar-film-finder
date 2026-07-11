@@ -7,6 +7,7 @@ wiring the proven seams together —
                             payload (GPU off/error — **HTTP 200, never a 5xx**);
 - ``GET  /api/health``   — aggregate: api / db / redis / llm / embed / rerank;
 - ``GET  /api/status``   — the cached degradation state only (cheap, D5 TTL);
+- ``GET  /api/replays``  — replay discovery: pinned run id + replayable fixtures (P6);
 - ``GET  /api/replay/{fixture_id}`` — committed pinned-run transcripts (zero-GPU story);
 - ``GET  /api/metrics``  — lands with cost accounting (task 10).
 
@@ -51,6 +52,7 @@ from sutradhar.serving.degrade import (
     OFFLINE_DETAIL,
     StatusCache,
     available_replays,
+    list_replays,
     load_replay,
     offline_payload,
 )
@@ -181,6 +183,10 @@ def create_app(
     counters = metrics or MetricsAccumulator()
     replay_kwargs: dict[str, Any] = {"runs_dir": runs_dir} if runs_dir else {}
 
+    def _offline(conversation_id: str | None, detail: str = OFFLINE_DETAIL) -> dict[str, Any]:
+        """offline_payload with the DEMO_VIDEO_URL evidence link wired in (P6 task 1)."""
+        return offline_payload(conversation_id, detail, demo_video=settings.demo_video_url)
+
     app = FastAPI(title="Sutradhar API", docs_url=None, redoc_url=None)
     app.state.status_cache = cache
     app.state.metrics = counters
@@ -212,9 +218,7 @@ def create_app(
         if status.status != "up":
             counters.record("off")
             return JSONResponse(
-                offline_payload(
-                    payload.conversation_id, f"{OFFLINE_DETAIL} (endpoint {status.status})"
-                )
+                _offline(payload.conversation_id, f"{OFFLINE_DETAIL} (endpoint {status.status})")
             )
         try:
             db = get_db()
@@ -243,7 +247,7 @@ def create_app(
             cache.invalidate()  # the endpoint died mid-turn; re-probe on the next request
             counters.record("aborted")
             return JSONResponse(
-                offline_payload(
+                _offline(
                     outcome.conversation_id,
                     f"{OFFLINE_DETAIL} (turn aborted: {outcome.detail})",
                 )
@@ -292,7 +296,7 @@ def create_app(
         status = cache.current()
         body: dict[str, Any] = {"status": status.status, "detail": status.detail}
         if status.status != "up":
-            body["evidence"] = offline_payload(None)["evidence"]
+            body["evidence"] = _offline(None)["evidence"]
         return body
 
     @app.get("/api/health")
@@ -305,6 +309,11 @@ def create_app(
             "embed": _provider_health("embeddings", settings.embed_base_url, settings.embed_model),
             "rerank": _provider_health("rerank", settings.rerank_base_url, settings.rerank_model),
         }
+
+    @app.get("/api/replays")
+    def api_replays() -> dict[str, Any]:
+        """Replay discovery (P6 task 1): the pinned run + the fixtures it can replay."""
+        return list_replays(**replay_kwargs)
 
     @app.get("/api/replay/{fixture_id}")
     def api_replay(fixture_id: str) -> JSONResponse:

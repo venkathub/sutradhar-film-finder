@@ -155,6 +155,7 @@ def _client(
     llm_handler: Any = None,
     store: InMemorySessionStore | None = None,
     session_factory: Any = None,
+    settings: Settings | None = None,
 ) -> TestClient:
     probes = {"n": 0}
 
@@ -163,7 +164,7 @@ def _client(
         return probe_status
 
     app = create_app(
-        Settings(_env_file=None),
+        settings or Settings(_env_file=None),
         llm_client=_llm(llm_handler or _ScriptedModel([])),
         status_cache=StatusCache(probe),
         session_store=store or InMemorySessionStore(3600),
@@ -191,7 +192,7 @@ def test_gpu_off_chat_returns_structured_200() -> None:
     assert "on-demand" in body["detail"]
     assert body["evidence"]["benchmarks"] == "docs/BENCHMARKS.md"
     assert body["evidence"]["replay"] == "/api/replay/GS-08a"
-    assert body["evidence"]["demo_video"] is None  # lands in P6
+    assert "demo_video" not in body["evidence"]  # DEMO_VIDEO_URL unset ⇒ key omitted (P6)
 
 
 def test_gpu_off_status_route() -> None:
@@ -349,6 +350,46 @@ def test_replay_unknown_fixture_404_lists_available() -> None:
     assert "GS-08a" in body["available"]
 
 
+# --- P6 task 1: replay discovery + DEMO_VIDEO_URL + trace over HTTP ---
+
+
+def test_replays_discovery_route() -> None:
+    """GET /api/replays: available_replays() promoted from the 404 body (P6_SPEC §1.2)."""
+    client = _client(probe_status=OFF)
+    resp = client.get("/api/replays")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["run_id"] == "20260704T093206Z-e9598564"  # the PINNED_RUN, stamped
+    assert body["prompt_hash"].startswith("78215ccc")
+    assert body["model"] and body["mode"]
+    assert "GS-08a" in body["available"]
+
+
+def test_demo_video_url_wired_into_offline_payload_and_status() -> None:
+    url = "https://github.com/example/sutradhar/releases/download/v1/demo.mp4"
+    settings = Settings(_env_file=None, DEMO_VIDEO_URL=url)
+    client = _client(probe_status=OFF, settings=settings)
+    chat = client.post("/api/chat", json={"message": "papanasam?"}).json()
+    assert chat["evidence"]["demo_video"] == url
+    status = client.get("/api/status").json()
+    assert status["evidence"]["demo_video"] == url
+
+
+def test_chat_response_carries_trace_over_http() -> None:
+    """trace[] is on the wire (P6_SPEC §2.2): one step per tool call, v0 names, bounded."""
+    client = _client(llm_handler=_ScriptedModel(list(TURN1)))
+    body = client.post("/api/chat", json={"message": "papanasam?"}).json()
+    assert [s["step"] for s in body["trace"]] == [1, 2]
+    assert [s["tool"] for s in body["trace"]] == ["resolve_title", "get_versions"]
+    assert all(s["valid"] and s["validation_error"] is None for s in body["trace"])
+    assert body["trace"][1]["result_summary"] == {
+        "kind": "versions",
+        "count": 2,
+        "ids": [V_ML, V_TA],
+    }
+    assert all(s["latency_ms"] >= 0 for s in body["trace"])
+
+
 # --- Health aggregate ---
 
 
@@ -373,10 +414,12 @@ def test_offline_payload_shape_is_the_spec_contract() -> None:
         "evidence": {
             "benchmarks": "docs/BENCHMARKS.md",
             "replay": "/api/replay/GS-08a",
-            "demo_video": None,
         },
-        "request_live_demo": "see docs/RUNBOOK.md (P6)",
+        "request_live_demo": "see docs/RUNBOOK.md",
     }
+    # DEMO_VIDEO_URL set ⇒ the evidence carries the link (P6_SPEC §2.2).
+    with_video = offline_payload("abc", demo_video="https://example.com/demo.mp4")
+    assert with_video["evidence"]["demo_video"] == "https://example.com/demo.mp4"
 
 
 def test_unhandled_error_gets_envelope_not_traceback() -> None:

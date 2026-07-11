@@ -236,3 +236,20 @@ def test_p5_serving_env_override(monkeypatch: pytest.MonkeyPatch) -> None:
     assert s.session_ttl_s == 120
     assert s.gpu_hourly_usd == 1.29  # float coercion
     assert s.serve_hold_minutes == 15
+
+
+def test_p6_surface_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
+    """P6 UI/portfolio fields (P6_SPEC §2.2): unset by default — off is first-class."""
+    _clear_env(monkeypatch)
+    s = Settings(_env_file=None)
+    assert s.demo_video_url is None  # offline payload omits the link until task 11
+    assert s.site_base_url is None
+
+
+def test_p6_surface_env_override(monkeypatch: pytest.MonkeyPatch) -> None:
+    _clear_env(monkeypatch)
+    monkeypatch.setenv("DEMO_VIDEO_URL", "https://example.com/demo.mp4")
+    monkeypatch.setenv("SITE_BASE_URL", "https://example.github.io/sutradhar")
+    s = Settings(_env_file=None)
+    assert s.demo_video_url == "https://example.com/demo.mp4"
+    assert s.site_base_url == "https://example.github.io/sutradhar"

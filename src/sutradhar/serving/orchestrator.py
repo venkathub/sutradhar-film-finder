@@ -26,12 +26,15 @@ Guardrail hooks (P5 task 8 plugs in; defaults are honest passthroughs):
 
 Response assembly (§2.3): ``versions[]`` mirrors the LAST ``get_versions`` result — or,
 after a ``refine_filter``, the filtered ids mapped back through the retained entries so
-refined turns keep cast/sources/confidence; one citation per surfaced version.
+refined turns keep cast/sources/confidence; one citation per surfaced version. Every
+tool call additionally becomes a bounded :class:`TraceStep` on ``ChatResponse.trace``
+(P6, DEC-P6-4) — the UI trace view renders what this loop already validated.
 """
 
 from __future__ import annotations
 
 import json
+import time
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
@@ -48,6 +51,7 @@ from sutradhar.serving.schemas import (
     ChatResponse,
     Citation,
     IntentPayload,
+    TraceStep,
     TurnAborted,
     Usage,
     VersionPayload,
@@ -91,6 +95,35 @@ def collect_titles(payload: Any) -> list[str]:
 
     walk(payload)
     return titles
+
+
+_SUMMARY_ERROR_CHARS = 200
+
+
+def summarize_result(payload: dict[str, Any]) -> dict[str, Any]:
+    """A BOUNDED trace digest of a tool-result payload (P6_SPEC §2.2).
+
+    Kind + count + ids only — never titles, cast, sources, or plot text: the trace
+    explains *how* the answer was assembled; the response's versions/citations carry
+    the *what*. Pure function, one branch per v0 result shape.
+    """
+    if "error" in payload:  # validation feedback or ToolExecutionError feedback
+        return {"kind": "error", "error": str(payload["error"])[:_SUMMARY_ERROR_CHARS]}
+    if "candidates" in payload:  # resolve_title
+        ids = [str(c["work_id"]) for c in payload["candidates"]]
+        return {"kind": "candidates", "count": len(ids), "ids": ids}
+    if "results" in payload:  # search_by_plot
+        ids = [str(r["work_id"]) for r in payload["results"]]
+        return {"kind": "results", "count": len(ids), "ids": ids}
+    if "versions" in payload:  # get_versions (original + versions) / refine_filter
+        entries = ([payload["original"]] if payload.get("original") else []) + list(
+            payload["versions"]
+        )
+        ids = [str(e["version_id"]) for e in entries]
+        return {"kind": "versions", "count": len(ids), "ids": ids}
+    if "work_id" in payload:  # get_work
+        return {"kind": "work", "count": 1, "ids": [str(payload["work_id"])]}
+    return {"kind": "other", "keys": sorted(payload)[:10]}  # pragma: no cover — defensive
 
 
 def _version_payload(entry: dict[str, Any]) -> VersionPayload:
@@ -188,6 +221,7 @@ class Orchestrator:
         tracker = _VersionTracker()
         tool_titles: list[str] = []
         warnings: list[str] = []
+        trace: list[TraceStep] = []
         usage = Usage()
         latency_ms = 0.0
         tool_call_count = 0
@@ -240,6 +274,7 @@ class Orchestrator:
                 for call in result.tool_calls:
                     tool_call_count += 1
                     errors = validate_emitted_call(self._schema, call.name, call.arguments)
+                    started = time.perf_counter()
                     with self._tracer.span(
                         f"tool:{call.name}", kind="tool", input=call.arguments
                     ) as tool_span:
@@ -255,6 +290,17 @@ class Orchestrator:
                                 payload = {"error": str(exc)}
                                 warnings.append(f"{call.name}: {exc}")
                                 tool_span.update(output=payload, level="ERROR")
+                    trace.append(
+                        TraceStep(
+                            step=tool_call_count,
+                            tool=call.name,
+                            arguments=call.arguments,
+                            valid=not errors,
+                            validation_error="; ".join(errors) if errors else None,
+                            result_summary=summarize_result(payload),
+                            latency_ms=round((time.perf_counter() - started) * 1000, 2),
+                        )
+                    )
                     if "error" not in payload:
                         tool_titles.extend(collect_titles(payload))
                         if call.name == "get_versions":
@@ -307,5 +353,6 @@ class Orchestrator:
             usage=usage,
             latency_ms=round(latency_ms, 2),
             tool_calls=tool_call_count,
+            trace=trace,
             trace_id=self._tracer.last_trace_id,
         )

@@ -53,18 +53,29 @@ class StatusCache:
         self._cached = None
 
 
-def offline_payload(conversation_id: str | None, detail: str = OFFLINE_DETAIL) -> dict[str, Any]:
-    """The §2.2 GPU-off response body — same route, structured, never an error."""
+def offline_payload(
+    conversation_id: str | None,
+    detail: str = OFFLINE_DETAIL,
+    *,
+    demo_video: str | None = None,
+) -> dict[str, Any]:
+    """The §2.2 GPU-off response body — same route, structured, never an error.
+
+    ``demo_video`` comes from ``DEMO_VIDEO_URL`` (P6): unset ⇒ the key is omitted
+    (P6_SPEC §2.2) — the UI treats absence as "no video", never renders a dead link.
+    """
+    evidence: dict[str, Any] = {
+        "benchmarks": "docs/BENCHMARKS.md",
+        "replay": "/api/replay/GS-08a",
+    }
+    if demo_video:
+        evidence["demo_video"] = demo_video
     return {
         "conversation_id": conversation_id,
         "status": "off",
         "detail": detail,
-        "evidence": {
-            "benchmarks": "docs/BENCHMARKS.md",
-            "replay": "/api/replay/GS-08a",
-            "demo_video": None,  # lands in P6
-        },
-        "request_live_demo": "see docs/RUNBOOK.md (P6)",
+        "evidence": evidence,
+        "request_live_demo": "see docs/RUNBOOK.md",
     }
 
 
@@ -117,3 +128,24 @@ def available_replays(
     """Fixture ids the pinned run can replay (listed in the 404 body — discoverable)."""
     artifact = load_generation_run(runs_dir, run_id)
     return [fixture.fixture_id for fixture in artifact.fixtures]
+
+
+def list_replays(
+    *,
+    run_id: str | None = None,
+    runs_dir: Path = GENERATION_RUNS_DIR,
+) -> dict[str, Any]:
+    """``GET /api/replays`` body (P6 task 1): the pinned run's identity + its fixtures.
+
+    Promotes :func:`available_replays` from the 404 body to a first-class discovery
+    route the UI replay browser lists from — stamped with the run it came from, same
+    provenance fields as :func:`load_replay`.
+    """
+    artifact = load_generation_run(runs_dir, run_id)
+    return {
+        "run_id": artifact.run_id,
+        "mode": artifact.mode,
+        "model": artifact.model,
+        "prompt_hash": artifact.prompt_hash,
+        "available": [fixture.fixture_id for fixture in artifact.fixtures],
+    }
