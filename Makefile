@@ -170,6 +170,9 @@ demo-up: ## P6: THE 30-second zero-GPU demo — build+up (demo profile) -> migra
 demo-down: ## P6: stop the demo stack (keeps the pgdata volume)
 	$(COMPOSE) --profile demo down
 
+site-build: ## P6: build the static always-available surface into site/dist (DEC-P6-3)
+	uv run python site/generate.py
+
 hf-check: ## Verify Hugging Face Hub auth (whoami via HF_TOKEN)
 	uv run python -m sutradhar.serving.hf_check
 

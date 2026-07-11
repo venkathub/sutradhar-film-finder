@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 560" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+  <!-- Sutradhar architecture (P6 task 9). Committed, hand-authored SVG — the
+       always-available surface embeds this; the dashed region is the COST STORY:
+       nothing inference-side runs 24/7, the GPU is on-demand. -->
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#5b6b7c"/>
+    </marker>
+  </defs>
+  <style>
+    .box { fill:#ffffff; stroke:#5b6b7c; stroke-width:1.4; rx:8; }
+    .accent { stroke:#b3541e; stroke-width:1.8; }
+    .ghost { fill:#fdf6f1; stroke:#b3541e; stroke-dasharray:7 5; stroke-width:1.6; }
+    .title { font-size:15px; font-weight:700; fill:#1d2733; }
+    .small { font-size:12px; fill:#5b6b7c; }
+    .tiny  { font-size:11px; fill:#5b6b7c; }
+    .flow  { stroke:#5b6b7c; stroke-width:1.4; fill:none; marker-end:url(#arrow); }
+    .label { font-size:11px; fill:#b3541e; font-weight:600; }
+  </style>
+
+  <text x="20" y="30" class="title" font-size="19">Sutradhar — cross-lingual film finder (remake / dub aware)</text>
+
+  <!-- Browser / UI -->
+  <rect x="20" y="60" width="200" height="88" class="box accent"/>
+  <text x="34" y="86" class="title">Chat UI (React)</text>
+  <text x="34" y="106" class="small">version cards · citations</text>
+  <text x="34" y="122" class="small">trace view · replay browser</text>
+  <text x="34" y="138" class="tiny">static assets, same origin</text>
+
+  <!-- FastAPI -->
+  <rect x="290" y="60" width="230" height="118" class="box accent"/>
+  <text x="304" y="86" class="title">FastAPI orchestration</text>
+  <text x="304" y="106" class="small">guardrails: injection defense,</text>
+  <text x="304" y="121" class="small">output gate (0 hallucinated movies)</text>
+  <text x="304" y="139" class="small">Redis sessions · cost/latency</text>
+  <text x="304" y="156" class="small">graceful degradation (off = 200)</text>
+
+  <!-- Agent loop -->
+  <rect x="290" y="212" width="230" height="86" class="box"/>
+  <text x="304" y="238" class="title">Agent loop</text>
+  <text x="304" y="258" class="small">5 v0 tools, schema-validated</text>
+  <text x="304" y="274" class="small">before every execution</text>
+  <text x="304" y="290" class="tiny">tool_schema.v0.json (frozen)</text>
+
+  <!-- Graph store -->
+  <rect x="20" y="212" width="230" height="118" class="box"/>
+  <text x="34" y="238" class="title">Postgres + pgvector</text>
+  <text x="34" y="258" class="small">Work / Version graph, typed edges:</text>
+  <text x="34" y="274" class="tiny">original · remake · official dub ·</text>
+  <text x="34" y="288" class="tiny">unofficial remake · sequel</text>
+  <text x="34" y="306" class="small">provenance + confidence on every row</text>
+  <text x="34" y="322" class="tiny">Wikidata · TMDB · IMDb · Wikipedia (pinned revs)</text>
+
+  <!-- Hybrid retrieval -->
+  <rect x="290" y="340" width="230" height="96" class="box"/>
+  <text x="304" y="366" class="title">Hybrid retrieval</text>
+  <text x="304" y="386" class="small">BGE-M3 dense + sparse fusion</text>
+  <text x="304" y="402" class="small">bge-reranker-v2-m3 rerank</text>
+  <text x="304" y="420" class="small">calibrated NO_MATCH abstention</text>
+
+  <!-- On-demand GPU (dashed = off by default) -->
+  <rect x="590" y="60" width="370" height="230" class="ghost"/>
+  <text x="606" y="88" class="title">On-demand GPU (JarvisLabs A100)</text>
+  <text x="606" y="106" class="label">OFF BY DEFAULT — up for benchmarks + demos, then destroyed</text>
+  <rect x="606" y="122" width="160" height="64" class="box"/>
+  <text x="618" y="146" class="small" font-weight="700">vLLM</text>
+  <text x="618" y="162" class="small">Gemma 4 E4B</text>
+  <text x="618" y="177" class="tiny">tool calling + answers</text>
+  <rect x="784" y="122" width="160" height="64" class="box"/>
+  <text x="796" y="146" class="small" font-weight="700">Embed / rerank sidecar</text>
+  <text x="796" y="162" class="small">BGE-M3 · reranker-v2-m3</text>
+  <text x="796" y="177" class="tiny">OpenAI-compatible HTTP</text>
+  <text x="606" y="214" class="tiny">Endpoints are env vars; empty = degradation mode:</text>
+  <text x="606" y="230" class="tiny">the SAME stories replay from committed pinned-run</text>
+  <text x="606" y="246" class="tiny">transcripts with real recorded GPU latencies.</text>
+  <text x="606" y="274" class="label">Standing evidence ≠ standing servers.</text>
+
+  <!-- Observability -->
+  <rect x="590" y="340" width="370" height="96" class="box"/>
+  <text x="606" y="366" class="title">Evals &amp; observability</text>
+  <text x="606" y="386" class="small">golden set (GS-01…GS-10) gates CI · RAGAS · LLM judge</text>
+  <text x="606" y="402" class="small">MLflow runs + registry · Langfuse traces (self-hosted)</text>
+  <text x="606" y="420" class="tiny">two-table benchmark: retrieval vs generation, never mixed</text>
+
+  <!-- Static surface -->
+  <rect x="20" y="470" width="940" height="70" class="box"/>
+  <text x="34" y="496" class="title">Always-available surface (GitHub Pages — this site)</text>
+  <text x="34" y="516" class="small">landing · benchmark report generated from BENCHMARKS.md · demo video (Release asset) · runbook —</text>
+  <text x="34" y="531" class="small">static + precomputed only; never a neural model. Live path = the on-demand GPU, brought up per demo.</text>
+
+  <!-- Flows -->
+  <path class="flow" d="M220 104 H286"/>
+  <path class="flow" d="M405 178 V208"/>
+  <path class="flow" d="M290 255 H254"/>
+  <path class="flow" d="M405 298 V336"/>
+  <path class="flow" d="M250 300 H286"/>
+  <path class="flow" d="M520 122 H586"/>
+  <path class="flow" d="M520 388 H586"/>
+  <path class="flow" d="M520 380 C560 340 560 220 590 200"/>
+</svg>
