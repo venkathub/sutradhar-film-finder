@@ -1500,3 +1500,16 @@ bring-up" exit criterion outright.
 **Consequences.** `make demo-up` = compose up (postgres, redis, app) → migrate → seed from
 recorded fixtures → open UI: fresh clone to working zero-GPU demo in one command, CI-proven from
 a fresh checkout; model endpoints stay env-driven and empty by default (off = first-class).
+
+## DEC-P6 execution addendum (2026-07-11)
+
+**Status:** P6 EXECUTED — D1–D5 implemented exactly as decided at grooming (no reopening):
+Vite 8.1.4 / React 19.2.7 / Vitest 4.1.10 / Node 24 pinned + lockfile (DEC-P6-1);
+non-streaming JSON + deterministic D2 progress states, SSE stayed cut (DEC-P6-2); GitHub Pages
+deploy workflow live, video-as-Release-asset wiring in place, VPS untouched/Langfuse-only,
+MLflow mirror stayed cut (DEC-P6-3); additive `ChatResponse.trace[]` assembled in-process
+(DEC-P6-4); single multi-stage `app` image, `make demo-up` CI-proven from a fresh checkout
+(DEC-P6-5). Rehearsal window measured (545 s cold bring-up, 25 s warm `demo-up`, $0.21/window,
+teardown `nuke`-verified — `docs/RUNBOOK.md` + BENCHMARKS degradation evidence). **One human
+step pending:** the narrated demo video (script in the RUNBOOK); until recorded + uploaded,
+`DEMO_VIDEO_URL` stays unset and no surface renders a video link.

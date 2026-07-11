@@ -99,31 +99,58 @@ message (the default — the on-demand GPU is normally paused).
 
 | Target | Purpose |
 |--------|---------|
+| `demo-up` / `demo-down` | **THE 30-second demo**: fresh clone → containerized stack → seeded graph → chat UI at `:8080`, zero GPU |
 | `setup` | `uv sync` the locked env |
 | `fmt` / `lint` / `typecheck` | ruff format / ruff check / mypy (strict) |
 | `test` / `test-int` | unit tests / integration tests (needs `make up`) |
 | `check` | Tier-1 gate: lint + typecheck + unit tests |
 | `up` / `down` / `down-v` | compose stack up / down / down + drop volume |
+| `ui-build` / `ui-dev` / `ui-test` / `ui-e2e` | build the chat UI / dev server / component tests / the 8 Playwright golden regressions |
+| `site-build` | generate the static portfolio surface (benchmark page from BENCHMARKS.md) |
+| `gpu-serve` / `gpu-stop` / `gpu-nuke` | on-demand GPU serve window / stop / stray-instance safety |
 | `smoke` / `hf-check` | LLM connectivity smoke / HF auth check |
-| `gpu-validate` / `gpu-nuke` | one-time ephemeral GPU validation / stray-instance safety |
 
 ## Status
 
-**P0 — Foundation: complete.** Reproducible skeleton in place:
+**P0–P6 complete — the system is finished and demonstrable.** Thirty seconds, zero GPU:
 
-- `uv`-locked Python monorepo (`src/sutradhar`), ruff + mypy (strict) + pytest, two-tier CI.
-- Env-driven `pydantic-settings` config with secret redaction; committed `.env.example`.
-- Dockerized Postgres (+pgvector) + Redis with healthchecks (`make up`).
-- Graceful OpenAI-compatible LLM smoke (`make smoke`) — green whether the GPU is up or off — and an
-  HF Hub auth check (`make hf-check`).
-- One-command on-demand GPU validation (`make gpu-validate`): create → vLLM serve → smoke → destroy,
-  teardown guaranteed. **Live-validated Gemma-4-E4B on an A100 at ~98 tok/s for ~$0.34**
-  (evidence in [`infra/README.md`](./infra/README.md); DEC-0001 follow-up discharged).
-- Protected `main` (ruleset: required Tier-1 checks + PR + no force-push).
+```bash
+git clone <repo> && cd sutradhar && make demo-up   # → http://localhost:8080/
+```
 
-See [`docs/BENCHMARKS.md`](./docs/BENCHMARKS.md) (two-table skeleton) and
-[`docs/PORTFOLIO.md`](./docs/PORTFOLIO.md) for the quantified results (filled from P2 onward).
-Next: **P1** — data ingestion + the Work/Version remake graph.
+The UI comes up **offline by design** (the GPU is on-demand, never 24/7) and replays the
+recorded Papanasam story — version cards with the original flagged, per-claim citations,
+the tool-call trace — from pinned benchmark transcripts with real GPU latencies. The live
+experience is one `make gpu-serve` away (rehearsed: 545 s cold bring-up, $0.21/window,
+teardown verified — [`docs/RUNBOOK.md`](./docs/RUNBOOK.md)).
+
+What each phase proved (details: [`docs/PORTFOLIO.md`](./docs/PORTFOLIO.md), numbers:
+[`docs/BENCHMARKS.md`](./docs/BENCHMARKS.md), every choice: [`docs/DECISIONS.md`](./docs/DECISIONS.md)):
+
+- **P1 — the remake graph:** verified cross-lingual Work/Version graph (typed edges:
+  original / remake / official dub / unofficial remake / sequel), per-claim provenance +
+  confidence gates, human-gated LLM edge extraction.
+- **P2 — hybrid retrieval:** BGE-M3 dense+sparse fusion + reranker; **Recall@10 = 1.0,
+  version-set recall 1.0** (incl. Papanasam→Drishyam) on the golden set; calibrated
+  NO_MATCH abstention; GPU-free CI evals from pinned artifacts.
+- **P3 — eval harness:** golden generation fixtures, tool-call scoring, LLM-judge
+  governance (κ-validated), RAGAS, MLflow + self-hosted Langfuse.
+- **P4 — QLoRA fine-tune, the honest negative:** trained, benchmarked base-vs-adapter
+  under a pre-committed keep/cut rule → **CUT** (the well-prompted base won); adapter +
+  dataset published for provenance.
+- **P5 — the served path:** FastAPI orchestration with layered injection defense
+  (**live ASR 0.000**, hallucinated-movie rate 0 via a deterministic output gate),
+  Redis sessions, cost accounting, graceful degradation (GPU off = structured 200).
+- **P6 — product + packaging:** the chat UI (version cards, citations, trace view,
+  replay browser), one-command containerized demo (CI-proven from a fresh checkout),
+  8 Playwright golden regressions on the rendered DOM, the
+  [always-available static surface](https://venkathub.github.io/sutradhar-film-finder/),
+  and the rehearsed, timed live-demo runbook.
+
+**The cost story is a feature:** nothing inference-side runs 24/7. Every neural workload
+ran in short, teardown-verified on-demand GPU windows; the standing evidence (benchmarks,
+pinned transcripts, MLflow runs, screenshots, this repo) carries the proof while every
+model server is off.
 
 See [`CLAUDE.md`](./CLAUDE.md) for the full engineering operating agreement and [`docs/`](./docs)
 for data sourcing, decisions, and golden-set scenarios.
@@ -131,5 +158,6 @@ for data sourcing, decisions, and golden-set scenarios.
 ## Licensing
 
 Data sources carry mixed licenses (IMDb non-commercial, Wikidata CC0, TMDB developer terms,
-Wikipedia CC BY-SA). This is a **non-commercial portfolio project**. See `docs/LICENSING.md`
-(planned) and `docs/DATA_SOURCES.md`.
+Wikipedia CC BY-SA 4.0 — revision-pinned). This is a **non-commercial portfolio project**; the
+UI renders the required attribution chrome (enforced by an executable test). See
+[`docs/LICENSING.md`](./docs/LICENSING.md) and [`docs/DATA_SOURCES.md`](./docs/DATA_SOURCES.md).

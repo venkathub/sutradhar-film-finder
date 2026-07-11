@@ -1,6 +1,12 @@
 # P6 Spec — UI, Containerization, Always-Available Surface & Runbook
 
-> **Status: APPROVED (2026-07-10).** Grooming complete: D1–D5 and Q1–Q5 confirmed by the user
+> **Status: EXECUTED (2026-07-11).** Tasks 1–12 landed in order on `feature/p6-ui-packaging`;
+> rehearsal window measured (545 s cold bring-up, 25 s warm `demo-up`, $0.21/window, teardown
+> `nuke`-verified); evidence in `docs/RUNBOOK.md`, BENCHMARKS §"Graceful degradation", and
+> `docs/evidence/p6/`. **One human step pending:** the narrated demo video (recording script in
+> the RUNBOOK) → Release asset → `DEMO_VIDEO_URL`; no surface renders a video link until then.
+>
+> **Approved 2026-07-10.** Grooming complete: D1–D5 and Q1–Q5 confirmed by the user
 > with the recommended options (§3/§7); logged as **DEC-P6-1..5** in `docs/DECISIONS.md`.
 > Web-research pass done 2026-07-10 (§8) — toolchain versions, hosting limits, and attribution
 > obligations below are sourced, not assumed. Implementation follows the §5 task order.

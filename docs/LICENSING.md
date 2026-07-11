@@ -32,6 +32,14 @@
 | **`finetune/scaffold_snapshot.json`** (committed) | CC BY-SA 4.0 applies to the plot excerpts inside | Same posture as the committed P2 retrieval artifacts: per-row provenance lives in `plot_texts` (page URL + revision id). |
 | **QLoRA adapter** (HF `venkat2393/sutradhar-gemma4-e4b-qlora-v1`, PUBLIC) | Apache 2.0 | Trained on `sutradhar-ft-v1` from an Apache-2.0 base with an Apache-2.0 teacher; published as a documented negative result (DEC-P4-9). Weights contain no verbatim source text. |
 
+## P6 distributed surfaces (2026-07-11)
+
+| Surface | License / terms | Notes |
+|---|---|---|
+| **Static site** (GitHub Pages, `site/dist` from `site/generate.py`) | Repo license; embedded content per source rows above | Distributes **aggregated benchmark numbers, committed screenshots, and the architecture diagram only** — no bulk source data (no titles/plots/AKA dumps) is redistributed. Footer carries the TMDB notice, the CC BY-SA 4.0 label, and the IMDb courtesy line. Non-commercial portfolio use (inside GitHub Pages acceptable-use terms). |
+| **Demo video** (GitHub Release asset, `DEMO_VIDEO_URL`) | Screen recording of the UI; displayed data per source rows above | The recorded frames show TMDB/Wikipedia/IMDb-derived facts as rendered by the attributed UI — the in-frame footer chrome (TMDB logo + notice, CC BY-SA, IMDb courtesy) satisfies the same obligations. Distributed via a Release asset (DEC-P6-3), never committed to git or the Pages site; non-commercial. |
+| **UI screenshots** (`docs/evidence/p6/*.png`, committed) | Same as the demo video | Rehearsal-window captures of the attributed UI (footer chrome visible in the full-page shots). |
+
 ## Code
 
 This repository: MIT (see `pyproject.toml`). `indic-transliteration` (Python): MIT.
