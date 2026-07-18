@@ -1162,6 +1162,15 @@ tool for one artifact family HF Hub already covers — ROADMAP §6.1 names HF Da
 D8 / §7 Q3). Implemented verbatim in `sutradhar.finetune.verdict` and committed before any
 training; the rule cannot move after the numbers exist.
 
+**Git-verifiable pre-registration (P7 task 12 annotation, 2026-07-18 — DEC-P7-1 finding 6).**
+Main is squash-merged, so the proof lives in **PR #5's retained branch commits**
+(`github.com/venkathub/sutradhar-film-finder/pull/5`): the rule was frozen in
+**`0fd94477`** — *"feat(finetune): frozen DEC-P4-8 verdict rule — committed BEFORE the window"*,
+**2026-07-04T03:06:31Z** — while the window that produced the numbers ran in **`710025c5`**
+(*"THE window executed — all three columns captured; verdict = CUT"*, **10:13:20Z**) and
+Table 2 published in **`95ea3d39`** (10:28:54Z). The rule predates the numbers by **7h07m**,
+verifiable by anyone from the PR commit timeline.
+
 **Decision.** **KEEP the adapter iff** (i) strict improvement on **≥ 2 of the 3 primary
 metrics** {GS-07 code-mixed intent accuracy, GS-07 slot F1, GS-08 backtracking coherence};
 (ii) **at least one improving primary metric clears ≥ +0.05 absolute** — so judge/small-n noise
@@ -1179,6 +1188,11 @@ generation-run artifacts — the 30-second demo path.
 
 **Status:** Accepted (P4 tasks 12–13 execution; verdict computed by `make ft-verdict` over the
 committed window artifacts — the DEC-P4-8 rule as frozen on 2026-07-03, applied untouched).
+
+**Git-verifiable ordering (P7 task 12 annotation, 2026-07-18).** PR #5 branch commits prove
+rule-before-numbers: DEC-P4-8 frozen in `0fd94477` (2026-07-04T03:06:31Z) → window executed
+`710025c5` (10:13:20Z) → Table 2 + this verdict published `95ea3d39` (10:28:54Z) — see the
+matching annotation on DEC-P4-8.
 
 **Verdict: CUT.** Window `ftwin-ce6b6930` (one A100, both columns, byte-identical serving):
 clause (i) 1/3 primaries improved — GS-07 slot F1 0.364→0.600 (+0.236, margin met); clause (iii)
