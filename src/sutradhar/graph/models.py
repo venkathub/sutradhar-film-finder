@@ -109,6 +109,28 @@ def sources_to_jsonb(sources: list[SourceRef]) -> list[dict[str, Any]]:
     return [s.to_jsonb() for s in sources]
 
 
+def merge_sources_jsonb(
+    existing: list[dict[str, Any]] | None, incoming: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Union + dedupe ``sources[]`` on re-ingest (P7 task 6, DEC-P7-1 finding 7).
+
+    Provenance is append-only: a spine re-ingest must never REPLACE the column and
+    thereby wipe provenance added by later pipeline stages (TMDB enrichment, AKA
+    load, human verification). Dedupe key = ``(source, ref)``; the first-seen entry
+    is kept (stable order, original ``retrieved_at`` preserved) and genuinely new
+    references are appended.
+    """
+    merged: list[dict[str, Any]] = []
+    seen: set[tuple[Any, Any]] = set()
+    for entry in [*(existing or []), *incoming]:
+        key = (entry.get("source"), entry.get("ref"))
+        if key in seen:
+            continue
+        seen.add(key)
+        merged.append(entry)
+    return merged
+
+
 class _GatedRecord(BaseModel):
     """Base for every record/edge behind the verification gate: provenance is mandatory."""
 

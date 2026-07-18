@@ -150,6 +150,94 @@ def test_qidless_dub_tracks_are_medium(
         assert v.sources and v.sources[0]["source"] == "human"
 
 
+def test_reingest_merges_sources_instead_of_replacing(
+    session: Session, slice_: SeedSlice, entities: dict[str, WikidataEntity]
+) -> None:
+    """P7 task 6 (DEC-P7-1 finding 7): provenance added by later pipeline stages
+    (TMDB enrichment, AKA load) must survive a spine re-ingest — sources[] is
+    merged (union + dedupe), never replaced."""
+    ingest_spine(session, slice_, entities)
+    version = session.scalars(select(Version).where(Version.wikidata_qid == "Q19824636")).one()
+    work = session.scalars(select(Work).where(Work.work_id == version.work_id)).one()
+    baseline_v, baseline_w = list(version.sources), list(work.sources)
+    # Simulate later-stage enrichment provenance on both node kinds.
+    tmdb_ref = {"source": "tmdb", "ref": "movie/333355"}
+    imdb_ref = {"source": "imdb", "ref": "tt4430212#akas"}
+    version.sources = [*version.sources, tmdb_ref, imdb_ref]
+    work.sources = [*work.sources, tmdb_ref]
+    session.flush()
+
+    ingest_spine(session, slice_, entities)  # the re-ingest that used to wipe it
+    session.flush()
+    version = session.scalars(select(Version).where(Version.wikidata_qid == "Q19824636")).one()
+    work = session.scalars(select(Work).where(Work.work_id == version.work_id)).one()
+    v_keys = {(s["source"], s.get("ref")) for s in version.sources}
+    assert ("tmdb", "movie/333355") in v_keys and ("imdb", "tt4430212#akas") in v_keys
+    assert ("tmdb", "movie/333355") in {(s["source"], s.get("ref")) for s in work.sources}
+    # Original spine provenance retained too, and no duplicates were minted.
+    for ref in baseline_v:
+        assert (ref["source"], ref.get("ref")) in v_keys
+    assert len(version.sources) == len(v_keys)
+    assert len(baseline_w) + 1 == len(work.sources)
+
+
+def test_reingest_never_downgrades_human_verified(
+    session: Session, slice_: SeedSlice, entities: dict[str, WikidataEntity]
+) -> None:
+    """P7 task 6 (DEC-P7-1 finding 7): a human-verified record's confidence and
+    curated values survive re-ingest untouched; golden eligibility cannot be
+    silently corrupted by the pipeline."""
+    ingest_spine(session, slice_, entities)
+    # A QID-less dub track lands MEDIUM via the (work, language, year) fallback key;
+    # a human then verifies it and curates the title.
+    verified = session.scalars(
+        select(Version).where(Version.confidence == "MEDIUM", Version.language == "ta")
+    ).first()
+    assert verified is not None
+    curated_title = verified.title + " (curated)"
+    verified.human_verified = True
+    verified.title = curated_title
+    verified.sources = [*verified.sources, {"source": "human", "ref": "review@2026-07-18"}]
+    session.flush()
+    vid = verified.version_id
+
+    ingest_spine(session, slice_, entities)
+    session.flush()
+    reloaded = session.scalars(select(Version).where(Version.version_id == vid)).one()
+    assert reloaded.human_verified is True
+    assert reloaded.title == curated_title  # curated value not overwritten
+    assert reloaded.confidence == "MEDIUM"  # unchanged — and still golden-eligible via the flag
+    assert ("human", "review@2026-07-18") in {(s["source"], s.get("ref")) for s in reloaded.sources}
+
+
+def test_reingest_confidence_is_raise_only(
+    session: Session, slice_: SeedSlice, entities: dict[str, WikidataEntity]
+) -> None:
+    """A HIGH (QID-anchored) version matched later via the QID-less fallback key
+    must keep HIGH — re-ingest can raise confidence, never lower it."""
+    ingest_spine(session, slice_, entities)
+    version = session.scalars(select(Version).where(Version.wikidata_qid == "Q19824636")).one()
+    assert version.confidence == "HIGH"
+    # Same seed row re-ingested WITHOUT its QID => fallback (work, language, year) match
+    # computing MEDIUM; the stored record must not be downgraded.
+    stripped_works = {}
+    for key, seed_work in slice_.works.items():
+        versions = {
+            vkey: (
+                sv.model_copy(update={"wikidata_qid": None})
+                if sv.wikidata_qid == "Q19824636"
+                else sv
+            )
+            for vkey, sv in seed_work.versions.items()
+        }
+        stripped_works[key] = seed_work.model_copy(update={"versions": versions})
+    stripped = slice_.model_copy(update={"works": stripped_works})
+    ingest_spine(session, stripped, entities)
+    session.flush()
+    reloaded = session.scalars(select(Version).where(Version.wikidata_qid == "Q19824636")).one()
+    assert reloaded.confidence == "HIGH"
+
+
 def test_same_language_remake_pair_stays_two_versions(session: Session) -> None:
     """P4 training-slice regression (Don hi-1978 -> hi-2006): the QID-less upsert fallback
     keys on (work, language, release_year), so a same-language remake inside one work must
