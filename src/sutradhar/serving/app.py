@@ -36,6 +36,8 @@ from typing import Any
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy import text as sqltext
 from sqlalchemy.orm import Session
 
@@ -64,6 +66,7 @@ from sutradhar.serving.executor import build_live_executor
 from sutradhar.serving.llm_client import LLMClient
 from sutradhar.serving.orchestrator import Orchestrator
 from sutradhar.serving.schemas import ChatRequest, TurnAborted
+from sutradhar.serving.security import authorize_chat, make_rate_limit_key
 from sutradhar.serving.sessions import (
     InMemorySessionStore,
     RedisSessionStore,
@@ -89,6 +92,37 @@ class _OfflineRetriever:
             "EMBED_BASE_URL/RERANK_BASE_URL/RETRIEVAL_RUN not configured — "
             "live plot retrieval needs the on-demand GPU sidecar (make gpu-serve)",
         )
+
+
+def _limiter_storage(settings: Settings) -> str:
+    """Redis-backed limits when Redis is reachable, in-memory otherwise.
+
+    Mirrors the DEC-P5-2 session-store posture: degrade, never crash. Memory
+    storage is per-process — fine for the single-worker demo topology (DEC-P6-5);
+    the compose stack has Redis and gets shared counters automatically.
+    """
+    try:
+        import redis
+
+        redis.Redis.from_url(settings.redis_url, socket_connect_timeout=0.5).ping()
+        return settings.redis_url
+    except Exception:  # noqa: BLE001 — any Redis failure degrades, never crashes
+        logger.warning("redis unreachable for rate limiting — using in-memory limits")
+        return "memory://"
+
+
+def _rate_limited_handler(request: Request, exc: Exception) -> JSONResponse:
+    """429 in the standard envelope (P7 task 4); detail carries the limit only."""
+    detail = getattr(exc, "detail", "rate limit exceeded")
+    return JSONResponse(
+        {
+            "error": "rate_limited",
+            "detail": f"rate limit exceeded: {detail}",
+            "request_id": getattr(request.state, "request_id", ""),
+        },
+        status_code=429,
+        headers={"Retry-After": "60"},
+    )
 
 
 def _default_session_store(settings: Settings) -> SessionStore:
@@ -176,6 +210,7 @@ def create_app(
     runs_dir: Path | None = None,
     metrics: MetricsAccumulator | None = None,
     ui_dist: Path | None = None,
+    rate_limit_storage: str | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     llm = llm_client or LLMClient(settings)
@@ -196,6 +231,16 @@ def create_app(
     app = FastAPI(title="Sutradhar API", docs_url=None, redoc_url=None)
     app.state.status_cache = cache
     app.state.metrics = counters
+
+    # DEC-P7-2: rate limiting on the paid path — token-first key, IP fallback.
+    limiter = Limiter(
+        key_func=make_rate_limit_key(settings),
+        storage_uri=rate_limit_storage or _limiter_storage(settings),
+    )
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limited_handler)
+    if settings.chat_auth == "disabled":
+        logger.warning("CHAT_AUTH=disabled — /api/chat auth is OFF (local/e2e only)")
 
     @app.middleware("http")
     async def trace_and_envelope(request: Request, call_next: Any) -> Response:
@@ -237,6 +282,7 @@ def create_app(
             return response
 
     @app.post("/api/chat")
+    @limiter.limit(settings.chat_rate_limit)
     def chat(payload: ChatRequest, request: Request) -> JSONResponse:
         status = cache.current()
         if status.status != "up":
@@ -244,6 +290,12 @@ def create_app(
             return JSONResponse(
                 _offline(payload.conversation_id, f"{OFFLINE_DETAIL} (endpoint {status.status})")
             )
+        # Auth gates the GPU-up path only (DEC-P7-2): degradation stays open,
+        # the endpoint that burns GPU seconds never is.
+        denied = authorize_chat(request, settings)
+        if denied is not None:
+            counters.record("denied")
+            return denied
         try:
             db = get_db()
             try:

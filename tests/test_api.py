@@ -149,6 +149,21 @@ class _StubDb:
         return None
 
 
+# P7 task 4 (DEC-P7-2): up-path chat requires a bearer token. The helper defaults
+# exercise the REAL authed path (token configured + header attached); the generous
+# limit keeps unrelated tests clear of 429s (dedicated limit tests set their own).
+TEST_TOKEN = "test-token"
+
+
+def _settings(**overrides: Any) -> Settings:
+    defaults: dict[str, Any] = {
+        "API_AUTH_TOKENS": TEST_TOKEN,
+        "CHAT_RATE_LIMIT": "1000/minute",
+    }
+    defaults.update(overrides)
+    return Settings(_env_file=None, **defaults)
+
+
 def _client(
     *,
     probe_status: EndpointStatus = UP,
@@ -156,6 +171,7 @@ def _client(
     store: InMemorySessionStore | None = None,
     session_factory: Any = None,
     settings: Settings | None = None,
+    authenticated: bool = True,
 ) -> TestClient:
     probes = {"n": 0}
 
@@ -164,15 +180,18 @@ def _client(
         return probe_status
 
     app = create_app(
-        settings or Settings(_env_file=None),
+        settings if settings is not None else _settings(),
         llm_client=_llm(llm_handler or _ScriptedModel([])),
         status_cache=StatusCache(probe),
         session_store=store or InMemorySessionStore(3600),
         session_factory=session_factory or (lambda: _StubDb()),
         make_executor=_executor,
         prompt_artifacts=ARTIFACTS,
+        rate_limit_storage="memory://",  # deterministic in tests, no Redis probe
     )
     client = TestClient(app, raise_server_exceptions=False)
+    if authenticated:
+        client.headers["Authorization"] = f"Bearer {TEST_TOKEN}"
     client.probes = probes  # type: ignore[attr-defined]
     return client
 
@@ -413,6 +432,7 @@ def _ui_client(tmp_path: Any, *, with_dist: bool) -> TestClient:
         make_executor=_executor,
         prompt_artifacts=ARTIFACTS,
         ui_dist=dist,
+        rate_limit_storage="memory://",
     )
     return TestClient(app, raise_server_exceptions=False)
 
@@ -474,15 +494,17 @@ def test_unhandled_error_gets_scrubbed_envelope_not_traceback(caplog: Any) -> No
         raise RuntimeError(f"could not connect: {fake_dsn}")
 
     app = create_app(
-        Settings(_env_file=None),
+        _settings(),
         llm_client=_llm(_ScriptedModel(list(TURN1))),
         status_cache=StatusCache(lambda: UP),
         session_store=InMemorySessionStore(3600),
         session_factory=lambda: _StubDb(),
         make_executor=boom,
         prompt_artifacts=ARTIFACTS,
+        rate_limit_storage="memory://",
     )
     client = TestClient(app, raise_server_exceptions=False)
+    client.headers["Authorization"] = f"Bearer {TEST_TOKEN}"
     with caplog.at_level("ERROR", logger="sutradhar.serving"):
         resp = client.post("/api/chat", json={"message": "x"})
     assert resp.status_code == 500

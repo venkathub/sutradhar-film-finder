@@ -20,7 +20,7 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Env-var suffixes that mark a value as secret and must be redacted when printed/logged.
-_SECRET_SUFFIXES = ("_KEY", "_TOKEN", "_PASSWORD")
+_SECRET_SUFFIXES = ("_KEY", "_TOKEN", "_TOKENS", "_PASSWORD")
 _REDACTED = "***REDACTED***"
 
 
@@ -168,6 +168,18 @@ class Settings(BaseSettings):
     gpu_hourly_usd: float = Field(default=0.89, validation_alias="GPU_HOURLY_USD")
     # serve-session hold TTL (DEC-P5-4): bounded live window, then destroy-in-finally.
     serve_hold_minutes: int = Field(default=60, validation_alias="SERVE_HOLD_MINUTES")
+
+    # --- P7 serving security (DEC-P7-2): the paid path is never silently open ---
+    # "required" (default) enforces bearer auth on the GPU-up chat path;
+    # "disabled" is the explicit local/e2e opt-out (logged, never implicit).
+    chat_auth: str = Field(default="required", validation_alias="CHAT_AUTH")
+    # Comma-separated static bearer tokens (per-person; revocation = removal).
+    # Redacted in logs via the _TOKENS suffix. Unset + auth required => 503.
+    api_auth_tokens: str | None = Field(default=None, validation_alias="API_AUTH_TOKENS")
+    # slowapi limit string for POST /api/chat, keyed token-first then IP.
+    chat_rate_limit: str = Field(default="10/minute", validation_alias="CHAT_RATE_LIMIT")
+    # Honor X-Forwarded-For for IP keying ONLY behind a trusted proxy.
+    trust_proxy: bool = Field(default=False, validation_alias="TRUST_PROXY")
 
     # --- P6 UI & portfolio surface (P6_SPEC §2.2) ---
     # Recorded demo video (GitHub Release asset, DEC-P6-3). Unset ⇒ the offline

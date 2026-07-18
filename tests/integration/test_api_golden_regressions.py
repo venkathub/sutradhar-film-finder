@@ -144,13 +144,16 @@ def _client(reviewed: Session, step_fn: StepFn) -> tuple[TestClient, RecordingEx
     fixture_ref = {"fixture_id": ""}
     recorder = RecordingExecutor(build_executor(reviewed, plot_search, fixture_ref), SCHEMA)
     app = create_app(
-        Settings(_env_file=None),
+        # CHAT_AUTH=disabled (DEC-P7-2 explicit opt-out): these regressions exercise
+        # golden-scenario orchestration, not auth — tests/test_api_security.py owns that.
+        Settings(_env_file=None, CHAT_AUTH="disabled", CHAT_RATE_LIMIT="1000/minute"),
         llm_client=ScriptedGraphModel(step_fn),  # type: ignore[arg-type]  # duck-typed .chat
         status_cache=StatusCache(lambda: UP),
         session_store=InMemorySessionStore(3600),
         session_factory=lambda: reviewed,  # single seeded session; close() is a no-op below
         make_executor=lambda _db: recorder,
         prompt_artifacts=load_serving_prompt_artifacts(),
+        rate_limit_storage="memory://",
     )
     # The app closes the session per request; keep the seeded savepoint session alive.
     reviewed.close = lambda: None  # type: ignore[method-assign]

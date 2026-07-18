@@ -64,8 +64,17 @@ make gpu-serve
 
 # 2. In the API shell: export those three + the pinned retrieval artifact, then
 export RETRIEVAL_RUN=20260702T135315Z-f6583183   # the pinned Table 1 winner artifact
+# P7 (DEC-P7-2): the live chat path requires auth — mint token(s) for this window.
+# The GPU-up /api/chat is the endpoint that burns GPU seconds; it is never open.
+export API_AUTH_TOKENS="$(openssl rand -hex 16)"   # comma-separate for guests
+echo "demo URL: http://localhost:8080/?token=${API_AUTH_TOKENS%%,*}"
 make demo-up                                # same command — compose passes the env through;
                                             # the flip is exports, never a rebuild
+
+# 2b. Open the printed ?token= URL — the UI adopts the token into sessionStorage
+#     and strips it from the address bar. Unauthed visitors still get the full
+#     GPU-off surface (replays, evidence); live turns 401 without the token and
+#     are rate-limited (CHAT_RATE_LIMIT, token-first keying) with it.
 
 # 3. Demo script (the gating story, live):
 #    - Tanglish/Hinglish plot query -> cited answer
