@@ -141,7 +141,10 @@ What each phase proved (details: [`docs/PORTFOLIO.md`](./docs/PORTFOLIO.md), num
   under a pre-committed keep/cut rule → **CUT** (the well-prompted base won); adapter +
   dataset published for provenance.
 - **P5 — the served path:** FastAPI orchestration with layered injection defense
-  (**live ASR 0.000**, hallucinated-movie rate 0 via a deterministic output gate),
+  (**live ASR 0.000** on the static suite — bounded claim, not adaptive robustness;
+  **served-layer** hallucinated-movie rate 0 via the deterministic output gate, while the
+  **model layer** honestly recorded **GS-02 = 1 ⚠ on both Table 2 columns** — the gate, not
+  the model, holds the zero),
   Redis sessions, cost accounting, graceful degradation (GPU off = structured 200).
 - **P6 — product + packaging:** the chat UI (version cards, citations, trace view,
   replay browser), one-command containerized demo (CI-proven from a fresh checkout),

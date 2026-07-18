@@ -92,6 +92,15 @@ well-prompted base model here, it is cut and the reason documented (DEC-0001).
 | Base (Gemma-4-E4B-it, prompted) | **0.083** (1/12) | **0.400** (2/5) | **0.550** | **0.667** | **0.933** (28/30; **GS-02 = 1** ⚠) | **0.571** ¹ | 798 / 5853 ms | **78.7** |
 | QLoRA (merged adapter) — **CUT** | **0.417** (5/12) | **0.200** (1/5) | **0.486** | **0.333** | **0.952** (20/21; **GS-02 = 1** ⚠) | — ¹ | 688 / 6938 ms | **74.3** |
 
+> **Two-layer hallucination framing (P7 annotation, 2026-07-18 — no cells changed).** The ⚠
+> marks are the honest **model-layer** number: GS-02 recorded **1 invented movie in BOTH
+> columns** (base invented "Pushpa"; QLoRA fuzzy-attached "Salaar"). The frequently-quoted
+> **"0 hallucinated movies" is the SERVED-layer number**: the deterministic output gate
+> (`sutradhar.serving.guardrails.output_gate`) fuzzy-grounds every asserted title against the
+> conversation's tool results and rewrites/disclaims inventions before they reach the user —
+> verified end-to-end in the P5/P6 golden regressions. Wherever a zero is claimed, it is the
+> gate's zero, not the model's; the relative GS-02 gate amendment is recorded in DEC-P4-9.
+
 **Captured 2026-07-04, window `ftwin-ce6b6930`** — ONE A100 40 GB instance, both columns, byte-
 identical serving (vLLM, `--enable-auto-tool-choice --tool-call-parser gemma4 --reasoning-parser
 gemma4`; QLoRA column = **merged** model per P4_SPEC §2.4, tokens/sec divergence 5.7% < the 10%

@@ -145,7 +145,8 @@ on-demand GPU (off by default) and the evals/observability rail."/>
   <div class="card"><h3>Grounded or silent</h3>
     <p>Every claim carries provenance (Wikidata / TMDB / IMDb / revision-pinned Wikipedia /
     named rule / human gate). A deterministic output gate keeps the hallucinated-movie rate
-    at zero on the served path; out-of-catalog queries abstain.</p></div>
+    at zero on the served path — the model layer itself recorded GS-02 = 1 in the frozen P4
+    capture; the gate, not the model, holds the zero. Out-of-catalog queries abstain.</p></div>
   <div class="card"><h3>Eval-gated CI</h3>
     <p>Golden regressions (the Drishyam franchise, dub-vs-remake, false-merge traps,
     multi-turn backtracking) gate every merge — from the repository layer to the rendered

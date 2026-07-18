@@ -72,7 +72,10 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   fault classes (hallucinated tool, hallucinated parameter, wrong-typed argument) caught and
   scored, proven by a committed 12-fixture dry-run whose only validity/faithfulness deductions
   are **exactly the two deliberately seeded faults** (schema-validity 35/36, faithfulness 17/18,
-  **0 hallucinated movies on the out-of-catalog gate**); Tier-1 CI recomputes every metric from
+  **0 hallucinated movies on the out-of-catalog gate** — a dry-run figure; the live P4 capture
+  later recorded **model-layer GS-02 = 1 ⚠ on both columns**, with the served-layer 0 held by
+  the deterministic output gate and the relative-CI gate amendment, DEC-P4-9); Tier-1 CI
+  recomputes every metric from
   the committed transcripts with the same scorer bytes on each PR and fails on any drift — or on
   a stale artifact after any prompt/schema re-pin.
 - Froze **LLM-as-judge governance the measured way**: a self-hosted cross-family judge
