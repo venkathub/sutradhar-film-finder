@@ -2,6 +2,10 @@
 # mirror the turn sequence (refine_filter over the standing version set); since P3 task 4
 # expected_intent/expected_slots carry one entry PER TURN (ordered, same length as query).
 # Expanded P3 task 4 (Q1 confirmed: GS-08 -> 3): b non-Drishyam franchise, c NO_MATCH mid-turn.
+# Expanded P7 task 15 (DEC-P7-4: GS-08 -> 10): d dub-vs-remake mid-conversation,
+# e year refine, f Kanglish backtrack, g actor-decoy mid-turn, h Hinglish franchise
+# crossover, i Tenglish era backtrack, j foreign-scope round trip. ADDITIVE and
+# unscored until the DEC-P7-7 capture window; frozen runs never re-scored.
 fixtures:
   - id: GS-08a
     name: Refine by actor, backtrack to original, then Telugu
@@ -134,3 +138,276 @@ fixtures:
         arguments:
           version_set: [$version_set]
           by: {language: kn}
+  - id: GS-08d
+    name: Baahubali — dub question mid-conversation stays a dub, never a remake
+    category: backtracking
+    subsystem: generation/backtrack
+    query:
+      - "show me the Telugu Baahubali: The Beginning"
+      - is the Hindi one a remake?
+      - and the Malayalam one?
+    query_lang: en
+    expected:
+      canonical_work: "Baahubali: The Beginning"
+      canonical_year: 2015
+      versions:  # expected answer per turn, in order
+        - {title: "Baahubali: The Beginning", language: te, year: 2015, is_original: true, relationship: is_original_of}
+        - {title: Baahubali - The Beginning, language: hi, year: 2015, relationship: is_official_dub_of}
+        - {title: Baahubali, language: ml, year: 2015, relationship: is_official_dub_of}
+    gating_metric: backtracking coherence + relationship-label accuracy (dub vs remake)
+    must_not:
+      - call the Hindi or Malayalam dub a remake
+      - lose context between turns
+    verify_source: [Q13897247]
+    expected_intent: [find_by_title, refine, refine]
+    expected_slots:
+      - {title: "Baahubali: The Beginning", language: te}
+      - {language: hi}
+      - {language: ml}
+    expected_tool_calls:
+      - tool: resolve_title
+        arguments: {title: "Baahubali: The Beginning"}
+      - tool: get_versions
+        arguments: {work_id: $work_id, scope: indian}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {language: te}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {language: hi}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {language: ml}
+  - id: GS-08e
+    name: Drishyam — refine by year, then language
+    category: backtracking
+    subsystem: generation/backtrack
+    query:
+      - show me all Drishyam versions
+      - just the 2015 ones
+      - now the Tamil remake
+    query_lang: en
+    expected:
+      canonical_work: Drishyam
+      canonical_year: 2013
+      versions:  # turn 1 representative row, then the turn-2/turn-3 narrowings
+        - {title: Drishyam, language: ml, year: 2013, is_original: true, relationship: is_original_of}
+        - {title: Drishyam, language: hi, year: 2015, relationship: is_remake_of}
+        - {title: Papanasam, language: ta, year: 2015, relationship: is_remake_of}
+    gating_metric: backtracking coherence
+    must_not:
+      - lose context between turns
+      - return the 2014 remakes after the year refinement
+    verify_source: [Q15401703, Q19824636, Q18129183]
+    expected_intent: [list_versions, refine, refine]
+    expected_slots:
+      - {title: Drishyam}
+      - {year: 2015}
+      - {language: ta}
+    expected_tool_calls:
+      - tool: resolve_title
+        arguments: {title: Drishyam}
+      - tool: get_versions
+        arguments: {work_id: $work_id, scope: indian}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {year: 2015}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {language: ta}
+  - id: GS-08f
+    name: Kanglish backtrack through the Manichitrathazhu family
+    category: backtracking
+    subsystem: generation/backtrack
+    query:
+      - Apthamitra yavudara remake gottidya?
+      - Tamil version yavudu?
+      - original film kodi
+    query_lang: kn-latin
+    expected:
+      canonical_work: Manichitrathazhu
+      canonical_year: 1993
+      versions:  # expected answer per turn, in order
+        - {title: Apthamitra, language: kn, year: 2004, relationship: is_remake_of}
+        - {title: Chandramukhi, language: ta, year: 2005, relationship: is_remake_of}
+        - {title: Manichitrathazhu, language: ml, year: 1993, is_original: true, relationship: is_original_of}
+    gating_metric: backtracking coherence (code-mixed multi-turn)
+    must_not:
+      - fail to parse because the turns are romanized Kannada
+      - present Apthamitra as the original
+    verify_source: [Q4782241, Q1193810, Q3530081]
+    expected_intent: [find_by_title, refine, refine]
+    expected_slots:
+      - {title: Apthamitra}
+      - {language: ta}
+      - {era: original}
+    expected_tool_calls:
+      - tool: resolve_title
+        arguments: {title: Apthamitra}
+      - tool: get_versions
+        arguments: {work_id: $work_id, scope: indian}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {language: ta}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {era: original}
+  - id: GS-08g
+    name: Drishyam — actor decoy mid-turn (no Shah Rukh Khan version), then recover
+    category: backtracking
+    subsystem: generation/backtrack
+    query:
+      - list all Drishyam versions
+      - which one stars Shah Rukh Khan?
+      - ok the Ajay Devgn one then
+    query_lang: en
+    expected:
+      canonical_work: Drishyam
+      canonical_year: 2013
+      # Turn 2 expects NO version — no Drishyam stars Shah Rukh Khan; the answer must
+      # say so without inventing one and without losing the standing set for turn 3.
+      versions:
+        - {title: Drishyam, language: ml, year: 2013, is_original: true, relationship: is_original_of}
+        - {title: Drishyam, language: hi, year: 2015, relationship: is_remake_of}
+    gating_metric: backtracking coherence + no-hallucinated-movie rate (=0)
+    must_not:
+      - invent a Shah Rukh Khan Drishyam
+      - lose the version set after the failed turn-2 refinement
+    verify_source: [Q15401703, Q19824636]
+    expected_intent: [list_versions, out_of_catalog, refine]
+    expected_slots:
+      - {title: Drishyam}
+      - {actor: Shah Rukh Khan}
+      - {actor: Ajay Devgn}
+    expected_tool_calls:
+      - tool: resolve_title
+        arguments: {title: Drishyam}
+      - tool: get_versions
+        arguments: {work_id: $work_id, scope: indian}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {actor: Shah Rukh Khan}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {actor: Ajay Devgn}
+  - id: GS-08h
+    name: Hinglish — Drishyam 2 language check, then its original
+    category: backtracking
+    subsystem: generation/backtrack
+    query:
+      - Drishyam 2 hindi mein bani thi kya?
+      - uska Malayalam original dikhao
+    query_lang: hi-latin
+    expected:
+      canonical_work: Drishyam 2
+      canonical_year: 2021
+      versions:  # expected answer per turn, in order
+        - {title: Drishyam 2, language: hi, year: 2022, relationship: is_remake_of}
+        - {title: Drishyam 2, language: ml, year: 2021, is_original: true, relationship: is_original_of}
+    gating_metric: backtracking coherence (code-mixed multi-turn)
+    must_not:
+      - lose context between turns
+      - answer with Drishyam-1 versions
+    verify_source: [Q112665700, Q102036246]
+    expected_intent: [find_by_title, refine]
+    expected_slots:
+      - {title: Drishyam 2, language: hi}
+      - {era: original}
+    expected_tool_calls:
+      - tool: resolve_title
+        arguments: {title: Drishyam 2}
+      - tool: get_versions
+        arguments: {work_id: $work_id, scope: indian}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {language: hi}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {era: original}
+  - id: GS-08i
+    name: Tenglish — Drushyam, backtrack to the original, then Kannada
+    category: backtracking
+    subsystem: generation/backtrack
+    query:
+      - Drushyam cinema details cheppu
+      - kaadu, Malayalam original kavali
+      - Kannada remake kuda undha?
+    query_lang: te-latin
+    expected:
+      canonical_work: Drishyam
+      canonical_year: 2013
+      versions:  # expected answer per turn, in order
+        - {title: Drushyam, language: te, year: 2014, relationship: is_remake_of}
+        - {title: Drishyam, language: ml, year: 2013, is_original: true, relationship: is_original_of}
+        - {title: Drishya, language: kn, year: 2014, relationship: is_remake_of}
+    gating_metric: backtracking coherence (code-mixed multi-turn)
+    must_not:
+      - fail to parse because the turns are romanized Telugu
+      - re-answer turn 1 after the correction
+    verify_source: [Q16248158, Q15401703, Q17052094]
+    expected_intent: [find_by_title, refine, refine]
+    expected_slots:
+      - {title: Drushyam}
+      - {era: original}
+      - {language: kn}
+    expected_tool_calls:
+      - tool: resolve_title
+        arguments: {title: Drushyam}
+      - tool: get_versions
+        arguments: {work_id: $work_id, scope: indian}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {era: original}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {language: kn}
+  - id: GS-08j
+    name: Foreign-scope round trip — outside India, the Chinese one, back to Indian
+    category: backtracking
+    subsystem: generation/backtrack
+    query:
+      - any versions of Drishyam outside India?
+      - the Chinese one
+      - ok back to the Indian versions
+    query_lang: en
+    expected:
+      canonical_work: Drishyam
+      canonical_year: 2013
+      versions:  # turns 1–2 foreign rows; turn 3 returns to the Indian set (representative row)
+        - {title: Dharmayuddhaya, language: si, year: 2017, relationship: is_remake_of}
+        - {title: Sheep Without a Shepherd, language: zh, year: 2019, relationship: is_remake_of}
+        - {title: Papanasam, language: ta, year: 2015, relationship: is_remake_of}
+    gating_metric: backtracking coherence + scoping correctness
+    must_not:
+      - mix foreign versions into the Indian set after turn 3
+      - lose context between turns
+    verify_source: [Q30647147, Q79325356, Q18129183]
+    expected_intent: [list_versions, refine, list_versions]
+    expected_slots:
+      - {title: Drishyam}
+      - {language: zh}
+      - {title: Drishyam}
+    expected_tool_calls:
+      - tool: resolve_title
+        arguments: {title: Drishyam}
+      - tool: get_versions
+        arguments: {work_id: $work_id, scope: foreign}
+      - tool: refine_filter
+        arguments:
+          version_set: [$version_set]
+          by: {language: zh}
+      - tool: get_versions
+        arguments: {work_id: $work_id, scope: indian}

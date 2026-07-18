@@ -63,6 +63,29 @@ def select_generation_fixtures(fixtures: list[GoldenFixture]) -> list[GoldenFixt
     return [f for f in fixtures if generation_slice(f.id) is not None]
 
 
+# P7 task 15 (DEC-P7-4): fixtures added AFTER the frozen 2026-07-04 capture windows.
+# They are schema-validated, graph-verified, and fully labelled in Tier-1 CI, but
+# UNSCORED until the approved DEC-P7-7 capture window produces new dated BENCHMARKS
+# rows; the frozen run artifacts are never re-scored against them. A future capture
+# scores the FULL slice (select_generation_fixtures) and empties this set.
+PENDING_CAPTURE_FIXTURES = frozenset(
+    {
+        "GS-07f",
+        "GS-07g",
+        "GS-07h",
+        "GS-07i",
+        "GS-07j",
+        "GS-08d",
+        "GS-08e",
+        "GS-08f",
+        "GS-08g",
+        "GS-08h",
+        "GS-08i",
+        "GS-08j",
+    }
+)
+
+
 # --- Per-fixture result ---
 
 
