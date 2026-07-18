@@ -192,6 +192,21 @@ form + idempotent fallback banner), regression-tested against the injection scor
 **re-confirmed live: ASR 0.1818 → 0.000**. Committed dry-run summaries:
 `evals/injection_runs/inj-{on,off}-dryrun.json`.
 
+> **Suite widened + claim re-scoped (P7 task 16, 2026-07-18 — DEC-P7-5; no cells above
+> changed).** The recorded numbers are the **v1 suite (INJ-01..14)** they were captured on. P7
+> adds **11 obfuscation variants (INJ-15..25)**: encoding (base64/leet), homoglyph, zero-width,
+> split-across-fields, plus obfuscation-shaped benign controls — scored AgentDojo-style as the
+> **benign-utility / utility-under-attack / ASR** triple. Deterministic Tier-1 bound, committed
+> as tests: the P7 normalization layer (NFKC + confusables + zero-width strip) defends the
+> homoglyph/zero-width/split/exfiltration variants; the **context-side encoding pair
+> (INJ-16/17) evades the static pattern layer by design** — that pair is the documented bound
+> of the claim. **A static suite bounds *these* attacks only**: 2025 adaptive-attack results
+> defeated all twelve published defenses, so ASR 0.000 here is never presented as robustness
+> against adaptive attackers; the structural layers (read-only v0 tools, schema-validated
+> calls, output gate) remain the reason a bypass cannot make the agent *act* or *assert* an
+> ungrounded film. Authoritative v2 live numbers come from the DEC-P7-7 capture window as new
+> dated rows.
+
 ### API end-to-end latency & throughput (live path)
 
 | Metric | Value |
