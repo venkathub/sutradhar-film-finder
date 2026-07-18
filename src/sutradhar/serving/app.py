@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import json
 import logging
+import uuid
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -198,23 +199,41 @@ def create_app(
 
     @app.middleware("http")
     async def trace_and_envelope(request: Request, call_next: Any) -> Response:
-        """One request span (the DEC-P3-6 seam) + a structured error envelope."""
+        """One request span (the DEC-P3-6 seam) + a scrubbed error envelope.
+
+        P7 task 3 (DEC-P7-1 finding 10): the client sees a generic message plus a
+        request id only; ``str(exc)`` (which can carry DSNs, paths, internal state)
+        goes to the server log, keyed by the same id. The id is echoed on every
+        response as ``X-Request-Id`` so users can quote it and operators can grep
+        logs / Langfuse traces for the exact request.
+        """
+        request_id = uuid.uuid4().hex
+        request.state.request_id = request_id
         with trace.span(
             "request",
             kind="agent",
             input={"method": request.method, "path": request.url.path},
+            metadata={"request_id": request_id},
         ) as span:
             request.state.trace_span = span  # routes attach cost metadata here
             try:
                 response: Response = await call_next(request)
             except Exception as exc:  # noqa: BLE001 — envelope, never a bare traceback
-                logger.exception("unhandled error on %s", request.url.path)
-                span.update(output={"error": type(exc).__name__}, level="ERROR")
+                # Full detail server-side ONLY (logger.exception includes the traceback).
+                logger.exception(
+                    "unhandled error on %s [request_id=%s]", request.url.path, request_id
+                )
+                span.update(
+                    output={"error": type(exc).__name__, "request_id": request_id},
+                    level="ERROR",
+                )
                 return JSONResponse(
-                    {"error": "internal error", "detail": f"{type(exc).__name__}: {exc}"[:300]},
+                    {"error": "internal_error", "request_id": request_id},
                     status_code=500,
+                    headers={"X-Request-Id": request_id},
                 )
             span.update(output={"status_code": response.status_code})
+            response.headers["X-Request-Id"] = request_id
             return response
 
     @app.post("/api/chat")
@@ -358,7 +377,10 @@ def _db_health(get_db: Callable[[], Session]) -> dict[str, Any]:
             db.close()
         return {"status": "up"}
     except Exception as exc:  # noqa: BLE001 — health reports, never raises
-        return {"status": "off", "detail": f"{type(exc).__name__}: {exc}"[:200]}
+        # P7 task 3: exception *class* only — str(exc) can embed the DSN. Full
+        # detail goes to the server log.
+        logger.warning("db health probe failed: %s: %s", type(exc).__name__, exc)
+        return {"status": "off", "detail": type(exc).__name__}
 
 
 def _redis_health(settings: Settings) -> dict[str, Any]:
@@ -369,7 +391,8 @@ def _redis_health(settings: Settings) -> dict[str, Any]:
         client.ping()
         return {"status": "up"}
     except Exception as exc:  # noqa: BLE001
-        return {"status": "off", "detail": f"{type(exc).__name__}: {exc}"[:200]}
+        logger.warning("redis health probe failed: %s: %s", type(exc).__name__, exc)
+        return {"status": "off", "detail": type(exc).__name__}
 
 
 def _provider_health(name: str, base_url: str | None, model: str) -> dict[str, Any]:
