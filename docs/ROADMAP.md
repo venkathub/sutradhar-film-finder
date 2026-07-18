@@ -57,9 +57,12 @@ is what makes it comprehensive.
 > That answer only shipped because **retrieval had already passed Recall@10 ≥ 0.90 in CI** against
 > the golden set, so the version set is *known-complete, not hoped-complete*. Every cited claim traces
 > to a **confidence-gated, sourced graph record** — nothing LLM-guessed reached the answer. The
-> correct handling of the Tanglish query and the "no, the newer one" backtrack exists because
-> **QLoRA measurably beat the well-prompted base model** on those exact fixtures, a result **tracked
-> in MLflow** and reproducible from an **adapter pinned on the HF Hub**. The whole turn — retrieval
+> correct handling of the Tanglish query and the "no, the newer one" backtrack ships on the
+> **well-prompted base model**, because the fine-tuning question was **settled by a pre-registered
+> verdict** (**CUT**, DEC-P4-9, 2026-07-04): base and QLoRA were measured on those exact fixtures
+> under a rule frozen *before* the GPU window, the adapter lost, and the loss is **tracked in
+> MLflow** with the **adapter + dataset pinned on the HF Hub** for provenance — the negative result
+> *is* the MLOps proof. The whole turn — retrieval
 > hits, tool calls, tokens, latency — is a **Langfuse trace**. The GPU that served it was brought up
 > **on-demand, its tokens/sec recorded, then stopped**; and when the GPU is off (the default), the
 > *same story replays from recorded benchmark evidence* instead of erroring.
@@ -88,8 +91,8 @@ end-to-end without building all of Sutradhar — application **and** MLOps.
 |---|---|---|---|
 | *"retrieval had already passed Recall@10 ≥ 0.90 in CI"* | **Eval harness + CI gate** (retrieval metrics on golden set) | P2/P3 | `BENCHMARKS.md` Table 1; green CI check |
 | *"every cited claim traces to a confidence-gated, sourced graph record"* | **Data provenance + verification gate** (`sources[]`, confidence, `candidate_edges`) | P1 | Gate report; precision/recall-lift metric |
-| *"QLoRA measurably beat the base model on those exact fixtures"* | **Experiment tracking + honest before/after benchmark** | P3 (base) + P4 (FT) | `BENCHMARKS.md` Table 2 (base vs QLoRA) |
-| *"reproducible from an adapter pinned on the HF Hub"* | **Model registry / reproducibility bridge** (MLflow registry + HF Hub) | P4 | HF Hub repo: adapter + metrics; MLflow run link |
+| *"the FT question was settled by a pre-registered verdict (CUT, DEC-P4-9)"* | **Experiment tracking + honest before/after benchmark** (rule frozen before the window; PR #5 SHAs prove it) | P3 (base) + P4 (FT) | `BENCHMARKS.md` Table 2 (base vs QLoRA, verdict CUT) |
+| *"adapter + dataset pinned on the HF Hub for provenance"* | **Model registry / reproducibility bridge** (MLflow registry + HF Hub) | P4 | HF Hub repo: adapter + metrics; MLflow run link |
 | *"the whole turn is a Langfuse trace"* | **Observability / tracing** | P3/P5 | Shared Langfuse trace links; UI trace view |
 | *"GPU brought up on-demand, tokens/sec recorded, then stopped"* | **Cost-aware on-demand GPU serving** (vLLM, env-driven endpoint) | P4/P5 | tokens/sec + cost/latency dashboard screenshots; RUNBOOK |
 | *"when the GPU is off, the same story replays from recorded evidence"* | **Graceful degradation** (evidence-backed static surface) | P5/P6 | Recorded demo video + benchmark report on the always-available host |

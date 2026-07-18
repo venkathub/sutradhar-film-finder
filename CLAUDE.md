@@ -32,8 +32,11 @@ frequently-updated factual data, so they live in retrieval, never in weights. Th
 - RAG owns the facts: catalog, remake/dub graph, grounding, citations.
 - QLoRA owns the behaviour: code-mixed intent parsing, slot extraction, multi-turn backtracking,
   tool-calling, and answering in the user's language/register.
-If QLoRA does not measurably beat a well-prompted base model on the generation metrics, we cut it
-and document why. Knowing when fine-tuning did NOT help is a senior signal, not a failure.
+The rule was: if QLoRA does not measurably beat a well-prompted base model on the generation
+metrics, we cut it and document why. **SETTLED (2026-07-04): the verdict came back CUT under the
+pre-registered DEC-P4-8 rule (DEC-P4-9)** — the served model is the **well-prompted base**; the
+adapter + dataset stay published on the HF Hub for provenance. Knowing when fine-tuning did NOT
+help is a senior signal, not a failure — the negative result is part of the portfolio.
 
 ## Subsystems
 1. Chat UI — find-a-movie chat; shows all language versions with the original flagged; renders
@@ -47,8 +50,10 @@ and document why. Knowing when fine-tuning did NOT help is a senior signal, not 
 4. Catalog + Remake-Graph store — Postgres modelling canonical Work nodes and per-language
    Version nodes with typed edges (is_original_of / is_remake_of / is_official_dub_of /
    is_unofficial_remake_of / is_sequel_of); embeddings in pgvector OR Qdrant (decide in P2).
-5. Conversation/Intent model — Gemma 4 E4B with a QLoRA adapter: code-mixed intent, slot
-   extraction, backtracking, tool-calling. (Base model per docs/DECISIONS.md DEC-0001.)
+5. Conversation/Intent model — the WELL-PROMPTED BASE Gemma 4 E4B: code-mixed intent, slot
+   extraction, backtracking, tool-calling. (Base model per DEC-0001; the QLoRA adapter was
+   trained and CUT under the pre-registered verdict DEC-P4-9 — deterministic orchestration,
+   schema-validated tool calls, and the output gate carry the served behaviour.)
 6. Serving — vLLM on a rented GPU, brought up ON-DEMAND for a live demo (and for the benchmark
    capture), then stopped. There is NO 24/7 CPU-served model: we do not keep an LLM live on a CPU
    host. The standing portfolio evidence is the documented benchmark from the live GPU run, not a
@@ -65,7 +70,8 @@ Cross-cutting: Evals & Observability (RAGAS + Langfuse + MLflow), CI-gated.
   for AKA/dub titles), curated Kaggle Indian-movie sets to backfill South-Indian coverage.
 - Stores: Postgres (+ pgvector) or Qdrant; Redis optional cache.
 - Models (see docs/DECISIONS.md DEC-0001 for rationale + sources; all IDs env-driven): serve the
-  fine-tuned Gemma 4 E4B (base + QLoRA adapter via vLLM) on the on-demand GPU; base for benchmark =
+  verdict-selected model — the well-prompted base Gemma 4 E4B via vLLM (adapter CUT, DEC-P4-9) —
+  on the on-demand GPU; base for benchmark =
   Gemma 4 E4B (Qwen3-4B-Instruct-2507 as fallback); embeddings = BGE-M3 (MIT); reranker =
   bge-reranker-v2-m3; optional bigger live showcase AND synthetic-data teacher = Sarvam-M 24B
   (Apache 2.0) on the GPU — NOT the fine-tune base (it is already Indic-specialized, leaving no
@@ -107,8 +113,9 @@ Cross-cutting: Evals & Observability (RAGAS + Langfuse + MLflow), CI-gated.
   repo / README) even though the model is not. The evidence is the proof; the endpoint is on-demand.
 - On-demand GPU is used for two things only: (a) the ONE-TIME training + benchmark-capture run, and
   (b) a QUICK live demo if an interviewer asks during a call. Resume JarvisLabs (sub-2-min), bring
-  the stack up with one command, demo, then STOP. Default the live demo to the fine-tuned Gemma 4
-  E4B (fast to load); the Sarvam-M 24B is an optional "if time permits" showcase.
+  the stack up with one command, demo, then STOP. Default the live demo to the well-prompted base
+  Gemma 4 E4B (fast to load; adapter CUT per DEC-P4-9); the Sarvam-M 24B is an optional "if time
+  permits" showcase.
 - A small/cheap always-on host (e.g. a low-tier VPS or static host) MAY serve only the static
   surface — landing page, README, architecture diagram, the recorded demo video, and the benchmark
   report — plus, optionally, dashboards over precomputed/recorded results. It never serves any neural
