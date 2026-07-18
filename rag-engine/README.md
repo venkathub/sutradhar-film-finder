@@ -233,3 +233,13 @@ IS the graceful-degradation story.
 uv run pytest tests/test_chunking.py tests/test_artifacts.py               # hermetic
 uv run pytest -m integration tests/integration/test_build_corpus.py       # needs `make up`
 ```
+
+## P7 — θ binding (DEC-P7-3, task 8)
+
+The DEC-P2-5 NO_MATCH threshold is no longer a code literal: `sutradhar.rag.calibration`
+loads θ from the pinned committed calibration artifact (`PINNED_CALIBRATION_RUN`) and
+`assert_calibration_matches` hard-fails serving (`StaleCalibrationError`) if the live
+index/embedder/config-cell drifts from what θ was calibrated on — recalibration is a
+one-line reviewable pin bump, never a silent reuse. A grep tripwire in
+`tests/test_calibration.py` forbids re-hardcoding the value. The HNSW/at-scale path
+(including mandatory recalibration per index rebuild) is designed in `docs/SCALE.md`.

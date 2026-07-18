@@ -287,3 +287,18 @@ so the evidence outlives the tunnel URL.
 - Frozen prompt artifacts — **landed in P3 task 3** (see above).
 - RAGAS harness; MLflow/Langfuse wiring; the two-table benchmark runner (base vs QLoRA)
   reusing `expected_tool_calls` (P3+).
+
+## P7 — Evidence strengthening (DEC-P7-4/5/6, tasks 13–17)
+
+- **Golden set:** GS-07/GS-08 expanded to n=10 each (24-fixture generation slice; target
+  formally revised per DEC-P7-4). New fixtures are ADDITIVE (`PENDING_CAPTURE_FIXTURES`):
+  schema-validated + graph-verified in Tier-1, scored only by the DEC-P7-7 capture window;
+  frozen run artifacts are never re-scored.
+- **Injection suite:** 25 fixtures (v1 INJ-01..14 = the frozen gate set; v2 INJ-15..25 =
+  obfuscation variants) scored as the AgentDojo benign-utility / utility-under-attack / ASR
+  triple. Homoglyph/zero-width variants are defense-regression-gated; the context encoding
+  pair (INJ-16/17) is the committed, documented bound of the static-suite claim.
+- **Judge validation:** blind test-retest package (`judge_validate.py blind` / `testretest`,
+  protocol-first per `judge_validation/PROTOCOL.md`) → intra-rater κ + real-items-only κ +
+  offline second-pass-vs-judge κ, all additive beside the frozen `report.json`.
+- **Claims lint:** `tests/test_claims_lint.py` keeps every P7-retired doc claim retired.

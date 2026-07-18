@@ -194,3 +194,36 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   nothing neural runs 24/7; a $0 GitHub Pages site (benchmark report generated from the single
   source of truth, link-checked in CI) carries the standing evidence, and the demo video ends
   with the GPU being destroyed on camera.
+
+## P7 — Credibility hardening: the audit that makes the evidence self-consistent
+
+- **Audited the project's own claims against its recorded evidence and reconciled every
+  mismatch, dated** — pre-registered the 12-finding fix list (DEC-P7-1) *before* fixing:
+  the FT story now leads with the pre-registered **CUT** verdict everywhere (with the PR-commit
+  SHA chain proving the rule predated the numbers by 7h07m); every "sub-2-min resume" claim
+  replaced by the measured 545 s posture + demo choreography; the project GPU total recomputed from audited
+  per-phase actuals (**≈ $19–21**, retiring an estimate presented as an actual); every
+  "0 hallucinated movies" claim now carries the two-layer framing (model-layer GS-02 = 1 ⚠ /
+  served-layer 0 via the output gate) — and a claims-lint CI tripwire keeps every retired claim
+  retired.
+- **Secured the cost-bearing endpoint:** bearer auth (never silently open — unset tokens ⇒ 503)
+  + token-first/IP-fallback rate limiting (slowapi on the existing Redis, spoofable
+  X-Forwarded-For opt-in only) on the GPU-up chat path, with the degradation surface left
+  public; scrubbed 500 envelopes to `{error, request_id}` (fake-DSN regression-tested);
+  non-root + HEALTHCHECK'd images with `docker inspect` CI assertions.
+- **Closed three data-integrity gaps with DB-owned constraints** (person.tmdb_id, the version
+  upsert fallback key, the candidate-edge dedup 4-tuple — pre-audit aborts rather than deletes)
+  — and the new constraint **immediately exposed a real latent bug** (within-batch duplicate
+  proposals invisible to SELECT-based dedup under autoflush=False; 3 in the recorded artifact),
+  fixed with a batch-local seen-set; re-ingest provenance made append-only with human-verified
+  records immutable to the pipeline; NO_MATCH θ re-bound to its calibration artifact with a
+  staleness hard-fail (a rebuilt index can never silently reuse θ).
+- **Strengthened the weakest evidence honestly:** generation golden set 8 → 24 fixtures
+  (GS-07/GS-08 → 10 each, additive, schema-validated against frozen v0, unscored until the
+  approved capture window); injection suite 14 → 25 with obfuscation variants scored as the
+  AgentDojo BU/UA/ASR triple — homoglyph/zero-width variants now caught by a normalization
+  layer, while the encoding pair that evades is **committed as the documented bound** of the
+  static-suite claim; judge validation gains a protocol-first blind test-retest package
+  (intra-rater κ framed as a proxy, never a human–human ceiling); `docs/SCALE.md` designs the
+  50k-film path (pg_trgm funnel, HNSW iterative scans, discovery-mode ingestion) with measured
+  triggers.

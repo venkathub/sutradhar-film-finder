@@ -431,3 +431,24 @@ Each task = one conventional commit (or small PR-internal sequence); Tier-1 CI g
 
 **APPROVED FOR EXECUTION (2026-07-18).** D1–D4 confirmed per recommendations; DEC-P7-1..7
 logged in `docs/DECISIONS.md` before any code, per CLAUDE.md. Execution starts at task 2.
+
+---
+
+## 8. Execution status (updated 2026-07-18)
+
+**Tasks 1–19 EXECUTED** on `feature/p7-credibility-hardening`, one committed diff per task,
+Tier-1 (822 unit) + integration (124, live Postgres) suites green throughout; no frozen
+benchmark artifact re-scored, no metric cell changed. Notable execution findings:
+- The `uq_candidate_edges_dedup` constraint **exposed a real latent bug** on landing: 3
+  within-batch duplicate proposals in the recorded extraction artifact, invisible to the
+  SELECT-based dedup under `autoflush=False` — fixed with a batch-local seen-set (task 7).
+- The claims-lint tripwire (task 13) caught its own author twice during tasks 13/19 —
+  evidence it bites.
+- The blind worksheet (`worksheet.blind.yaml`) is generated and committed unlabelled.
+
+**Remaining:**
+- **Task 17 (human step):** the rater's blind labelling pass (~30–45 min, PROTOCOL.md first),
+  then `uv run python evals/judge_validate.py testretest`.
+- **Task 20 (the only GPU step, approved ~$3–5):** Langfuse Cloud keys in env → one A100
+  window scoring the 24-fixture generation slice + the 25-fixture injection suite (BU/UA/ASR)
+  → new dated BENCHMARKS rows → teardown.

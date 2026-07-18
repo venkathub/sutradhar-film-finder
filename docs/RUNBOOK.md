@@ -15,8 +15,17 @@ No GPU, no secrets, no model. Works from a fresh clone (CI-proven by the tier-1
 
 ```bash
 make demo-up          # .env from template -> compose (postgres, redis, app) ->
-                      # migrate -> seed graph from recorded fixtures
+                      # migrate -> seed graph from recorded fixtures (incl. the
+                      # P7 uniqueness migration a41f09c3d7e2)
 # open http://localhost:8080/
+
+# P7 hardening, visible in 30 seconds (task 19 demo path):
+curl -si -X POST localhost:8080/api/chat -H 'content-type: application/json' \
+  -d '{"message":"papanasam?"}' | head -1        # GPU off => structured 200 (open surface)
+curl -si localhost:8080/api/status | grep -i x-request-id   # every response carries the id
+# With a GPU window up (Path B) the same unauthenticated POST returns 401, a
+# wrong token 401, >CHAT_RATE_LIMIT requests 429 — and a forced error returns
+# {"error":"internal_error","request_id":...} with nothing leaked.
 ```
 
 What you see and say:

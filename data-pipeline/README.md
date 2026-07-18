@@ -354,3 +354,18 @@ make graph-demo`. CI proves the whole chain from a clean database on every run.
 
 Evidence: `docs/BENCHMARKS.md` ("Graph coverage & extraction lift"), `docs/DECISIONS.md`
 (DEC-P1-1..8 + amendments), `evals/golden/` (frozen), `docs/phases/tool_schema.v0.json` (frozen).
+
+## P7 — Provenance & uniqueness hardening (tasks 6–7)
+
+- Spine re-ingest now MERGES `sources[]` (union + dedupe on `(source, ref)` — append-only
+  provenance) instead of replacing; confidence is raise-only; `human_verified` records keep
+  their curated values (gaps may be filled, values never overwritten). Regression-tested in
+  `tests/integration/test_ingest_spine.py`.
+- Migration `a41f09c3d7e2` adds DB-owned uniqueness: `uq_person_tmdb_id`,
+  `uq_version_work_lang_year` (the QID-less upsert fallback key), and
+  `uq_candidate_edges_dedup` (NULLS NOT DISTINCT). The pre-audit ABORTS on existing
+  duplicates — a migration never deletes data. The constraint exposed and fixed a real
+  latent bug: within-batch duplicate proposals invisible to SELECT-based dedup under
+  `autoflush=False` (`load_candidates` now keeps a batch-local seen-set).
+- Catalog-scale ingestion (discovery mode, paginated SPARQL, delta re-ingest) is designed in
+  `docs/SCALE.md` — design only, not implemented.
