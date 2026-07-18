@@ -158,7 +158,12 @@ def test_candidate_loading_idempotent(built: Session, artifact: dict[str, Any]) 
     first = load_candidates(built, artifact["raw_outputs"], artifact["pages"], artifact["model_id"])
     again = load_candidates(built, artifact["raw_outputs"], artifact["pages"], artifact["model_id"])
     assert again.candidates_written == 0
-    assert again.proposals_duplicate == first.candidates_written
+    # P7 task 7: the recorded artifact carries 3 within-batch duplicate proposals
+    # that the pre-constraint SELECT-then-skip dedup could not see (autoflush=False);
+    # they are now skipped on EVERY pass, so the re-run's duplicate count covers
+    # both the DB-deduped rows and the batch-deduped repeats.
+    assert first.proposals_duplicate == 3  # the latent-bug evidence, now counted
+    assert again.proposals_duplicate == first.candidates_written + first.proposals_duplicate
 
 
 def test_conservative_binding(built: Session, artifact: dict[str, Any]) -> None:
