@@ -46,6 +46,7 @@ from sutradhar.evals.driver import ToolExecutor
 from sutradhar.evals.prompts import PromptArtifacts, load_serving_prompt_artifacts
 from sutradhar.obs.cost import MetricsAccumulator, request_cost
 from sutradhar.obs.tracing import Tracer
+from sutradhar.rag.calibration import assert_calibration_matches
 from sutradhar.rag.providers import (
     HttpEmbeddings,
     HttpReranker,
@@ -151,12 +152,21 @@ def _winner_retrieval_config(settings: Settings, runs_dir: Path) -> RetrievalCon
     artifact = json.loads(path.read_text(encoding="utf-8"))
     winner = artifact.get("winner")
     record = artifact["records"][winner]
-    return RetrievalConfig(
+    config = RetrievalConfig(
         chunk_config=str(record["retrieval_config"]["chunk_config"]),
         embed_model=settings.embed_model,
         index_version=run_id,
         rerank_depth=int(record["retrieval_config"]["rerank_depth"]),
     )
+    # P7 task 8 (DEC-P7-3): θ staleness gate — abstention goes live ONLY against
+    # the exact stack it was calibrated on; any drift hard-fails at wiring time.
+    assert_calibration_matches(
+        embed_model=config.embed_model,
+        index_version=config.index_version,
+        chunk_config=config.chunk_config,
+        rerank_depth=config.rerank_depth,
+    )
+    return config
 
 
 def _default_make_executor(settings: Settings) -> Callable[[Session], ToolExecutor]:

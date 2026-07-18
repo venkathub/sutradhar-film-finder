@@ -27,24 +27,23 @@ from __future__ import annotations
 
 import json
 import uuid
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 
 from sqlalchemy import text as sqltext
 from sqlalchemy.orm import Session
 
 from sutradhar.graph.repository import resolve_title
 from sutradhar.rag.artifacts import EmbeddingProvider, RerankProvider
+from sutradhar.rag.calibration import calibrated_threshold
 from sutradhar.rag.fusion import RRF_K, aggregate_max, fuse
 from sutradhar.rag.sparse import ChannelHit, sparse_top_chunks
 
-# DEC-P2-5 calibrated NO_MATCH threshold (P2 task 11, run 20260702T135315Z-f6583183):
-# θ = 1.35 × top calibration-canary score (NEG-17 = 0.11241). Zero false accepts on
-# GS-02 + the untouched test half (NO_MATCH recall 1.0); the zero-false-reject
-# constraint measured INFEASIBLE (witness GS-07a = 0.00084 ≤ NEG-17) — four weak-scoring
-# positives (GS-03a/c, GS-07a/b) return abstain=true WITH their (correct) results,
-# degrading to "low confidence", never to a hallucinated match. Curve + report:
-# evals/retrieval_runs/<run>.calibration.json; rationale in docs/DECISIONS.md.
-CALIBRATED_NO_MATCH_THRESHOLD = 0.151747
+# DEC-P2-5 calibrated NO_MATCH threshold: θ = 1.35 × top calibration-canary score
+# (NEG-17). Zero false accepts on GS-02 + the untouched test half; the
+# zero-false-reject constraint measured INFEASIBLE — weak-scoring positives return
+# abstain=true WITH their (correct) results, degrading to "low confidence", never
+# to a hallucinated match. P7 task 8 (DEC-P7-3): the VALUE now lives in the pinned
+# calibration artifact (see sutradhar.rag.calibration) — no numeric θ literal here.
 
 
 @dataclass(frozen=True)
@@ -60,7 +59,8 @@ class RetrievalConfig:
     sparse_top_n: int = 50
     rerank_depth: int = 50  # DEC-P2-4 default; ablated {20, 50}
     top_k: int = 10
-    no_match_threshold: float = CALIBRATED_NO_MATCH_THRESHOLD  # DEC-P2-5 θ
+    # DEC-P2-5 θ, loaded from the pinned calibration artifact (DEC-P7-3).
+    no_match_threshold: float = field(default_factory=calibrated_threshold)
 
     def stamp(self) -> str:
         """Deterministic JSON for BENCHMARKS/DECISIONS reproducibility stamps."""

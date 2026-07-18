@@ -90,6 +90,96 @@ def test_recorded_calibration_outcome_holds() -> None:
     # The recorded, documented trade-off (DEC-P2-5): exactly these four flagged positives.
     assert report.positive_false_rejects == ["GS-03a", "GS-03c", "GS-07a", "GS-07b"]
     # θ wired into the retriever matches the recomputed value (no silent drift).
-    from sutradhar.rag.retrieve import CALIBRATED_NO_MATCH_THRESHOLD
+    # P7 task 8 (DEC-P7-3): the wired value now COMES FROM the pinned artifact.
+    from sutradhar.rag.calibration import calibrated_threshold
 
-    assert report.theta == pytest.approx(CALIBRATED_NO_MATCH_THRESHOLD)
+    assert report.theta == pytest.approx(calibrated_threshold())
+
+
+# --- P7 task 8 (DEC-P7-3): θ binding + staleness gate ---
+
+
+def test_theta_round_trips_from_the_pinned_artifact() -> None:
+    from sutradhar.rag.calibration import load_calibration
+    from sutradhar.rag.retrieve import RetrievalConfig
+
+    binding = load_calibration()
+    assert binding.theta == pytest.approx(0.151747)  # DEC-P2-5 value, unchanged
+    assert binding.config_key == "1024tok_15pct/d20"
+    assert binding.embed_model == "BAAI/bge-m3"
+    # RetrievalConfig's default is the artifact value — no independent constant.
+    config = RetrievalConfig(
+        chunk_config=binding.chunk_config,
+        embed_model=binding.embed_model,
+        index_version=binding.run_id,
+        rerank_depth=binding.rerank_depth,
+    )
+    assert config.no_match_threshold == pytest.approx(binding.theta)
+
+
+def test_no_theta_literal_remains_in_rag_source() -> None:
+    """Grep tripwire: the calibrated value must never be re-hardcoded in code."""
+    rag_dir = Path("src/sutradhar/rag")
+    offenders = [
+        path for path in rag_dir.rglob("*.py") if "0.151747" in path.read_text(encoding="utf-8")
+    ]
+    assert offenders == [], f"θ literal re-hardcoded in {offenders} — it lives in the artifact"
+
+
+def test_stale_calibration_hard_fails() -> None:
+    from sutradhar.rag.calibration import (
+        StaleCalibrationError,
+        assert_calibration_matches,
+        load_calibration,
+    )
+
+    binding = load_calibration()
+    ok = dict(
+        embed_model=binding.embed_model,
+        index_version=binding.run_id,
+        chunk_config=binding.chunk_config,
+        rerank_depth=binding.rerank_depth,
+    )
+    assert assert_calibration_matches(**ok) == binding  # exact match passes
+    for drift in (
+        {"embed_model": "BAAI/bge-multilingual-gemma2"},  # embedder swap (DEC-0002 9B leg)
+        {"index_version": "20990101T000000Z-deadbeef"},  # rebuilt index
+        {"chunk_config": "256tok_15pct"},  # different ablation cell
+        {"rerank_depth": 50},  # different rerank depth
+    ):
+        with pytest.raises(StaleCalibrationError, match="never silently reused"):
+            assert_calibration_matches(**{**ok, **drift})
+
+
+def test_tampered_artifact_changes_are_detected(tmp_path: Path) -> None:
+    """The binding follows the artifact: a mutated embed_model in a copied run is
+    faithfully loaded — and then trips the staleness gate against the real stack."""
+    import json as _json
+
+    from sutradhar.rag.calibration import (
+        StaleCalibrationError,
+        assert_calibration_matches,
+        load_calibration,
+    )
+
+    src = Path("evals/retrieval_runs")
+    run = "20260702T135315Z-f6583183"
+    for suffix in (".calibration.json", ".meta.json"):
+        (tmp_path / f"{run}{suffix}").write_text(
+            (src / f"{run}{suffix}").read_text(encoding="utf-8"), encoding="utf-8"
+        )
+    meta_path = tmp_path / f"{run}.meta.json"
+    meta = _json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["meta"]["embed_model"] = "tampered/embedder"
+    meta_path.write_text(_json.dumps(meta), encoding="utf-8")
+
+    tampered = load_calibration(run, tmp_path)
+    assert tampered.embed_model == "tampered/embedder"
+    with pytest.raises(StaleCalibrationError):
+        assert_calibration_matches(
+            embed_model="BAAI/bge-m3",
+            index_version=run,
+            chunk_config=tampered.chunk_config,
+            rerank_depth=tampered.rerank_depth,
+            binding=tampered,
+        )
