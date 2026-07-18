@@ -21,7 +21,7 @@ tool-calling) and serve via vLLM on an **on-demand** GPU. Two hard constraints s
    no headroom → FT can't win → wasted GPU. "Beatable" ≠ "weak"; it means *strong in general,
    unspecialized in our niche*.
 2. **Accurate + cheap to serve on-demand.** Small (~4B), single-GPU QLoRA, day-0 vLLM support,
-   fast to load for a sub-2-min live demo, Apache-2.0 (clean licensing for a portfolio).
+   fast to load for an on-demand live demo *(P7 annotation, 2026-07-18: measured posture is ~545 s ephemeral create→ready, not a sub-2-min resume — see RUNBOOK Path B)*, Apache-2.0 (clean licensing for a portfolio).
 
 **Options considered (mid-2026 landscape).**
 
@@ -154,7 +154,7 @@ H100 SXM 80 GB ≈ $2.69–2.80/hr; A30 / RTX 4090 24 GB budget tier; CPU VM ≈
 - **Primary workhorse for all core jobs (P1 extraction, P2 embedding incl. the 9B A/B, P4 QLoRA FT +
   base/after benchmark serving, P5/P6 demo) → NVIDIA A100 40 GB (~$0.89/hr).** Best balance: ample for
   4B QLoRA, strong tokens/sec for the 4B serving benchmark, fits the 9B embedder, best cost-per-token,
-  fast pause/resume for a sub-2-min live demo.
+  fast pause/resume for the live demo *(P7 annotation, 2026-07-18: the shipped posture is ephemeral create→destroy, measured ~545 s to ready — RUNBOOK Path B)*.
 - **Value alternative → RTX 6000 Ada 48 GB (~$0.99/hr)** if A100 40 GB is unavailable — more headroom
   (fits Sarvam-M 24B in FP8/4-bit) at a similar rate.
 - **Budget floor (FT + 4B serving only, skip the 9B embedder) → 24 GB tier (RTX 4090 / A30).** 24 GB
@@ -288,7 +288,7 @@ use" principle: the UP-state proof is reproducible from nothing.
 destroys any stray tagged instance — a leaked billing GPU is treated as a defect (a teardown test
 injects a smoke failure and asserts destroy still runs). (2) **Never on a PR** — developer- or
 `workflow_dispatch`-invoked only (cost + secrets); Tier-1 CI stays fully mocked/stubbed. (3) The
-*cold* create→destroy validation is distinct from the P6 **sub-2-min warm-resume** demo path (R4),
+*cold* create→destroy validation is distinct from the P6 demo path (R4) *(P7 annotation, 2026-07-18: the demo path also shipped as ephemeral create→destroy, measured ~545 s — no warm-resume exists)*,
 which remains in `docs/RUNBOOK.md`.
 
 **Consequences.** Adds `JARVISLABS_API_KEY` (+ `GPU_TYPE`) to `.env.example`; drops any persistent
@@ -860,7 +860,10 @@ P5's FastAPI middleware reuses this exact seam.
 
 **Status:** Accepted (P3 grooming; **user-directed**). Replaces the CLAUDE.md "Langfuse Cloud
 free tier" default — CLAUDE.md §Tech stack reconciled (2026-07-02); Cloud free tier remains the
-documented fallback.
+documented fallback. **P7 status annotation (2026-07-18): the VPS was DESTROYED once its
+evidence was committed — standing observability cost ₹799/mo → ₹0. The Langfuse Cloud free tier
+is the active fallback for future capture windows (DEC-P7-7); the idempotent bootstrap below
+remains the documented self-hosted rebuild path.**
 
 **Context (verified live against the AIC Cloud API, 2026-07-02).** Public catalogue
 `GET https://api.aiccloud.in/api/v1/public/essential-vps-plans` (no auth): the implemented

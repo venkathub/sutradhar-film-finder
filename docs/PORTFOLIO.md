@@ -178,10 +178,14 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   create→ready (vLLM + embed/rerank sidecar), 40 s exports→first cited answer, live UI latency
   p50 4252 ms (parity with the P5 benchmark), **$0.21 total for the 13.9-minute window**,
   teardown `nuke`-verified with the app auto-degrading to the offline state on camera.
-- **The capstone cost story: total on-demand GPU spend for the ENTIRE project ≈ $12–17**
-  (every window itemized: $0.34 validation, ~$1 extraction, $0.22 embedding, <$1 judge, ~$2
-  teacher, ~$4–8 train+benchmark + $1.5 resume, ~$3–4 serving benchmark, $0.38 across the two
-  P6 rehearsal/recording windows) **against $0.00 of standing infrastructure — now including
+- **The capstone cost story: total on-demand GPU spend for the ENTIRE project ≈ $19–21,
+  recomputed 2026-07-18 from the audited per-phase ACTUALS in `docs/DECISIONS.md`** — never
+  from estimates (the earlier "≈ $12–17" here was an estimate-based figure; the honest itemized
+  actuals are: $0.34 P0 validation, ~$1 P1 extraction, $0.22 P2 embedding, <$1 P3 judge,
+  **≈ $13–14 P4 audited** — teacher ≈ $7 incl. think-mode/disk failures + train/benchmark
+  window ≈ $6.2 incl. 8 recorded failure-mode attempts (DEC-P4-9) —, ~$3–4 P5 serving
+  benchmark, $0.38 across the two P6 rehearsal/recording windows) **against $0.00 of standing
+  infrastructure — now including
   observability: the Langfuse VPS (₹799/mo) was deleted once its evidence was committed**
   (tracing no-ops by design; one command rebuilds it from scratch if ever wanted) —
   nothing neural runs 24/7; a $0 GitHub Pages site (benchmark report generated from the single

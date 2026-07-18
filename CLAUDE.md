@@ -112,8 +112,10 @@ Cross-cutting: Evals & Observability (RAGAS + Langfuse + MLflow), CI-gated.
   throughput (tokens/sec), and a recorded demo video. These artifacts are always available (in the
   repo / README) even though the model is not. The evidence is the proof; the endpoint is on-demand.
 - On-demand GPU is used for two things only: (a) the ONE-TIME training + benchmark-capture run, and
-  (b) a QUICK live demo if an interviewer asks during a call. Resume JarvisLabs (sub-2-min), bring
-  the stack up with one command, demo, then STOP. Default the live demo to the well-prompted base
+  (b) a QUICK live demo if an interviewer asks during a call. Measured bring-up posture
+  (RUNBOOK, 2026-07-11): ~545 s ephemeral create→ready (vLLM + embed/rerank sidecar) — NOT a
+  sub-2-min resume; the demo choreography is: start `make gpu-serve` at meeting open, walk the
+  recorded replays while it boots, flip to live via env exports, demo, then STOP. Default the live demo to the well-prompted base
   Gemma 4 E4B (fast to load; adapter CUT per DEC-P4-9); the Sarvam-M 24B is an optional "if time
   permits" showcase.
 - A small/cheap always-on host (e.g. a low-tier VPS or static host) MAY serve only the static
