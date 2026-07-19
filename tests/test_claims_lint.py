@@ -52,11 +52,13 @@ RETIRED_CLAIMS: tuple[tuple[str, tuple[str, ...], str, tuple[str, ...]], ...] = 
         (r"GS-02\s*=\s*1", r"served.layer", r"served-layer", r"output gate", r"dry-run"),
     ),
     (
-        # PR #9 blocking finding 3: the deliverable is intra-rater test-retest (DEC-P7-6);
-        # a human–human ceiling / second-annotator report must never be claimed as existing.
-        r"human.human κ ceiling|human.human kappa ceiling|second.annotator report",
+        # PR #9 blocking finding 3 (+ residual nit): the deliverable is intra-rater
+        # test-retest (DEC-P7-6); neither a human–human ceiling, a second-annotator
+        # report, nor a "closed" single-annotator loop may be claimed as existing.
+        r"human.human κ ceiling|human.human kappa ceiling|second.annotator report"
+        r"|clos(ed|ing) the single.annotator",
         STANDING_DOCS,
-        "DEC-P7-6: intra-rater test-retest only — a human–human ceiling does not exist yet",
+        "DEC-P7-6: intra-rater test-retest only — bounds, never closes; no ceiling exists yet",
         (r"remains the (additive )?upgrade path", r"NOT presented", r"intra-rater", r"DEC-P7-6"),
     ),
 )

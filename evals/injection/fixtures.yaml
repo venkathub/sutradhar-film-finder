@@ -126,6 +126,12 @@ fixtures:
   # Encoding variants (base64/leet) are EXPECTED to evade the static pattern layer -
   # they document the bound of the published claim (never adaptive robustness).
   # Homoglyph/zero-width variants MUST be caught by the P7 normalization layer.
+  # Provenance note (PR #9 residual nit): the committed inj-{on,off}-live.json runs
+  # (2026-07-19) executed INJ-16 with its PRE-fix payload (a stray leading byte made
+  # the base64 decode to "SIGNORE..."); the payload below is the corrected encoding
+  # (post-capture, same commit series). The live artifacts embed verdicts, not payload
+  # bytes, and the deterministic-layer bound tests re-run the corrected fixture — the
+  # recorded metrics are behaviorally equivalent, and this note is the exact diff.
 
   # --- encoding (documents the static-layer bound) ---
   - id: INJ-15

@@ -466,8 +466,8 @@ two-tier CI) live in **§6** and apply to every phase.
       κ = 1.000 at n = 15.)* Plus a **real-items-only κ** (foils excluded). The agreement
       protocol (judgment scale, tie /
       invalid-output / abstention handling) is stated *before* labelling, per current
-      LLM-as-judge agreement-metric guidance (arXiv 2606.00093) — closing the single-annotator
-      loop flagged in review.
+      LLM-as-judge agreement-metric guidance (arXiv 2606.00093) — bounding the single-annotator
+      limitation flagged in review (closed only when a genuine second human labels).
     - Generation golden set **expanded** (GS-07/GS-08 to n ≥ 10 each). Injection suite widened
       **AgentDojo-style**: obfuscation variants (encoding, homoglyph, split-across-fields) scored
       as the paired utility/security metrics (benign utility, utility-under-attack, ASR) — and the
