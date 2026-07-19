@@ -191,7 +191,8 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   actuals are: $0.34 P0 validation, ~$1 P1 extraction, $0.22 P2 embedding, <$1 P3 judge,
   **≈ $13–14 P4 audited** — teacher ≈ $7 incl. think-mode/disk failures + train/benchmark
   window ≈ $6.2 incl. 8 recorded failure-mode attempts (DEC-P4-9) —, ~$3–4 P5 serving
-  benchmark, $0.38 across the two P6 rehearsal/recording windows) **against $0.00 of standing
+  benchmark, $0.38 across the two P6 rehearsal/recording windows, **$0.61 P7 capture window —
+  dashboard actual, ₹29.80 + ₹21.29, 2026-07-19**) **against $0.00 of standing
   infrastructure — now including
   observability: the Langfuse VPS (₹799/mo) was deleted once its evidence was committed**
   (tracing no-ops by design; one command rebuilds it from scratch if ever wanted) —
@@ -232,8 +233,8 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   human–human ceiling); `docs/SCALE.md` designs the 50k-film path (pg_trgm funnel, HNSW
   iterative scans, discovery-mode ingestion) with measured triggers.
 - **Executed the approved capture window and kept the accounting honest (2026-07-19,
-  DEC-P7-7 addendum):** two ephemeral A100 sessions (~37 min total, ≈ $0.55 estimated pending
-  the dashboard actual — vs the $3–5 envelope), both nuke-verified; run
+  DEC-P7-7 addendum):** two ephemeral A100 sessions — **₹51.09 ≈ $0.61 total, dashboard
+  actuals** (₹29.80 + ₹21.29, vs the $3–5 envelope), both nuke-verified; run
   `20260719T063002Z-1bf3cd3e` scored the full 24-fixture slice with judge + RAGAS (code-mixed
   intent **held at 0.400 with n doubled to 10**; coherence **0.700 at n = 10**; Langfuse Cloud
   trace committed) and the widened 25-fixture injection suite ran live (**ASR 0.000 / BU 1.000

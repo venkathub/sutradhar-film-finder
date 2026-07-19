@@ -1729,13 +1729,12 @@ window as the final, separately-runnable task; doc/bug/security work never waits
   BENCHMARKS) + live injection on/off (`inj-{on,off}-live.json`). B = instance **450712**
   (gpt-oss-20b + sidecar via the committed `infra/gpu/p7_judge_window.py`): judge coherence
   (10 fixtures) + RAGAS (24), written back into the run artifact in place.
-- **Durations (timestamp-derived from logs/artifacts — measured wall-clock bounds, not billing
-  actuals):** Session A ≈ 11:47–12:08 IST (~21 min incl. ~9-min boot and a ~4-min idle gap —
-  see incident below); Session B ≈ 12:09–12:25 IST (~16 min incl. boot + a failed create).
-  **Derived cost ≈ $0.55 (~₹48) at the DEC-0003 $0.89/h rate — an ESTIMATE pending the
-  JarvisLabs dashboard actual** (the SDK exposes wallet balance but no per-instance billing;
-  this entry is updated with the dashboard number when read). Either way an order of magnitude
-  inside the approved $3–5.
+- **Cost — DASHBOARD ACTUALS (read by the user, 2026-07-19): ₹29.80 (Session A) + ₹21.29
+  (Session B) = ₹51.09 ≈ $0.61 total** — an order of magnitude inside the approved $3–5.
+  Back-solved at the DEC-0003 $0.89/h rate that is ~24 + ~17 billed minutes, consistent with
+  the timestamp-derived wall clocks (Session A ≈ 11:47–12:08 IST incl. ~9-min boot and the
+  ~4-min idle gap below; Session B ≈ 12:09–12:25 IST incl. boot + one failed create). The
+  earlier "≈ $0.55" estimate in this entry is superseded by these actuals.
 - **Incidents (recorded, not hidden):** (1) the sandbox killed the detached `gpu-serve` hold
   after the window came UP — its `finally` never ran, so Session A was closed manually
   (`make gpu-stop`) after the captures, with ~4 min of idle billing between UP and the first
