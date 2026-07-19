@@ -84,7 +84,11 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   ephemeral A100 session (~6 min, <$1, auto-destroyed)** — **Cohen's κ = 0.738** (coherence
   slice κ = 1.0), with the disagreement analysis motivating the design: the deterministic
   no-hallucinated-movie detector **gates**, the judge stays supplementary; RAGAS runs through
-  the same judge + self-served BGE-M3 with **zero external eval APIs**.
+  the same judge + self-served BGE-M3 with **zero external eval APIs**. **Label stability
+  closed the single-annotator loop honestly (P7, DEC-P7-6): a protocol-first blind test-retest
+  pass (ids re-minted, order reshuffled, 16-day gap) measured intra-rater κ = 0.933 overall
+  and 1.000 on real items (both label flips were on foils) — reported as an upper-bound proxy,
+  never as a human–human ceiling** (`evals/judge_validation/report_testretest.json`).
 - Stood up the **all-self-hosted observability stack** and kept it honest about cost and
   reality: MLflow (compose, DB-backed registry) + Langfuse v3 self-hosted on a ₹799/mo VPS via
   an **idempotent from-scratch bootstrap** (find-or-create API provisioning + check-then-act
