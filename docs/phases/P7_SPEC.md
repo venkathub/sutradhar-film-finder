@@ -466,4 +466,19 @@ benchmark artifact re-scored, no metric cell changed. Notable execution findings
   regression test; MLflow three-way doc contradiction; ROADMAP second-annotator stale claim;
   undisclosed RAGAS coverage gap; missing committed trace export), plus the non-blocking
   corrections (flip count, counts 46/83, cost framing, spec header, mlflow HEALTHCHECK,
-  Retry-After derivation, INJ-16 payload byte, GIN/GiST wording, decontamination notes).
+  Retry-After derivation, INJ-16 payload byte, GIN/GiST wording, decontamination notes) and
+  both residual nits (ROADMAP "closing"→"bounding" + lint coverage; INJ-16 capture-provenance
+  note).
+
+**Carried debt → next housekeeping pass (recorded here so nothing is silently dropped):**
+1. **Limiter Redis runtime fallback** — `_limiter_storage` probes Redis once at app creation;
+   a Redis outage *after* startup degrades limits (slowapi's storage errors), unlike the
+   session store's graceful runtime fallback (DEC-P5-2). Align the behaviours.
+2. **`Settings.chat_auth` as `Literal["required", "disabled"]`** — currently a bare `str`; a
+   typo (e.g. `CHAT_AUTH=disable`) silently means "required" (fail-closed, so safe — but the
+   type should make the contract explicit and reject typos loudly).
+3. **PG ≥ 15 note on migration `a41f09c3d7e2`** — `postgresql_nulls_not_distinct` requires
+   PostgreSQL 15+; the pinned image is pg17 so this holds, but the migration docstring should
+   state the floor for anyone rebuilding on older Postgres.
+4. **`DEFAULT_RUNS_DIR` settings seam** (already annotated in `rag/calibration.py`) — route
+   artifact roots through `Settings` if a second working-directory convention ever appears.
