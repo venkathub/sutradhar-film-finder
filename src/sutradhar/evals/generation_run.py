@@ -64,10 +64,13 @@ def select_generation_fixtures(fixtures: list[GoldenFixture]) -> list[GoldenFixt
 
 
 # P7 task 15 (DEC-P7-4): fixtures added AFTER the frozen 2026-07-04 capture windows.
-# They are schema-validated, graph-verified, and fully labelled in Tier-1 CI, but
-# UNSCORED until the approved DEC-P7-7 capture window produces new dated BENCHMARKS
-# rows; the frozen run artifacts are never re-scored against them. A future capture
-# scores the FULL slice (select_generation_fixtures) and empties this set.
+# Schema-validated, graph-verified, and fully labelled in Tier-1 CI. SCORED by the
+# DEC-P7-7 window (run 20260719T063002Z-1bf3cd3e — the full 24-fixture slice, new
+# dated BENCHMARKS rows). This set REMAINS as frozen-slice bookkeeping: the Tier-1
+# pin (PINNED_RUN 20260704T093206Z-e9598564) still gates on the frozen artifact,
+# whose coverage test excludes these ids; the set empties only if/when the pin
+# moves to a post-P7 run (its own decision — the P7 run trips the absolute GS-02
+# gate with 2 model-layer inventions, handled by the DEC-P4-9 relative gate).
 PENDING_CAPTURE_FIXTURES = frozenset(
     {
         "GS-07f",

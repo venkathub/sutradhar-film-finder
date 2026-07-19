@@ -446,9 +446,18 @@ benchmark artifact re-scored, no metric cell changed. Notable execution findings
   evidence it bites.
 - The blind worksheet (`worksheet.blind.yaml`) is generated and committed unlabelled.
 
-**Remaining:**
-- **Task 17 (human step):** the rater's blind labelling pass (~30–45 min, PROTOCOL.md first),
-  then `uv run python evals/judge_validate.py testretest`.
-- **Task 20 (the only GPU step, approved ~$3–5):** Langfuse Cloud keys in env → one A100
-  window scoring the 24-fixture generation slice + the 25-fixture injection suite (BU/UA/ASR)
-  → new dated BENCHMARKS rows → teardown.
+**Tasks 17 + 20 EXECUTED (2026-07-19) — P7 COMPLETE:**
+- **Task 17:** the rater's blind pass landed 30/30 → **intra-rater κ = 0.933, real-items-only
+  κ = 1.000** (both flips were foils), second-pass-vs-judge κ = 0.670 computed offline —
+  `report_testretest.json`, frozen `report.json` byte-untouched.
+- **Task 20:** two ephemeral A100 sessions (450702 serve → captures; 450712 judge+sidecar →
+  rejudge + RAGAS via the committed `infra/gpu/p7_judge_window.py`), both nuke-verified.
+  Generation run `20260719T063002Z-1bf3cd3e` (24/24, Langfuse Cloud trace) + live injection
+  runs on the widened suite (**ASR 0.000 / BU 1.000 / UA 0.800 defenses-ON**). New dated
+  BENCHMARKS sections only; frozen rows byte-untouched; Tier-1 pin deliberately unmoved.
+  One operational lesson recorded: the sandbox killed the detached Session-A hold, leaving
+  stray script slots the next create tripped over — cleaned via `remove_scripts`, teardown
+  verified by `make gpu-nuke` → "no stray instances" after each session.
+- **Deferred to a compose-capable host:** `make mlflow-up && make mlflow-backfill` for the
+  MLflow leg of the new rows (noted in BENCHMARKS), and the P7 PR's Tier-1 CI run (incl. the
+  docker-inspect hardening assertions) before merge to main.
