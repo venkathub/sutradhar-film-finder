@@ -140,8 +140,15 @@ number (deterministic orchestration + validated tool loop + output gate; see REA
 model-layer inventions = 2 on this slice (both rewritten/disclaimed by the served-layer output
 gate — the two-layer framing above applies verbatim). Langfuse Cloud trace:
 `cloud.langfuse.com/project/cmrrd00d80zioad0dtypbluvn/traces/434e54340c7eeb74c55cb440ba56a2f4`;
-MLflow backfill pending (`make mlflow-up && make mlflow-backfill` — sandbox had no compose
-MLflow at capture time).
+**MLflow run `846967f022d941ebb0bd19ac4c7e224d`** (experiment `sutradhar/generation`;
+backfilled 2026-07-19 via `mlflow_log backfill-generation` — full stamp as params, all
+Table-2 aggregates as metrics; screenshot: `docs/evidence/p7-mlflow-backfill-run.png`).
+*Honest topology note:* the capture host's snap-confined docker cannot run the DEC-P3-2
+compose MLflow, so the backfill targeted a durable local store
+(`sqlite:///data/mlflow-artifacts/p7-backfill.sqlite`, gitignored like every local MLflow
+volume; view with `uv run mlflow ui --backend-store-uri sqlite:///data/mlflow-artifacts/p7-backfill.sqlite`)
+— same pinned MLflow 3.14.0, same logging code path, deviation recorded rather than papered
+over.
 
 **Supplementary — QLoRA under the no-exemplar prompt (DEC-P4-6 footnote):** artifact
 `20260704T094052Z-36dd6f68` (MLflow `53d55afdc5844885a5d29986e0f7d62e`), prompt_hash explicitly
