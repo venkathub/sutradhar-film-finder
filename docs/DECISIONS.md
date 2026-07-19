@@ -1720,3 +1720,35 @@ clearly-dated rows** in `BENCHMARKS.md` — existing rows byte-untouched. Budget
 **Consequences.** MLflow stays the local compose service (DEC-P3-2, unaffected). `.env.example`
 comment updated: `LANGFUSE_HOST` may point at Cloud or a self-hosted instance. P7 tasks gain the
 window as the final, separately-runnable task; doc/bug/security work never waits on it.
+
+**Execution addendum (2026-07-19) — window EXECUTED; honest accounting.**
+
+- **Sessions (both A100-40GB, both destroyed, `make gpu-nuke` → "no stray instances" after
+  each):** A = instance **450702** (Gemma-4-E4B-it + FlagEmbedding sidecar): generation capture
+  run **`20260719T063002Z-1bf3cd3e`** (24/24 fixtures, Langfuse Cloud trace recorded in
+  BENCHMARKS) + live injection on/off (`inj-{on,off}-live.json`). B = instance **450712**
+  (gpt-oss-20b + sidecar via the committed `infra/gpu/p7_judge_window.py`): judge coherence
+  (10 fixtures) + RAGAS (24), written back into the run artifact in place.
+- **Durations (timestamp-derived from logs/artifacts — measured wall-clock bounds, not billing
+  actuals):** Session A ≈ 11:47–12:08 IST (~21 min incl. ~9-min boot and a ~4-min idle gap —
+  see incident below); Session B ≈ 12:09–12:25 IST (~16 min incl. boot + a failed create).
+  **Derived cost ≈ $0.55 (~₹48) at the DEC-0003 $0.89/h rate — an ESTIMATE pending the
+  JarvisLabs dashboard actual** (the SDK exposes wallet balance but no per-instance billing;
+  this entry is updated with the dashboard number when read). Either way an order of magnitude
+  inside the approved $3–5.
+- **Incidents (recorded, not hidden):** (1) the sandbox killed the detached `gpu-serve` hold
+  after the window came UP — its `finally` never ran, so Session A was closed manually
+  (`make gpu-stop`) after the captures, with ~4 min of idle billing between UP and the first
+  capture; (2) the dead hold also leaked JarvisLabs **script slots** (3-slot quota), which
+  blocked Session B's first create (`Maximum scripts reached`) — cleaned via `remove_scripts`
+  and retried; `p7_judge_window.py` carries the standard remove-in-`finally`.
+- **Result posture:** new dated BENCHMARKS sections only; frozen 2026-07-04 rows and the
+  Tier-1 `PINNED_RUN` byte-untouched (the new run records GS-02 model-layer = 2 — the absolute
+  gate trips by design and is handled by the DEC-P4-9 relative framing; moving the pin is a
+  separate future decision).
+- **Open leg (the one incomplete item):** the **MLflow backfill** for the new rows. The
+  capture sandbox could not run the compose MLflow (docker snap path confinement), and an
+  ephemeral throwaway MLflow would be fake evidence — deferred to the persistent dev host:
+  `make mlflow-up && make mlflow-backfill`, then add the run link beside the Langfuse trace in
+  BENCHMARKS. Until then the new rows carry artifact + stamp + Langfuse evidence but no MLflow
+  link, and say so.

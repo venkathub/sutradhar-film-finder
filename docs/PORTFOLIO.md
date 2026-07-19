@@ -228,6 +228,15 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   AgentDojo BU/UA/ASR triple — homoglyph/zero-width variants now caught by a normalization
   layer, while the encoding pair that evades is **committed as the documented bound** of the
   static-suite claim; judge validation gains a protocol-first blind test-retest package
-  (intra-rater κ framed as a proxy, never a human–human ceiling); `docs/SCALE.md` designs the
-  50k-film path (pg_trgm funnel, HNSW iterative scans, discovery-mode ingestion) with measured
-  triggers.
+  (**measured: intra-rater κ = 0.933, real-items-only κ = 1.000** — framed as a proxy, never a
+  human–human ceiling); `docs/SCALE.md` designs the 50k-film path (pg_trgm funnel, HNSW
+  iterative scans, discovery-mode ingestion) with measured triggers.
+- **Executed the approved capture window and kept the accounting honest (2026-07-19,
+  DEC-P7-7 addendum):** two ephemeral A100 sessions (~37 min total, ≈ $0.55 estimated pending
+  the dashboard actual — vs the $3–5 envelope), both nuke-verified; run
+  `20260719T063002Z-1bf3cd3e` scored the full 24-fixture slice with judge + RAGAS (code-mixed
+  intent **held at 0.400 with n doubled to 10**; coherence **0.700 at n = 10**; Langfuse Cloud
+  trace committed) and the widened 25-fixture injection suite ran live (**ASR 0.000 / BU 1.000
+  / UA 0.800 defenses-ON**) — new dated BENCHMARKS rows beside byte-untouched frozen ones; the
+  window's own incidents (killed hold, leaked script slots) recorded in the DEC addendum, and
+  the one open leg (MLflow backfill on the persistent host) stated rather than papered over.
