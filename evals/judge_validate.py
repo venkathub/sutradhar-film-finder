@@ -90,5 +90,65 @@ def report(
         sys.exit(3)  # distinct code: gate failed (rubric revision / escalation per DEC-P3-1)
 
 
+@app.command()
+def blind(
+    worksheet_dir: Path = typer.Option(VALIDATION_DIR, help="Worksheet dir"),  # noqa: B008 — typer idiom
+) -> None:
+    """P7 task 17 (DEC-P7-6): write the blind second-pass worksheet (+ id-map key).
+
+    Ids are re-minted and order reshuffled (recorded seed) so foil provenance and
+    fixture pairing are invisible; read PROTOCOL.md before labelling.
+    """
+    from sutradhar.evals.judge_validation import (
+        build_blind_worksheet,
+        load_worksheet,
+        save_blind_worksheet,
+    )
+
+    items = load_worksheet(worksheet_dir)
+    blind_items, id_map = build_blind_worksheet(items)
+    path = save_blind_worksheet(blind_items, id_map, worksheet_dir)
+    typer.echo(f"wrote {path}: {len(blind_items)} blind items — read PROTOCOL.md, then label")
+
+
+@app.command()
+def testretest(
+    worksheet_dir: Path = typer.Option(VALIDATION_DIR, help="Worksheet dir"),  # noqa: B008 — typer idiom
+) -> None:
+    """P7 task 17 (DEC-P7-6): intra-rater test-retest report from the labelled blind pass.
+
+    Additive: report.json stays frozen; the judge leg is computed offline from its
+    recorded per-item verdicts (no GPU, nothing re-scored).
+    """
+    from sutradhar.evals.judge_validation import (
+        BLIND_KEY_FILE,
+        REPORT_FILE,
+        compute_testretest_report,
+        load_blind_worksheet,
+        load_worksheet,
+        save_testretest_report,
+    )
+
+    items = load_worksheet(worksheet_dir)
+    blind_items = load_blind_worksheet(worksheet_dir)
+    id_map = json.loads((worksheet_dir / BLIND_KEY_FILE).read_text("utf-8"))
+    frozen_path = worksheet_dir / REPORT_FILE
+    judge_binaries: dict[str, int] | None = None
+    if frozen_path.exists():
+        frozen = json.loads(frozen_path.read_text("utf-8"))
+        judge_binaries = {v["item_id"]: int(v["judge_binary"]) for v in frozen["verdicts"]}
+    report_ = compute_testretest_report(items, blind_items, id_map, judge_binaries)
+    path = save_testretest_report(report_, worksheet_dir)
+    typer.echo(f"n = {report_.n_items}; percent agreement = {report_.percent_agreement:.3f}")
+    typer.echo(
+        f"intra-rater kappa = {report_.intra_rater_kappa:.3f} "
+        f"(real items only: {report_.intra_rater_kappa_real_items_only:.3f})"
+    )
+    if report_.second_pass_vs_judge_kappa is not None:
+        typer.echo(f"second-pass vs judge kappa = {report_.second_pass_vs_judge_kappa:.3f}")
+    typer.echo("FRAMING: intra-rater test-retest proxy — NOT a human-human ceiling (DEC-P7-6)")
+    typer.echo(f"report -> {path}")
+
+
 if __name__ == "__main__":
     app()

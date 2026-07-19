@@ -184,6 +184,12 @@ def load_candidates(
     revisions = {k: str(p["revision"]) for k, p in pages.items()}
     report.run_hash = extraction_run_hash(model_id, revisions)
 
+    # P7 task 7 (DEC-P7-1 finding 9): batch-local dedup. The SELECT below cannot
+    # see pending (unflushed) inserts under autoflush=False, so duplicates WITHIN
+    # one batch used to slip through — exposed the moment the DB-owned
+    # uq_candidate_edges_dedup constraint landed. Key mirrors that constraint.
+    seen_in_batch: set[tuple[str, str | None, str | None, str]] = set()
+
     for key, raw in sorted(raw_outputs.items()):
         page = pages[key]
         response = parse_extraction_output(raw)
@@ -199,6 +205,12 @@ def load_candidates(
             dst_id = _bind_version(session, proposal.dst_title, proposal.dst_language)
             if src_id is not None and src_id == dst_id:
                 dst_id = None  # never propose a self-edge binding; keep raw for the reviewer
+            dedup_key = (
+                str(proposal.edge_type),
+                proposal.src_title,
+                proposal.dst_title,
+                str(page["title"]),
+            )
             duplicate = session.scalars(
                 select(CandidateEdge).where(
                     CandidateEdge.edge_type == proposal.edge_type,
@@ -207,9 +219,10 @@ def load_candidates(
                     CandidateEdge.source_page == str(page["title"]),
                 )
             ).first()
-            if duplicate is not None:
+            if duplicate is not None or dedup_key in seen_in_batch:
                 report.proposals_duplicate += 1
                 continue
+            seen_in_batch.add(dedup_key)
             session.add(
                 CandidateEdge(
                     edge_type=proposal.edge_type,

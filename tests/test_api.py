@@ -149,6 +149,21 @@ class _StubDb:
         return None
 
 
+# P7 task 4 (DEC-P7-2): up-path chat requires a bearer token. The helper defaults
+# exercise the REAL authed path (token configured + header attached); the generous
+# limit keeps unrelated tests clear of 429s (dedicated limit tests set their own).
+TEST_TOKEN = "test-token"
+
+
+def _settings(**overrides: Any) -> Settings:
+    defaults: dict[str, Any] = {
+        "API_AUTH_TOKENS": TEST_TOKEN,
+        "CHAT_RATE_LIMIT": "1000/minute",
+    }
+    defaults.update(overrides)
+    return Settings(_env_file=None, **defaults)
+
+
 def _client(
     *,
     probe_status: EndpointStatus = UP,
@@ -156,6 +171,7 @@ def _client(
     store: InMemorySessionStore | None = None,
     session_factory: Any = None,
     settings: Settings | None = None,
+    authenticated: bool = True,
 ) -> TestClient:
     probes = {"n": 0}
 
@@ -164,15 +180,18 @@ def _client(
         return probe_status
 
     app = create_app(
-        settings or Settings(_env_file=None),
+        settings if settings is not None else _settings(),
         llm_client=_llm(llm_handler or _ScriptedModel([])),
         status_cache=StatusCache(probe),
         session_store=store or InMemorySessionStore(3600),
         session_factory=session_factory or (lambda: _StubDb()),
         make_executor=_executor,
         prompt_artifacts=ARTIFACTS,
+        rate_limit_storage="memory://",  # deterministic in tests, no Redis probe
     )
     client = TestClient(app, raise_server_exceptions=False)
+    if authenticated:
+        client.headers["Authorization"] = f"Bearer {TEST_TOKEN}"
     client.probes = probes  # type: ignore[attr-defined]
     return client
 
@@ -413,6 +432,7 @@ def _ui_client(tmp_path: Any, *, with_dist: bool) -> TestClient:
         make_executor=_executor,
         prompt_artifacts=ARTIFACTS,
         ui_dist=dist,
+        rate_limit_storage="memory://",
     )
     return TestClient(app, raise_server_exceptions=False)
 
@@ -465,24 +485,61 @@ def test_offline_payload_shape_is_the_spec_contract() -> None:
     assert with_video["evidence"]["demo_video"] == "https://example.com/demo.mp4"
 
 
-def test_unhandled_error_gets_envelope_not_traceback() -> None:
+def test_unhandled_error_gets_scrubbed_envelope_not_traceback(caplog: Any) -> None:
+    """P7 task 3 (DEC-P7-1 finding 10): the 500 envelope must never leak str(exc) —
+    generic message + request id to the client; full detail to the server log only."""
+    fake_dsn = "postgresql://svc_user:hunter2@db.internal:5432/sutradhar"
+
     def boom(db: Any) -> Any:
-        raise RuntimeError("wiring bug")
+        raise RuntimeError(f"could not connect: {fake_dsn}")
 
     app = create_app(
-        Settings(_env_file=None),
+        _settings(),
         llm_client=_llm(_ScriptedModel(list(TURN1))),
         status_cache=StatusCache(lambda: UP),
         session_store=InMemorySessionStore(3600),
         session_factory=lambda: _StubDb(),
         make_executor=boom,
         prompt_artifacts=ARTIFACTS,
+        rate_limit_storage="memory://",
     )
     client = TestClient(app, raise_server_exceptions=False)
-    resp = client.post("/api/chat", json={"message": "x"})
+    client.headers["Authorization"] = f"Bearer {TEST_TOKEN}"
+    with caplog.at_level("ERROR", logger="sutradhar.serving"):
+        resp = client.post("/api/chat", json={"message": "x"})
     assert resp.status_code == 500
     body = resp.json()
-    assert body["error"] == "internal error" and "RuntimeError" in body["detail"]
+    # Client sees the generic envelope only — no DSN, no exception text/class.
+    assert body == {"error": "internal_error", "request_id": body["request_id"]}
+    assert fake_dsn not in resp.text and "RuntimeError" not in resp.text
+    # The request id round-trips as a header so users can quote it.
+    assert resp.headers["X-Request-Id"] == body["request_id"]
+    # The server log carries the id AND the full exception (via logger.exception).
+    log_text = "\n".join(
+        r.getMessage() + (str(r.exc_info) if r.exc_info else "") for r in caplog.records
+    )
+    assert body["request_id"] in log_text
+    assert any(r.exc_info and fake_dsn in str(r.exc_info[1]) for r in caplog.records)
+
+
+def test_every_response_carries_x_request_id() -> None:
+    client = _client(probe_status=OFF)
+    resp = client.get("/api/status")
+    assert resp.headers.get("X-Request-Id")
+
+
+def test_health_probe_failures_expose_class_not_message() -> None:
+    """P7 task 3: /api/health degradation details name the exception class only —
+    a failing DB probe must not echo the DSN embedded in the exception message."""
+
+    def bad_db() -> Any:
+        raise ConnectionError("dial postgresql://svc_user:hunter2@db.internal:5432/x failed")
+
+    client = _client(session_factory=bad_db)
+    body = client.get("/api/health").json()
+    assert body["db"]["status"] == "off"
+    assert body["db"]["detail"] == "ConnectionError"
+    assert "hunter2" not in json.dumps(body)
 
 
 # --- /api/metrics (P5 task 10): chat-scoped counters + cost accounting ---

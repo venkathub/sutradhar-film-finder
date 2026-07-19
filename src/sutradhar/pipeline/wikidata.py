@@ -30,6 +30,7 @@ from sutradhar.graph.models import (
     EdgeType,
     SourceId,
     SourceRef,
+    merge_sources_jsonb,
     sources_to_jsonb,
 )
 from sutradhar.graph.schema import Conflict, Edge, Version, Work
@@ -303,9 +304,15 @@ def _upsert_work(
         session.add(existing)
         session.flush()
     else:
-        existing.original_language = seed_work.original_language
-        existing.wikidata_qid = anchor_qid
-        existing.sources = sources_to_jsonb(sources)
+        # P7 task 6 (DEC-P7-1 finding 7): provenance is append-only — merge, never
+        # replace — and a human-verified record's curated fields are not overwritten
+        # by a pipeline re-ingest.
+        existing.sources = merge_sources_jsonb(existing.sources, sources_to_jsonb(sources))
+        if not existing.human_verified:
+            existing.original_language = seed_work.original_language
+            existing.wikidata_qid = anchor_qid
+        elif existing.wikidata_qid is None and anchor_qid:
+            existing.wikidata_qid = anchor_qid  # filling a gap is a raise, not an overwrite
     return existing
 
 
@@ -360,14 +367,22 @@ def _upsert_version(
         session.add(existing)
         session.flush()
     else:
-        existing.tmdb_id = entity.tmdb_id if entity else existing.tmdb_id
-        existing.imdb_id = entity.imdb_id if entity else existing.imdb_id
-        existing.title = seed_version.title
-        existing.release_year = year
-        existing.country = seed_version.country
-        existing.is_original = seed_version.is_original
-        existing.confidence = confidence.value
-        existing.sources = sources_to_jsonb(sources)
+        # P7 task 6 (DEC-P7-1 finding 7): merge sources[] (append-only provenance);
+        # confidence is raise-only on re-ingest (a QID-less fallback match must not
+        # downgrade a HIGH record); human-verified records keep their curated values.
+        existing.sources = merge_sources_jsonb(existing.sources, sources_to_jsonb(sources))
+        if existing.human_verified:
+            existing.tmdb_id = existing.tmdb_id or (entity.tmdb_id if entity else None)
+            existing.imdb_id = existing.imdb_id or (entity.imdb_id if entity else None)
+        else:
+            existing.tmdb_id = entity.tmdb_id if entity else existing.tmdb_id
+            existing.imdb_id = entity.imdb_id if entity else existing.imdb_id
+            existing.title = seed_version.title
+            existing.release_year = year
+            existing.country = seed_version.country
+            existing.is_original = seed_version.is_original
+            if confidence is Confidence.HIGH:
+                existing.confidence = Confidence.HIGH.value
     return existing, year_conflict
 
 

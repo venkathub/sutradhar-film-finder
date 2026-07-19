@@ -72,7 +72,10 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   fault classes (hallucinated tool, hallucinated parameter, wrong-typed argument) caught and
   scored, proven by a committed 12-fixture dry-run whose only validity/faithfulness deductions
   are **exactly the two deliberately seeded faults** (schema-validity 35/36, faithfulness 17/18,
-  **0 hallucinated movies on the out-of-catalog gate**); Tier-1 CI recomputes every metric from
+  **0 hallucinated movies on the out-of-catalog gate** — a dry-run figure; the live P4 capture
+  later recorded **model-layer GS-02 = 1 ⚠ on both columns**, with the served-layer 0 held by
+  the deterministic output gate and the relative-CI gate amendment, DEC-P4-9); Tier-1 CI
+  recomputes every metric from
   the committed transcripts with the same scorer bytes on each PR and fails on any drift — or on
   a stale artifact after any prompt/schema re-pin.
 - Froze **LLM-as-judge governance the measured way**: a self-hosted cross-family judge
@@ -81,7 +84,13 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   ephemeral A100 session (~6 min, <$1, auto-destroyed)** — **Cohen's κ = 0.738** (coherence
   slice κ = 1.0), with the disagreement analysis motivating the design: the deterministic
   no-hallucinated-movie detector **gates**, the judge stays supplementary; RAGAS runs through
-  the same judge + self-served BGE-M3 with **zero external eval APIs**.
+  the same judge + self-served BGE-M3 with **zero external eval APIs**. **Label stability
+  BOUNDED (not closed) the single-annotator limitation honestly (P7, DEC-P7-6): a
+  protocol-first blind test-retest pass (ids re-minted, order reshuffled, 16-day gap)
+  measured intra-rater κ = 0.933 (29/30 agreement — the single flip was on a foil) and
+  κ = 1.000 on real items (n = 15) — an upper-bound proxy, never a human–human ceiling; a
+  genuine second annotator remains the open upgrade path**
+  (`evals/judge_validation/report_testretest.json`).
 - Stood up the **all-self-hosted observability stack** and kept it honest about cost and
   reality: MLflow (compose, DB-backed registry) + Langfuse v3 self-hosted on a ₹799/mo VPS via
   an **idempotent from-scratch bootstrap** (find-or-create API provisioning + check-then-act
@@ -178,12 +187,64 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   create→ready (vLLM + embed/rerank sidecar), 40 s exports→first cited answer, live UI latency
   p50 4252 ms (parity with the P5 benchmark), **$0.21 total for the 13.9-minute window**,
   teardown `nuke`-verified with the app auto-degrading to the offline state on camera.
-- **The capstone cost story: total on-demand GPU spend for the ENTIRE project ≈ $12–17**
-  (every window itemized: $0.34 validation, ~$1 extraction, $0.22 embedding, <$1 judge, ~$2
-  teacher, ~$4–8 train+benchmark + $1.5 resume, ~$3–4 serving benchmark, $0.38 across the two
-  P6 rehearsal/recording windows) **against $0.00 of standing infrastructure — now including
+- **The capstone cost story: total on-demand GPU spend for the ENTIRE project ≈ $19–21,
+  recomputed 2026-07-18/19 from the per-phase figures recorded in `docs/DECISIONS.md`** —
+  precision labelled per item, never an estimate passed off as a read (the earlier "≈ $12–17"
+  here was an unlabelled estimate; the itemization mixes **dashboard reads** ($0.34 P0,
+  $0.22 P2, $0.38 P6, $0.61 P7) with **recorded window approximations** (~$1 P1, <$1 P3,
+  ~$3–4 P5) and the **audited P4 reconstruction**: $0.34 P0 validation, ~$1 P1 extraction,
+  $0.22 P2 embedding, <$1 P3 judge,
+  **≈ $13–14 P4 audited** — teacher ≈ $7 incl. think-mode/disk failures + train/benchmark
+  window ≈ $6.2 incl. 8 recorded failure-mode attempts (DEC-P4-9) —, ~$3–4 P5 serving
+  benchmark, $0.38 across the two P6 rehearsal/recording windows, **$0.61 P7 capture window —
+  dashboard actual, ₹29.80 + ₹21.29, 2026-07-19**) **against $0.00 of standing
+  infrastructure — now including
   observability: the Langfuse VPS (₹799/mo) was deleted once its evidence was committed**
   (tracing no-ops by design; one command rebuilds it from scratch if ever wanted) —
   nothing neural runs 24/7; a $0 GitHub Pages site (benchmark report generated from the single
   source of truth, link-checked in CI) carries the standing evidence, and the demo video ends
   with the GPU being destroyed on camera.
+
+## P7 — Credibility hardening: the audit that makes the evidence self-consistent
+
+- **Audited the project's own claims against its recorded evidence and reconciled every
+  mismatch, dated** — pre-registered the 12-finding fix list (DEC-P7-1) *before* fixing:
+  the FT story now leads with the pre-registered **CUT** verdict everywhere (with the PR-commit
+  SHA chain proving the rule predated the numbers by 7h07m); every "sub-2-min resume" claim
+  replaced by the measured 545 s posture + demo choreography; the project GPU total recomputed from audited
+  per-phase actuals (**≈ $19–21**, retiring an estimate presented as an actual); every
+  "0 hallucinated movies" claim now carries the two-layer framing (model-layer GS-02 = 1 ⚠ /
+  served-layer 0 via the output gate) — and a claims-lint CI tripwire keeps every retired claim
+  retired.
+- **Secured the cost-bearing endpoint:** bearer auth (never silently open — unset tokens ⇒ 503)
+  + token-first/IP-fallback rate limiting (slowapi on the existing Redis, spoofable
+  X-Forwarded-For opt-in only) on the GPU-up chat path, with the degradation surface left
+  public; scrubbed 500 envelopes to `{error, request_id}` (fake-DSN regression-tested);
+  non-root + HEALTHCHECK'd images with `docker inspect` CI assertions.
+- **Closed three data-integrity gaps with DB-owned constraints** (person.tmdb_id, the version
+  upsert fallback key, the candidate-edge dedup 4-tuple — pre-audit aborts rather than deletes)
+  — and the new constraint **immediately exposed a real latent bug** (within-batch duplicate
+  proposals invisible to SELECT-based dedup under autoflush=False; 3 in the recorded artifact),
+  fixed with a batch-local seen-set; re-ingest provenance made append-only with human-verified
+  records immutable to the pipeline; NO_MATCH θ re-bound to its calibration artifact with a
+  staleness hard-fail (a rebuilt index can never silently reuse θ).
+- **Strengthened the weakest evidence honestly:** generation golden set 8 → 24 fixtures
+  (GS-07/GS-08 → 10 each, additive, schema-validated against frozen v0, unscored until the
+  approved capture window); injection suite 14 → 25 with obfuscation variants scored as the
+  AgentDojo BU/UA/ASR triple — homoglyph/zero-width variants now caught by a normalization
+  layer, while the encoding pair that evades is **committed as the documented bound** of the
+  static-suite claim; judge validation gains a protocol-first blind test-retest package
+  (**measured: intra-rater κ = 0.933 at n = 30; real-items-only κ = 1.000 at n = 15** — a
+  proxy that bounds, never a human–human ceiling); `docs/SCALE.md` designs the 50k-film path
+  (pg_trgm funnel, HNSW iterative scans, discovery-mode ingestion) with measured triggers.
+- **Executed the approved capture window and kept the accounting honest (2026-07-19,
+  DEC-P7-7 addendum):** two ephemeral A100 sessions — **₹51.09 ≈ $0.61 total, dashboard
+  actuals** (₹29.80 + ₹21.29, vs the $3–5 envelope), both nuke-verified; run
+  `20260719T063002Z-1bf3cd3e` scored the full 24-fixture slice with judge + RAGAS (code-mixed
+  intent **held at 0.400 with n doubled to 10**; coherence **0.700 at n = 10**; Langfuse Cloud
+  trace committed) and the widened 25-fixture injection suite ran live (**ASR 0.000 / BU 1.000
+  / UA 0.800 defenses-ON**) — new dated BENCHMARKS rows beside byte-untouched frozen ones; the
+  window's own incidents (killed hold, leaked script slots), the RAGAS-faithfulness coverage
+  gap (8/24 scored), and the MLflow-topology deviation (durable local sqlite instead of the
+  snap-blocked compose server — run `846967f0…` + screenshot + exported Langfuse trace all
+  committed) each recorded in the DEC-P7-7 addendum rather than papered over.

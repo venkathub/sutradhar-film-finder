@@ -113,6 +113,14 @@ jobs:
           curl -sf -X POST localhost:8080/api/chat \
             -H 'content-type: application/json' \
             -d '{"message":"papanasam?"}' | grep -q '"status": *"off"\|"status":"off"'
+      - name: Image hardening assertions (P7 task 5 — non-root USER + HEALTHCHECK)
+        run: |
+          image_id=$(docker compose -f infra/docker-compose.yml images -q app)
+          test -n "$image_id"
+          user=$(docker inspect --format '{{.Config.User}}' "$image_id")
+          echo "image user: ${user:-<empty>}"
+          test -n "$user" && test "$user" != "root" && test "$user" != "0"
+          docker inspect --format '{{.Config.Healthcheck.Test}}' "$image_id" | grep -q "api/health"
       - name: Tear down
         if: always()
         run: make demo-down

@@ -40,14 +40,21 @@ def _generation_slice(fixtures: dict[str, GoldenFixture]) -> list[GoldenFixture]
 
 
 def test_confirmed_fixture_counts(fixtures: dict[str, GoldenFixture]) -> None:
-    """Q1 confirmed sizing: GS-07 -> 5, GS-08 -> 3, GS-02-conversational -> 4."""
-    assert sum(1 for f in fixtures if f.startswith("GS-07")) == 5
-    assert sum(1 for f in fixtures if f.startswith("GS-08")) == 3
+    """Sizing per DEC-P7-4 (P7 task 15): GS-07 -> 10, GS-08 -> 10 (P3's Q1-confirmed
+    5/3 expanded additively; the 12 pending-capture ids are unscored until the
+    DEC-P7-7 window), GS-02-conversational -> 4 (unchanged)."""
+    from sutradhar.evals.generation_run import PENDING_CAPTURE_FIXTURES
+
+    assert sum(1 for f in fixtures if f.startswith("GS-07")) == 10
+    assert sum(1 for f in fixtures if f.startswith("GS-08")) == 10
     conversational = [f for f in fixtures if f.startswith("GS-02") and f >= "GS-02d"]
     assert len(conversational) == 4
     # The retrieval-shaped GS-02 negatives are untouched (P2 artifact must keep validating).
     assert {"GS-02a", "GS-02b", "GS-02c"} <= set(fixtures)
-    assert len(_generation_slice(fixtures)) == 12
+    assert len(_generation_slice(fixtures)) == 24
+    # Pending-capture set is exactly the P7 additions and every id exists.
+    assert PENDING_CAPTURE_FIXTURES <= {f.id for f in _generation_slice(fixtures)}
+    assert len(PENDING_CAPTURE_FIXTURES) == 12
 
 
 def test_generation_slice_fully_labelled(fixtures: dict[str, GoldenFixture]) -> None:

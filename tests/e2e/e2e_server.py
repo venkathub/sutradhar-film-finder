@@ -255,7 +255,9 @@ def seed(session: Session) -> None:
 def main() -> None:
     mode = os.environ.get("E2E_MODE", "up")
     port = int(os.environ.get("E2E_PORT", "8765"))
-    settings = Settings(_env_file=None)
+    # CHAT_AUTH=disabled: the explicit local/e2e opt-out (DEC-P7-2) — the Playwright
+    # UI has no token; production keeps auth required. Generous limit for UI runs.
+    settings = Settings(_env_file=None, CHAT_AUTH="disabled", CHAT_RATE_LIMIT="1000/minute")
 
     if mode == "off":
         app = create_app(

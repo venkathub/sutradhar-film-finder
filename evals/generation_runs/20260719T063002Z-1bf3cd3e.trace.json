@@ -1,0 +1,465 @@
+{
+  "id": "434e54340c7eeb74c55cb440ba56a2f4",
+  "projectId": "cmrrd00d80zioad0dtypbluvn",
+  "name": "fixture:GS-08j",
+  "timestamp": "2026-07-19T06:29:59.064Z",
+  "environment": "default",
+  "tags": [],
+  "bookmarked": false,
+  "release": null,
+  "version": null,
+  "userId": null,
+  "sessionId": null,
+  "public": false,
+  "input": null,
+  "output": {
+    "answers": 3,
+    "calls": 1
+  },
+  "metadata": {
+    "fixture_id": "GS-08j",
+    "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+    "resourceAttributes": {
+      "telemetry.sdk.language": "python",
+      "telemetry.sdk.name": "opentelemetry",
+      "telemetry.sdk.version": "1.43.0",
+      "service.instance.id": "15715a74-068e-4099-b343-bb26cf80e0dd",
+      "service.name": "unknown_service"
+    },
+    "scope": {
+      "name": "langfuse-sdk",
+      "version": "4.13.0",
+      "attributes": {
+        "public_key": "pk-lf-d2c31a83-f0d9-4edd-81a7-66706fe3754d"
+      }
+    }
+  },
+  "createdAt": "2026-07-19T06:30:03.000Z",
+  "updatedAt": "2026-07-19T06:30:03.171Z",
+  "externalId": null,
+  "scores": [],
+  "latency": 3.866,
+  "observations": [
+    {
+      "id": "144d32c8d77a10e6",
+      "traceId": "434e54340c7eeb74c55cb440ba56a2f4",
+      "startTime": "2026-07-19T06:29:59.064Z",
+      "endTime": "2026-07-19T06:30:02.930Z",
+      "projectId": "cmrrd00d80zioad0dtypbluvn",
+      "parentObservationId": null,
+      "type": "AGENT",
+      "environment": "default",
+      "name": "fixture:GS-08j",
+      "level": "DEFAULT",
+      "statusMessage": null,
+      "version": null,
+      "createdAt": "2026-07-19T06:30:03.104Z",
+      "updatedAt": "2026-07-19T06:30:03.104Z",
+      "input": null,
+      "output": {
+        "answers": 3,
+        "calls": 1
+      },
+      "metadata": {
+        "fixture_id": "GS-08j",
+        "prompt_hash": "78215ccc26ff2dcb641e69257510f474ddd1f204056bae46bec9bbd81907ff7b",
+        "resourceAttributes": {
+          "telemetry.sdk.language": "python",
+          "telemetry.sdk.name": "opentelemetry",
+          "telemetry.sdk.version": "1.43.0",
+          "service.instance.id": "15715a74-068e-4099-b343-bb26cf80e0dd",
+          "service.name": "unknown_service"
+        },
+        "scope": {
+          "name": "langfuse-sdk",
+          "version": "4.13.0",
+          "attributes": {
+            "public_key": "pk-lf-d2c31a83-f0d9-4edd-81a7-66706fe3754d"
+          }
+        }
+      },
+      "model": null,
+      "modelParameters": {},
+      "completionStartTime": null,
+      "promptId": null,
+      "promptName": null,
+      "promptVersion": null,
+      "latency": 3.866,
+      "timeToFirstToken": null,
+      "usageDetails": {},
+      "costDetails": {},
+      "usagePricingTierId": null,
+      "usagePricingTierName": null,
+      "inputPrice": 0,
+      "outputPrice": 0,
+      "totalPrice": 0,
+      "calculatedInputCost": null,
+      "calculatedOutputCost": null,
+      "calculatedTotalCost": 0,
+      "unit": "TOKENS",
+      "promptTokens": 0,
+      "completionTokens": 0,
+      "totalTokens": 0,
+      "modelId": null,
+      "usage": {
+        "unit": "TOKENS",
+        "input": 0,
+        "output": 0,
+        "total": 0
+      }
+    },
+    {
+      "id": "89aa1b9fabadee99",
+      "traceId": "434e54340c7eeb74c55cb440ba56a2f4",
+      "startTime": "2026-07-19T06:30:01.590Z",
+      "endTime": "2026-07-19T06:30:02.930Z",
+      "projectId": "cmrrd00d80zioad0dtypbluvn",
+      "parentObservationId": "144d32c8d77a10e6",
+      "type": "GENERATION",
+      "environment": "default",
+      "name": "chat",
+      "level": "DEFAULT",
+      "statusMessage": null,
+      "version": null,
+      "createdAt": "2026-07-19T06:30:03.104Z",
+      "updatedAt": "2026-07-19T06:30:03.104Z",
+      "input": {
+        "turn": 2,
+        "round": 0,
+        "messages": 8
+      },
+      "output": {
+        "status": "up",
+        "finish_reason": "stop",
+        "tool_calls": 0
+      },
+      "metadata": {
+        "resourceAttributes": {
+          "telemetry.sdk.language": "python",
+          "telemetry.sdk.name": "opentelemetry",
+          "telemetry.sdk.version": "1.43.0",
+          "service.instance.id": "15715a74-068e-4099-b343-bb26cf80e0dd",
+          "service.name": "unknown_service"
+        },
+        "scope": {
+          "name": "langfuse-sdk",
+          "version": "4.13.0",
+          "attributes": {
+            "public_key": "pk-lf-d2c31a83-f0d9-4edd-81a7-66706fe3754d"
+          }
+        }
+      },
+      "model": null,
+      "modelParameters": {},
+      "completionStartTime": null,
+      "promptId": null,
+      "promptName": null,
+      "promptVersion": null,
+      "latency": 1.34,
+      "timeToFirstToken": null,
+      "usageDetails": {},
+      "costDetails": {},
+      "usagePricingTierId": null,
+      "usagePricingTierName": null,
+      "inputPrice": 0,
+      "outputPrice": 0,
+      "totalPrice": 0,
+      "calculatedInputCost": null,
+      "calculatedOutputCost": null,
+      "calculatedTotalCost": 0,
+      "unit": "TOKENS",
+      "promptTokens": 0,
+      "completionTokens": 0,
+      "totalTokens": 0,
+      "modelId": null,
+      "usage": {
+        "unit": "TOKENS",
+        "input": 0,
+        "output": 0,
+        "total": 0
+      }
+    },
+    {
+      "id": "9175d0e248135af5",
+      "traceId": "434e54340c7eeb74c55cb440ba56a2f4",
+      "startTime": "2026-07-19T06:29:59.467Z",
+      "endTime": "2026-07-19T06:30:00.975Z",
+      "projectId": "cmrrd00d80zioad0dtypbluvn",
+      "parentObservationId": "144d32c8d77a10e6",
+      "type": "GENERATION",
+      "environment": "default",
+      "name": "chat",
+      "level": "DEFAULT",
+      "statusMessage": null,
+      "version": null,
+      "createdAt": "2026-07-19T06:30:02.041Z",
+      "updatedAt": "2026-07-19T06:30:02.042Z",
+      "input": {
+        "turn": 0,
+        "round": 1,
+        "messages": 4
+      },
+      "output": {
+        "status": "up",
+        "finish_reason": "stop",
+        "tool_calls": 0
+      },
+      "metadata": {
+        "resourceAttributes": {
+          "telemetry.sdk.language": "python",
+          "telemetry.sdk.name": "opentelemetry",
+          "telemetry.sdk.version": "1.43.0",
+          "service.instance.id": "15715a74-068e-4099-b343-bb26cf80e0dd",
+          "service.name": "unknown_service"
+        },
+        "scope": {
+          "name": "langfuse-sdk",
+          "version": "4.13.0",
+          "attributes": {
+            "public_key": "pk-lf-d2c31a83-f0d9-4edd-81a7-66706fe3754d"
+          }
+        }
+      },
+      "model": null,
+      "modelParameters": {},
+      "completionStartTime": null,
+      "promptId": null,
+      "promptName": null,
+      "promptVersion": null,
+      "latency": 1.508,
+      "timeToFirstToken": null,
+      "usageDetails": {},
+      "costDetails": {},
+      "usagePricingTierId": null,
+      "usagePricingTierName": null,
+      "inputPrice": 0,
+      "outputPrice": 0,
+      "totalPrice": 0,
+      "calculatedInputCost": null,
+      "calculatedOutputCost": null,
+      "calculatedTotalCost": 0,
+      "unit": "TOKENS",
+      "promptTokens": 0,
+      "completionTokens": 0,
+      "totalTokens": 0,
+      "modelId": null,
+      "usage": {
+        "unit": "TOKENS",
+        "input": 0,
+        "output": 0,
+        "total": 0
+      }
+    },
+    {
+      "id": "d1e31b368bb6cd07",
+      "traceId": "434e54340c7eeb74c55cb440ba56a2f4",
+      "startTime": "2026-07-19T06:30:00.976Z",
+      "endTime": "2026-07-19T06:30:01.590Z",
+      "projectId": "cmrrd00d80zioad0dtypbluvn",
+      "parentObservationId": "144d32c8d77a10e6",
+      "type": "GENERATION",
+      "environment": "default",
+      "name": "chat",
+      "level": "DEFAULT",
+      "statusMessage": null,
+      "version": null,
+      "createdAt": "2026-07-19T06:30:02.041Z",
+      "updatedAt": "2026-07-19T06:30:02.042Z",
+      "input": {
+        "turn": 1,
+        "round": 0,
+        "messages": 6
+      },
+      "output": {
+        "status": "up",
+        "finish_reason": "stop",
+        "tool_calls": 0
+      },
+      "metadata": {
+        "resourceAttributes": {
+          "telemetry.sdk.language": "python",
+          "telemetry.sdk.name": "opentelemetry",
+          "telemetry.sdk.version": "1.43.0",
+          "service.instance.id": "15715a74-068e-4099-b343-bb26cf80e0dd",
+          "service.name": "unknown_service"
+        },
+        "scope": {
+          "name": "langfuse-sdk",
+          "version": "4.13.0",
+          "attributes": {
+            "public_key": "pk-lf-d2c31a83-f0d9-4edd-81a7-66706fe3754d"
+          }
+        }
+      },
+      "model": null,
+      "modelParameters": {},
+      "completionStartTime": null,
+      "promptId": null,
+      "promptName": null,
+      "promptVersion": null,
+      "latency": 0.614,
+      "timeToFirstToken": null,
+      "usageDetails": {},
+      "costDetails": {},
+      "usagePricingTierId": null,
+      "usagePricingTierName": null,
+      "inputPrice": 0,
+      "outputPrice": 0,
+      "totalPrice": 0,
+      "calculatedInputCost": null,
+      "calculatedOutputCost": null,
+      "calculatedTotalCost": 0,
+      "unit": "TOKENS",
+      "promptTokens": 0,
+      "completionTokens": 0,
+      "totalTokens": 0,
+      "modelId": null,
+      "usage": {
+        "unit": "TOKENS",
+        "input": 0,
+        "output": 0,
+        "total": 0
+      }
+    },
+    {
+      "id": "d5b1c1715acc6dba",
+      "traceId": "434e54340c7eeb74c55cb440ba56a2f4",
+      "startTime": "2026-07-19T06:29:59.065Z",
+      "endTime": "2026-07-19T06:29:59.462Z",
+      "projectId": "cmrrd00d80zioad0dtypbluvn",
+      "parentObservationId": "144d32c8d77a10e6",
+      "type": "GENERATION",
+      "environment": "default",
+      "name": "chat",
+      "level": "DEFAULT",
+      "statusMessage": null,
+      "version": null,
+      "createdAt": "2026-07-19T06:30:02.041Z",
+      "updatedAt": "2026-07-19T06:30:02.042Z",
+      "input": {
+        "turn": 0,
+        "round": 0,
+        "messages": 2
+      },
+      "output": {
+        "status": "up",
+        "finish_reason": "tool_calls",
+        "tool_calls": 1
+      },
+      "metadata": {
+        "resourceAttributes": {
+          "telemetry.sdk.language": "python",
+          "telemetry.sdk.name": "opentelemetry",
+          "telemetry.sdk.version": "1.43.0",
+          "service.instance.id": "15715a74-068e-4099-b343-bb26cf80e0dd",
+          "service.name": "unknown_service"
+        },
+        "scope": {
+          "name": "langfuse-sdk",
+          "version": "4.13.0",
+          "attributes": {
+            "public_key": "pk-lf-d2c31a83-f0d9-4edd-81a7-66706fe3754d"
+          }
+        }
+      },
+      "model": null,
+      "modelParameters": {},
+      "completionStartTime": null,
+      "promptId": null,
+      "promptName": null,
+      "promptVersion": null,
+      "latency": 0.397,
+      "timeToFirstToken": null,
+      "usageDetails": {},
+      "costDetails": {},
+      "usagePricingTierId": null,
+      "usagePricingTierName": null,
+      "inputPrice": 0,
+      "outputPrice": 0,
+      "totalPrice": 0,
+      "calculatedInputCost": null,
+      "calculatedOutputCost": null,
+      "calculatedTotalCost": 0,
+      "unit": "TOKENS",
+      "promptTokens": 0,
+      "completionTokens": 0,
+      "totalTokens": 0,
+      "modelId": null,
+      "usage": {
+        "unit": "TOKENS",
+        "input": 0,
+        "output": 0,
+        "total": 0
+      }
+    },
+    {
+      "id": "926a72250a113029",
+      "traceId": "434e54340c7eeb74c55cb440ba56a2f4",
+      "startTime": "2026-07-19T06:29:59.463Z",
+      "endTime": "2026-07-19T06:29:59.467Z",
+      "projectId": "cmrrd00d80zioad0dtypbluvn",
+      "parentObservationId": "144d32c8d77a10e6",
+      "type": "TOOL",
+      "environment": "default",
+      "name": "tool:resolve_title",
+      "level": "DEFAULT",
+      "statusMessage": null,
+      "version": null,
+      "createdAt": "2026-07-19T06:30:02.041Z",
+      "updatedAt": "2026-07-19T06:30:02.042Z",
+      "input": {
+        "title": "Drishyam"
+      },
+      "output": {
+        "ok": true
+      },
+      "metadata": {
+        "resourceAttributes": {
+          "telemetry.sdk.language": "python",
+          "telemetry.sdk.name": "opentelemetry",
+          "telemetry.sdk.version": "1.43.0",
+          "service.instance.id": "15715a74-068e-4099-b343-bb26cf80e0dd",
+          "service.name": "unknown_service"
+        },
+        "scope": {
+          "name": "langfuse-sdk",
+          "version": "4.13.0",
+          "attributes": {
+            "public_key": "pk-lf-d2c31a83-f0d9-4edd-81a7-66706fe3754d"
+          }
+        }
+      },
+      "model": null,
+      "modelParameters": {},
+      "completionStartTime": null,
+      "promptId": null,
+      "promptName": null,
+      "promptVersion": null,
+      "latency": 0.004,
+      "timeToFirstToken": null,
+      "usageDetails": {},
+      "costDetails": {},
+      "usagePricingTierId": null,
+      "usagePricingTierName": null,
+      "inputPrice": 0,
+      "outputPrice": 0,
+      "totalPrice": 0,
+      "calculatedInputCost": null,
+      "calculatedOutputCost": null,
+      "calculatedTotalCost": 0,
+      "unit": "TOKENS",
+      "promptTokens": 0,
+      "completionTokens": 0,
+      "totalTokens": 0,
+      "modelId": null,
+      "usage": {
+        "unit": "TOKENS",
+        "input": 0,
+        "output": 0,
+        "total": 0
+      }
+    }
+  ],
+  "htmlPath": "/project/cmrrd00d80zioad0dtypbluvn/traces/434e54340c7eeb74c55cb440ba56a2f4",
+  "totalCost": 0
+}

@@ -59,6 +59,9 @@ mlflow-backfill: ## P3: log the committed P2 retrieval run (Table 1) to MLflow (
 mlflow-log-serving: ## P5: log the committed serving-benchmark window to MLflow (needs mlflow-up)
 	uv run python -m sutradhar.obs.mlflow_log log-serving
 
+mlflow-backfill-p7: ## P7: backfill the DEC-P7-7 capture run to MLflow (needs mlflow-up)
+	uv run python -m sutradhar.obs.mlflow_log backfill-generation 20260719T063002Z-1bf3cd3e
+
 langfuse-up: ## P3: idempotent from-scratch Langfuse bootstrap on AIC Cloud (DEC-P3-7; needs AICCLOUD_API_KEY)
 	uv run python infra/langfuse/provision.py
 

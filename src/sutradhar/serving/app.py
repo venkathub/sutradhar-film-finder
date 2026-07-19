@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import json
 import logging
+import uuid
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -35,6 +36,8 @@ from typing import Any
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy import text as sqltext
 from sqlalchemy.orm import Session
 
@@ -43,6 +46,7 @@ from sutradhar.evals.driver import ToolExecutor
 from sutradhar.evals.prompts import PromptArtifacts, load_serving_prompt_artifacts
 from sutradhar.obs.cost import MetricsAccumulator, request_cost
 from sutradhar.obs.tracing import Tracer
+from sutradhar.rag.calibration import assert_calibration_matches
 from sutradhar.rag.providers import (
     HttpEmbeddings,
     HttpReranker,
@@ -63,6 +67,7 @@ from sutradhar.serving.executor import build_live_executor
 from sutradhar.serving.llm_client import LLMClient
 from sutradhar.serving.orchestrator import Orchestrator
 from sutradhar.serving.schemas import ChatRequest, TurnAborted
+from sutradhar.serving.security import authorize_chat, make_rate_limit_key
 from sutradhar.serving.sessions import (
     InMemorySessionStore,
     RedisSessionStore,
@@ -88,6 +93,42 @@ class _OfflineRetriever:
             "EMBED_BASE_URL/RERANK_BASE_URL/RETRIEVAL_RUN not configured — "
             "live plot retrieval needs the on-demand GPU sidecar (make gpu-serve)",
         )
+
+
+def _limiter_storage(settings: Settings) -> str:
+    """Redis-backed limits when Redis is reachable, in-memory otherwise.
+
+    Mirrors the DEC-P5-2 session-store posture: degrade, never crash. Memory
+    storage is per-process — fine for the single-worker demo topology (DEC-P6-5);
+    the compose stack has Redis and gets shared counters automatically.
+    """
+    try:
+        import redis
+
+        redis.Redis.from_url(settings.redis_url, socket_connect_timeout=0.5).ping()
+        return settings.redis_url
+    except Exception:  # noqa: BLE001 — any Redis failure degrades, never crashes
+        logger.warning("redis unreachable for rate limiting — using in-memory limits")
+        return "memory://"
+
+
+def _rate_limited_handler(request: Request, exc: Exception) -> JSONResponse:
+    """429 in the standard envelope (P7 task 4); detail carries the limit only."""
+    detail = getattr(exc, "detail", "rate limit exceeded")
+    # Retry-After from the tripped limit's actual window (PR #9 review), 60 s fallback.
+    try:
+        retry_after = int(exc.limit.limit.get_expiry())  # type: ignore[attr-defined]
+    except Exception:  # noqa: BLE001 — header hint only, never worth failing a response
+        retry_after = 60
+    return JSONResponse(
+        {
+            "error": "rate_limited",
+            "detail": f"rate limit exceeded: {detail}",
+            "request_id": getattr(request.state, "request_id", ""),
+        },
+        status_code=429,
+        headers={"Retry-After": str(retry_after)},
+    )
 
 
 def _default_session_store(settings: Settings) -> SessionStore:
@@ -116,12 +157,21 @@ def _winner_retrieval_config(settings: Settings, runs_dir: Path) -> RetrievalCon
     artifact = json.loads(path.read_text(encoding="utf-8"))
     winner = artifact.get("winner")
     record = artifact["records"][winner]
-    return RetrievalConfig(
+    config = RetrievalConfig(
         chunk_config=str(record["retrieval_config"]["chunk_config"]),
         embed_model=settings.embed_model,
         index_version=run_id,
         rerank_depth=int(record["retrieval_config"]["rerank_depth"]),
     )
+    # P7 task 8 (DEC-P7-3): θ staleness gate — abstention goes live ONLY against
+    # the exact stack it was calibrated on; any drift hard-fails at wiring time.
+    assert_calibration_matches(
+        embed_model=config.embed_model,
+        index_version=config.index_version,
+        chunk_config=config.chunk_config,
+        rerank_depth=config.rerank_depth,
+    )
+    return config
 
 
 def _default_make_executor(settings: Settings) -> Callable[[Session], ToolExecutor]:
@@ -175,6 +225,7 @@ def create_app(
     runs_dir: Path | None = None,
     metrics: MetricsAccumulator | None = None,
     ui_dist: Path | None = None,
+    rate_limit_storage: str | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     llm = llm_client or LLMClient(settings)
@@ -196,28 +247,57 @@ def create_app(
     app.state.status_cache = cache
     app.state.metrics = counters
 
+    # DEC-P7-2: rate limiting on the paid path — token-first key, IP fallback.
+    limiter = Limiter(
+        key_func=make_rate_limit_key(settings),
+        storage_uri=rate_limit_storage or _limiter_storage(settings),
+    )
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limited_handler)
+    if settings.chat_auth == "disabled":
+        logger.warning("CHAT_AUTH=disabled — /api/chat auth is OFF (local/e2e only)")
+
     @app.middleware("http")
     async def trace_and_envelope(request: Request, call_next: Any) -> Response:
-        """One request span (the DEC-P3-6 seam) + a structured error envelope."""
+        """One request span (the DEC-P3-6 seam) + a scrubbed error envelope.
+
+        P7 task 3 (DEC-P7-1 finding 10): the client sees a generic message plus a
+        request id only; ``str(exc)`` (which can carry DSNs, paths, internal state)
+        goes to the server log, keyed by the same id. The id is echoed on every
+        response as ``X-Request-Id`` so users can quote it and operators can grep
+        logs / Langfuse traces for the exact request.
+        """
+        request_id = uuid.uuid4().hex
+        request.state.request_id = request_id
         with trace.span(
             "request",
             kind="agent",
             input={"method": request.method, "path": request.url.path},
+            metadata={"request_id": request_id},
         ) as span:
             request.state.trace_span = span  # routes attach cost metadata here
             try:
                 response: Response = await call_next(request)
             except Exception as exc:  # noqa: BLE001 — envelope, never a bare traceback
-                logger.exception("unhandled error on %s", request.url.path)
-                span.update(output={"error": type(exc).__name__}, level="ERROR")
+                # Full detail server-side ONLY (logger.exception includes the traceback).
+                logger.exception(
+                    "unhandled error on %s [request_id=%s]", request.url.path, request_id
+                )
+                span.update(
+                    output={"error": type(exc).__name__, "request_id": request_id},
+                    level="ERROR",
+                )
                 return JSONResponse(
-                    {"error": "internal error", "detail": f"{type(exc).__name__}: {exc}"[:300]},
+                    {"error": "internal_error", "request_id": request_id},
                     status_code=500,
+                    headers={"X-Request-Id": request_id},
                 )
             span.update(output={"status_code": response.status_code})
+            response.headers["X-Request-Id"] = request_id
             return response
 
     @app.post("/api/chat")
+    @limiter.limit(settings.chat_rate_limit)
     def chat(payload: ChatRequest, request: Request) -> JSONResponse:
         status = cache.current()
         if status.status != "up":
@@ -225,6 +305,12 @@ def create_app(
             return JSONResponse(
                 _offline(payload.conversation_id, f"{OFFLINE_DETAIL} (endpoint {status.status})")
             )
+        # Auth gates the GPU-up path only (DEC-P7-2): degradation stays open,
+        # the endpoint that burns GPU seconds never is.
+        denied = authorize_chat(request, settings)
+        if denied is not None:
+            counters.record("denied")
+            return denied
         try:
             db = get_db()
             try:
@@ -358,7 +444,10 @@ def _db_health(get_db: Callable[[], Session]) -> dict[str, Any]:
             db.close()
         return {"status": "up"}
     except Exception as exc:  # noqa: BLE001 — health reports, never raises
-        return {"status": "off", "detail": f"{type(exc).__name__}: {exc}"[:200]}
+        # P7 task 3: exception *class* only — str(exc) can embed the DSN. Full
+        # detail goes to the server log.
+        logger.warning("db health probe failed: %s: %s", type(exc).__name__, exc)
+        return {"status": "off", "detail": type(exc).__name__}
 
 
 def _redis_health(settings: Settings) -> dict[str, Any]:
@@ -369,7 +458,8 @@ def _redis_health(settings: Settings) -> dict[str, Any]:
         client.ping()
         return {"status": "up"}
     except Exception as exc:  # noqa: BLE001
-        return {"status": "off", "detail": f"{type(exc).__name__}: {exc}"[:200]}
+        logger.warning("redis health probe failed: %s: %s", type(exc).__name__, exc)
+        return {"status": "off", "detail": type(exc).__name__}
 
 
 def _provider_health(name: str, base_url: str | None, model: str) -> dict[str, Any]:

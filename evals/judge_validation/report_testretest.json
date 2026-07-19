@@ -1,0 +1,22 @@
+{
+  "framing": "INTRA-RATER (test-retest) reliability: the same human relabelled blind (ids re-minted, order reshuffled, >= 14-day gap). An upper-bound PROXY for label stability — NOT a human-human inter-rater ceiling (DEC-P7-6); a genuine second human would add that ceiling additively.",
+  "n_items": 30,
+  "percent_agreement": 0.9666666666666667,
+  "intra_rater_kappa": 0.9327354260089686,
+  "intra_rater_kappa_real_items_only": 1.0,
+  "per_kind": {
+    "coherence": {
+      "n": 6.0,
+      "percent_agreement": 1.0,
+      "cohens_kappa": 1.0
+    },
+    "faithfulness": {
+      "n": 24.0,
+      "percent_agreement": 0.9583333333333334,
+      "cohens_kappa": 0.9166666666666667
+    }
+  },
+  "second_pass_vs_judge_kappa": 0.669603524229075,
+  "first_pass_file": "worksheet.yaml",
+  "protocol_file": "PROTOCOL.md"
+}

@@ -250,3 +250,169 @@ def save_report(report: AgreementReport, directory: Path = VALIDATION_DIR) -> Pa
     path = directory / REPORT_FILE
     path.write_text(report.model_dump_json(indent=2) + "\n", "utf-8")
     return path
+
+
+# --- P7 task 17 (DEC-P7-6): blind test-retest second pass ---------------------------
+#
+# The ROADMAP asked for a second annotator (human-human kappa ceiling); the available
+# second pass is the SAME human who labelled the original worksheet, so it is measured
+# and reported as INTRA-RATER (test-retest) reliability -- an upper-bound *proxy*,
+# explicitly never presented as a human-human ceiling. Protocol committed BEFORE
+# labelling: evals/judge_validation/PROTOCOL.md. The frozen report.json is never
+# modified; the new report is additive (report_testretest.json), and the judge leg
+# is computed OFFLINE from the frozen report's recorded judge_binary verdicts.
+
+BLIND_WORKSHEET_FILE = "worksheet.blind.yaml"
+BLIND_KEY_FILE = "worksheet.blind.key.json"
+TESTRETEST_REPORT_FILE = "report_testretest.json"
+BLIND_SHUFFLE_SEED = 20260718  # deterministic, recorded — the blinding is reproducible
+
+
+class BlindItem(BaseModel):
+    """A worksheet item stripped for blind relabelling: no label, no foil-revealing id,
+    no fixture pairing. Only the content the rater needs."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    blind_id: str
+    kind: Literal["coherence", "faithfulness"]
+    conversation: list[dict[str, str]] | None = None
+    answer: str | None = None
+    allowed_titles: list[str] | None = None
+    human_label: int | None = None  # the rater fills this in the SECOND pass
+
+
+def build_blind_worksheet(
+    items: list[WorksheetItem], seed: int = BLIND_SHUFFLE_SEED
+) -> tuple[list[BlindItem], dict[str, str]]:
+    """Blind copy + id map. Original ids embed foil provenance (``…-foil``) and fixture
+    pairing, so blind ids are re-minted after a seeded shuffle; the map lives in a
+    separate key file the rater never opens."""
+    import random
+
+    shuffled = list(items)
+    random.Random(seed).shuffle(shuffled)
+    blind: list[BlindItem] = []
+    id_map: dict[str, str] = {}
+    for index, item in enumerate(shuffled, start=1):
+        blind_id = f"blind-{index:03d}"
+        id_map[blind_id] = item.item_id
+        blind.append(
+            BlindItem(
+                blind_id=blind_id,
+                kind=item.kind,
+                conversation=item.conversation,
+                answer=item.answer,
+                allowed_titles=item.allowed_titles,
+                human_label=None,
+            )
+        )
+    return blind, id_map
+
+
+def save_blind_worksheet(
+    blind: list[BlindItem], id_map: dict[str, str], directory: Path = VALIDATION_DIR
+) -> Path:
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / BLIND_WORKSHEET_FILE
+    payload = {
+        "instructions": (
+            "SECOND PASS (blind test-retest, DEC-P7-6). Read PROTOCOL.md FIRST. "
+            "Label EVERY item independently: human_label = 1 when the conversation is "
+            "coherent / the answer is faithful to its allowed_titles, else 0. Do NOT "
+            "open worksheet.yaml, worksheet.key.json, worksheet.blind.key.json, or "
+            "report*.json until every label is filled."
+        ),
+        "items": [item.model_dump(exclude_none=True) for item in blind],
+    }
+    path.write_text(yaml.safe_dump(payload, sort_keys=False, allow_unicode=True), "utf-8")
+    (directory / BLIND_KEY_FILE).write_text(json.dumps(id_map, indent=2) + "\n", "utf-8")
+    return path
+
+
+def load_blind_worksheet(directory: Path = VALIDATION_DIR) -> list[BlindItem]:
+    payload = yaml.safe_load((directory / BLIND_WORKSHEET_FILE).read_text("utf-8"))
+    return [BlindItem.model_validate(raw) for raw in payload["items"]]
+
+
+class TestRetestReport(BaseModel):
+    """Additive agreement report for the blind second pass. FRAMING IS PART OF THE
+    ARTIFACT: intra-rater kappa is an upper-bound proxy, not a human-human ceiling."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    framing: str
+    n_items: int
+    percent_agreement: float
+    intra_rater_kappa: float
+    intra_rater_kappa_real_items_only: float  # foils excluded
+    per_kind: dict[str, dict[str, float]]
+    second_pass_vs_judge_kappa: float | None  # offline, from the FROZEN report.json
+    first_pass_file: str
+    protocol_file: str
+
+
+def compute_testretest_report(
+    original: list[WorksheetItem],
+    blind: list[BlindItem],
+    id_map: dict[str, str],
+    frozen_judge_binaries: dict[str, int] | None = None,
+) -> TestRetestReport:
+    """Pure computation — reads nothing, writes nothing, mutates nothing frozen."""
+    unlabelled = [b.blind_id for b in blind if b.human_label is None]
+    if unlabelled:
+        raise ValueError(f"blind worksheet has unlabelled items: {unlabelled}")
+    by_original_id = {item.item_id: item for item in original}
+    pairs: list[tuple[str, int, int]] = []  # (original_id, first, second)
+    for blind_item in blind:
+        original_id = id_map[blind_item.blind_id]
+        first = by_original_id[original_id].human_label
+        if first is None:
+            raise ValueError(f"original worksheet item {original_id} is unlabelled")
+        assert blind_item.human_label is not None
+        pairs.append((original_id, first, blind_item.human_label))
+
+    firsts = [p[1] for p in pairs]
+    seconds = [p[2] for p in pairs]
+    real = [p for p in pairs if not p[0].endswith("-foil")]
+    per_kind: dict[str, dict[str, float]] = {}
+    for kind in ("coherence", "faithfulness"):
+        sub = [p for p in pairs if by_original_id[p[0]].kind == kind]
+        if sub:
+            per_kind[kind] = {
+                "n": float(len(sub)),
+                "percent_agreement": percent_agreement([p[1] for p in sub], [p[2] for p in sub]),
+                "cohens_kappa": cohens_kappa([p[1] for p in sub], [p[2] for p in sub]),
+            }
+
+    judge_kappa: float | None = None
+    if frozen_judge_binaries is not None:
+        judged = [p for p in pairs if p[0] in frozen_judge_binaries]
+        if judged:
+            judge_kappa = cohens_kappa(
+                [frozen_judge_binaries[p[0]] for p in judged], [p[2] for p in judged]
+            )
+
+    return TestRetestReport(
+        framing=(
+            "INTRA-RATER (test-retest) reliability: the same human relabelled blind "
+            "(ids re-minted, order reshuffled, >= 14-day gap). An upper-bound PROXY "
+            "for label stability — NOT a human-human inter-rater ceiling (DEC-P7-6); "
+            "a genuine second human would add that ceiling additively."
+        ),
+        n_items=len(pairs),
+        percent_agreement=percent_agreement(firsts, seconds),
+        intra_rater_kappa=cohens_kappa(firsts, seconds),
+        intra_rater_kappa_real_items_only=cohens_kappa([p[1] for p in real], [p[2] for p in real]),
+        per_kind=per_kind,
+        second_pass_vs_judge_kappa=judge_kappa,
+        first_pass_file=WORKSHEET_FILE,
+        protocol_file="PROTOCOL.md",
+    )
+
+
+def save_testretest_report(report: TestRetestReport, directory: Path = VALIDATION_DIR) -> Path:
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / TESTRETEST_REPORT_FILE
+    path.write_text(report.model_dump_json(indent=2) + "\n", "utf-8")
+    return path

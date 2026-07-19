@@ -92,6 +92,15 @@ well-prompted base model here, it is cut and the reason documented (DEC-0001).
 | Base (Gemma-4-E4B-it, prompted) | **0.083** (1/12) | **0.400** (2/5) | **0.550** | **0.667** | **0.933** (28/30; **GS-02 = 1** ⚠) | **0.571** ¹ | 798 / 5853 ms | **78.7** |
 | QLoRA (merged adapter) — **CUT** | **0.417** (5/12) | **0.200** (1/5) | **0.486** | **0.333** | **0.952** (20/21; **GS-02 = 1** ⚠) | — ¹ | 688 / 6938 ms | **74.3** |
 
+> **Two-layer hallucination framing (P7 annotation, 2026-07-18 — no cells changed).** The ⚠
+> marks are the honest **model-layer** number: GS-02 recorded **1 invented movie in BOTH
+> columns** (base invented "Pushpa"; QLoRA fuzzy-attached "Salaar"). The frequently-quoted
+> **"0 hallucinated movies" is the SERVED-layer number**: the deterministic output gate
+> (`sutradhar.serving.guardrails.output_gate`) fuzzy-grounds every asserted title against the
+> conversation's tool results and rewrites/disclaims inventions before they reach the user —
+> verified end-to-end in the P5/P6 golden regressions. Wherever a zero is claimed, it is the
+> gate's zero, not the model's; the relative GS-02 gate amendment is recorded in DEC-P4-9.
+
 **Captured 2026-07-04, window `ftwin-ce6b6930`** — ONE A100 40 GB instance, both columns, byte-
 identical serving (vLLM, `--enable-auto-tool-choice --tool-call-parser gemma4 --reasoning-parser
 gemma4`; QLoRA column = **merged** model per P4_SPEC §2.4, tokens/sec divergence 5.7% < the 10%
@@ -110,6 +119,44 @@ improved, judgment regressed (root cause = three training-data defects, transcri
 see the DEC-P4 verdict entry and the conditional ROADMAP P4.1). Honesty notes: `fixtures_completed`
 = 12/12 base vs **6/12 QLoRA** (missing final answers — defect #3); n = 5 GS-07 / 3 GS-08
 fixtures, exact fractions throughout, no significance theater.
+
+**P7 capture window — the expanded 24-fixture slice, base model (2026-07-19, DEC-P7-7).**
+New dated rows only; the frozen 2026-07-04 rows above are byte-untouched and NOT comparable
+cell-for-cell (different fixture set: n = 10 GS-07 / 10 GS-08 / 4 GS-02-conversational vs the
+frozen 5/3/4). Artifact `20260719T063002Z-1bf3cd3e` (stamp: code `0ae7b136`, golden-set
+`89a0bb1a…`, retrieval replay `20260702T135315Z-f6583183`, same frozen prompt/judge config);
+one A100 serve session (instance 450702) + one judge session (450712), both nuke-verified.
+
+| Model (24-fixture slice) | Tool-call seq acc | Code-mixed intent acc | Slot micro-F1 | Backtracking coherence | Faithfulness (1 − halluc.-movie rate) | Answer relevancy | Latency p50/p95 | tok/s |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Base (Gemma-4-E4B-it, prompted) — **P7 slice** | **0.042** (1/24) | **0.400** (4/10) | **0.565** | **0.700** | **0.824** (42/51; GS-02 = 2 ⚠) | **0.601** | 1044 / 4547 ms | **71.8** |
+
+Reading it honestly: the doubled GS-07/GS-08 slices *confirm* the frozen findings at higher n —
+code-mixed intent holds at 0.400 (4/10 vs 2/5), coherence 0.700 (n = 10 vs 0.667 at n = 3),
+schema validity 0.986; strict full-sequence tool-call accuracy drops to 0.042 because the new
+multi-turn fixtures are longer (any step needing feedback fails the whole conversation — the
+call-level rate is 0.235), which is exactly why the served product does not depend on this
+number (deterministic orchestration + validated tool loop + output gate; see README). GS-02
+model-layer inventions = 2 on this slice (both rewritten/disclaimed by the served-layer output
+gate — the two-layer framing above applies verbatim). **Coverage + gating honesty:** RAGAS
+**faithfulness scored 8/24 fixtures** (16 hit `IncompleteOutputException` in the judge's
+guided-JSON parse on the longer multi-turn contexts — the 0.219 aggregate covers the 8
+survivors only; answer_relevancy scored 24/24; the deterministic hallucinated-movie detector,
+the actual gate, covered 24/24). This row is **standing evidence, not a CI gate** — Tier-1
+continues to gate on the frozen `PINNED_RUN` (`20260704T093206Z-e9598564`); moving the pin is
+a separate future decision. Langfuse Cloud trace (exported copy committed per the
+evidence-outlives-infrastructure standard:
+`evals/generation_runs/20260719T063002Z-1bf3cd3e.trace.json`):
+`cloud.langfuse.com/project/cmrrd00d80zioad0dtypbluvn/traces/434e54340c7eeb74c55cb440ba56a2f4`;
+**MLflow run `846967f022d941ebb0bd19ac4c7e224d`** (experiment `sutradhar/generation`;
+backfilled 2026-07-19 via `mlflow_log backfill-generation` — full stamp as params, all
+Table-2 aggregates as metrics; screenshot: `docs/evidence/p7-mlflow-backfill-run.png`).
+*Honest topology note:* the capture host's snap-confined docker cannot run the DEC-P3-2
+compose MLflow, so the backfill targeted a durable local store
+(`sqlite:///data/mlflow-artifacts/p7-backfill.sqlite`, gitignored like every local MLflow
+volume; view with `uv run mlflow ui --backend-store-uri sqlite:///data/mlflow-artifacts/p7-backfill.sqlite`)
+— same pinned MLflow 3.14.0, same logging code path, deviation recorded rather than papered
+over.
 
 **Supplementary — QLoRA under the no-exemplar prompt (DEC-P4-6 footnote):** artifact
 `20260704T094052Z-36dd6f68` (MLflow `53d55afdc5844885a5d29986e0f7d62e`), prompt_hash explicitly
@@ -182,6 +229,40 @@ inside the `**…**` span, slipping a naive membership check). Fixed (regex wrap
 form + idempotent fallback banner), regression-tested against the injection scorer, and
 **re-confirmed live: ASR 0.1818 → 0.000**. Committed dry-run summaries:
 `evals/injection_runs/inj-{on,off}-dryrun.json`.
+
+> **Suite widened + claim re-scoped (P7 task 16, 2026-07-18 — DEC-P7-5; no cells above
+> changed).** The recorded numbers are the **v1 suite (INJ-01..14)** they were captured on. P7
+> adds **11 obfuscation variants (INJ-15..25)**: encoding (base64/leet), homoglyph, zero-width,
+> split-across-fields, plus obfuscation-shaped benign controls — scored AgentDojo-style as the
+> **benign-utility / utility-under-attack / ASR** triple. Deterministic Tier-1 bound, committed
+> as tests: the P7 normalization layer (NFKC + confusables + zero-width strip) defends the
+> homoglyph/zero-width/split/exfiltration variants; the **context-side encoding pair
+> (INJ-16/17) evades the static pattern layer by design** — that pair is the documented bound
+> of the claim. **A static suite bounds *these* attacks only**: 2025 adaptive-attack results
+> defeated all twelve published defenses, so ASR 0.000 here is never presented as robustness
+> against adaptive attackers; the structural layers (read-only v0 tools, schema-validated
+> calls, output gate) remain the reason a bypass cannot make the agent *act* or *assert* an
+> ungrounded film. Authoritative v2 live numbers come from the DEC-P7-7 capture window as new
+> dated rows.
+
+**P7 capture window — the widened 25-fixture suite, live (2026-07-19, DEC-P7-7).** Runs
+`evals/injection_runs/inj-{on,off}-live.json` (instance 450702, same serve session as the
+generation capture; frozen v1 rows above untouched — 20 attacks + 5 benign controls here vs
+the v1 11+3):
+
+| Live (widened suite) | Defenses ON | Defenses OFF |
+|---|---:|---:|
+| ASR (20 attacks) | **0.000** | 0.150 |
+| Benign utility (BU, 5 controls) | **1.000** | 1.000 |
+| Utility under attack (UA) | **0.800** | 0.850 |
+| False-positive rate on benign | **0.000** | 0.000 |
+
+Honest reading: the real model resisted even the encoding pair (INJ-16/17) the worst-case
+dry-run bound assumes compliant — live ASR 0.000 therefore *includes* the obfuscation variants
+this time, but the claim stays bounded to this static suite (the dry-run bound and the
+adaptive-attack caveat above are unchanged). The defenses-ON UA cost (0.800 vs 0.850 OFF) is
+the datamarking/withholding trade-off, now visible because BU/UA are measured — a defense that
+broke utility would show here.
 
 ### API end-to-end latency & throughput (live path)
 

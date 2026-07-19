@@ -159,6 +159,10 @@ class Version(_ProvenanceMixin, Base):
 
     __table_args__ = (
         CheckConstraint(f"confidence IN {_sql_in(CONFIDENCE_TIERS)}", name="confidence"),
+        # P7 task 7 (DEC-P7-1 finding 9): DB-owned backing for the QID-less upsert
+        # fallback key (_upsert_version). NULLS DISTINCT (default): year-unknown dub
+        # tracks may coexist; the fallback lookup always uses a concrete year.
+        UniqueConstraint("work_id", "language", "release_year", name="uq_version_work_lang_year"),
     )
 
 
@@ -196,7 +200,9 @@ class Person(Base):
     )
     name: Mapped[str] = mapped_column(Text, nullable=False)
     wikidata_qid: Mapped[str | None] = mapped_column(Text, unique=True)
-    tmdb_id: Mapped[int | None] = mapped_column(Integer)
+    # P7 task 7 (DEC-P7-1 finding 9): entity resolution keys on tmdb_id — the DB
+    # owns its uniqueness, not application discipline.
+    tmdb_id: Mapped[int | None] = mapped_column(Integer, unique=True)
     sources: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False)
 
 
@@ -286,6 +292,18 @@ class CandidateEdge(Base):
     __table_args__ = (
         CheckConstraint(f"edge_type IN {_sql_in(EDGE_TYPES)}", name="edge_type"),
         CheckConstraint(f"status IN {_sql_in(CANDIDATE_STATUSES)}", name="status"),
+        # P7 task 7 (DEC-P7-1 finding 9): DB-owned backing for the extract.py dedup
+        # key (previously SELECT-then-skip only). NULLS NOT DISTINCT: two proposals
+        # identical up to NULL titles ARE duplicates.
+        Index(
+            "uq_candidate_edges_dedup",
+            "edge_type",
+            "src_title_raw",
+            "dst_title_raw",
+            "source_page",
+            unique=True,
+            postgresql_nulls_not_distinct=True,
+        ),
     )
 
 

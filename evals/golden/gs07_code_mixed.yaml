@@ -4,6 +4,13 @@
 # (evals/prompts/intent_taxonomy_v1.json). Placeholders ($work_id) are bound at runtime;
 # P4 synthetic data and the tool-call/intent/slot-accuracy metrics use these sequences.
 # Expanded P3 task 4 (Q1 confirmed: GS-07 -> 5): c Kanglish, d Tenglish, e native script.
+# Expanded P7 task 15 (DEC-P7-4: GS-07 -> 10): f Manglish plot, g Hinglish title+year,
+# h Tanglish collision (disambiguate), i Tenglish franchise, j native Devanagari.
+# P7 fixtures are ADDITIVE and unscored until the DEC-P7-7 capture window; frozen
+# Table 2 runs are never re-scored against them.
+# Decontamination (PR #9 review): the P7 additions were authored 2026-07-18, after
+# the FT dataset sealed (2026-07-03) and against golden-slice entities that DEC-P4-3
+# structurally excludes from every training surface — no train/eval overlap possible.
 fixtures:
   - id: GS-07a
     name: Tanglish plot query
@@ -140,6 +147,140 @@ fixtures:
     expected_tool_calls:
       - tool: resolve_title
         arguments: {title: ಅಪ್ತಮಿತ್ರ}
+      - tool: get_versions
+        arguments:
+          work_id: $work_id
+          scope: indian
+  - id: GS-07f
+    name: Manglish plot query
+    category: code-mixed
+    subsystem: intent/translit
+    query: oru achan police-il ninnu kudumbathe rakshikkaan evidence okke maattunna padam ethaanu
+    query_lang: ml-latin
+    expected:
+      canonical_work: Drishyam
+      canonical_year: 2013
+      versions:
+        - {title: Drishyam, language: ml, year: 2013, is_original: true, relationship: is_original_of}
+        - {title: Drishyam, language: hi, year: 2015, relationship: is_remake_of}
+    gating_metric: intent/slot accuracy
+    must_not:
+      - fail to parse because the query is romanized Malayalam
+    verify_source: [Q15401703, Q19824636]
+    expected_intent: find_by_plot
+    expected_slots:
+      plot_description: a father tampers with evidence to protect his family from the police
+    expected_tool_calls:
+      - tool: search_by_plot
+        arguments:
+          description: a father tampers with evidence to protect his family from the police
+          top_k: 10
+      - tool: get_versions
+        arguments:
+          work_id: $work_id
+          scope: indian
+  - id: GS-07g
+    name: Hinglish title query with year slot
+    category: code-mixed
+    subsystem: intent/translit
+    query: 2007 wali Bhool Bhulaiyaa kiska remake hai? sab versions batao
+    query_lang: hi-latin
+    expected:
+      canonical_work: Manichitrathazhu
+      canonical_year: 1993
+      versions:
+        - {title: Bhool Bhulaiyaa, language: hi, year: 2007, relationship: is_remake_of}
+        - {title: Manichitrathazhu, language: ml, year: 1993, is_original: true, relationship: is_original_of}
+    gating_metric: intent/slot accuracy
+    must_not:
+      - present Bhool Bhulaiyaa as the original
+    verify_source: [Q3764588, Q3530081]
+    expected_intent: list_versions
+    expected_slots:
+      title: Bhool Bhulaiyaa
+      year: 2007
+    expected_tool_calls:
+      - tool: resolve_title
+        arguments: {title: Bhool Bhulaiyaa, language: hi}
+      - tool: get_versions
+        arguments:
+          work_id: $work_id
+          scope: indian
+  - id: GS-07h
+    name: Tanglish title collision must disambiguate, never merge
+    category: code-mixed
+    subsystem: intent/translit
+    query: Vikram padam pathi sollu, Kamal Haasan nadicha adhu
+    query_lang: ta-latin
+    expected:
+      works: [Vikram]
+      ambiguous: true
+      versions:
+        - {title: Vikram, language: ta, year: 1986, is_original: true}
+        - {title: Vikram, language: ta, year: 2022, is_original: true}
+    gating_metric: intent/slot accuracy + false-merge rate (=0)
+    must_not:
+      - merge the 1986 and 2022 Vikram works because both star Kamal Haasan
+      - answer for one film without asking which one
+    verify_source: [Q7929545, Q102147287]
+    expected_intent: disambiguate
+    expected_slots:
+      title: Vikram
+      actor: Kamal Haasan
+    expected_tool_calls:
+      - tool: resolve_title
+        arguments: {title: Vikram, language: ta}
+  - id: GS-07i
+    name: Tenglish franchise query (sequel walk)
+    category: code-mixed
+    subsystem: intent/translit
+    query: Drushyam 2 original edi? mottham franchise kuda cheppu
+    query_lang: te-latin
+    expected:
+      canonical_work: Drishyam 2
+      canonical_year: 2021
+      versions:
+        - {title: Drushyam 2, language: te, year: 2021, relationship: is_remake_of}
+        - {title: Drishyam 2, language: ml, year: 2021, is_original: true, relationship: is_original_of}
+    gating_metric: intent/slot accuracy
+    must_not:
+      - fail to parse because the query is romanized Telugu
+      - return Drishyam-1 remakes as Drishyam-2 remakes
+    verify_source: [Q105984608, Q102036246]
+    expected_intent: list_versions
+    expected_slots:
+      title: Drushyam 2
+    expected_tool_calls:
+      - tool: resolve_title
+        arguments: {title: Drushyam 2}
+      - tool: get_versions
+        arguments:
+          work_id: $work_id
+          scope: indian
+          include_sequels: true
+  - id: GS-07j
+    name: Native-script (Devanagari) title query with year slot
+    category: code-mixed
+    subsystem: intent/translit
+    query: "देवदास 2002 के सारे वर्ज़न दिखाओ"
+    query_lang: hi
+    expected:
+      canonical_work: Devdas
+      canonical_year: 2002
+      versions:
+        - {title: Devdas, language: hi, year: 2002, is_original: true}
+    gating_metric: intent/slot accuracy
+    must_not:
+      - fail to parse because the query is native-script Hindi
+      - collapse the 1955 and 2002 Devdas films into one work
+    verify_source: [Q247854]
+    expected_intent: list_versions
+    expected_slots:
+      title: "देवदास"
+      year: 2002
+    expected_tool_calls:
+      - tool: resolve_title
+        arguments: {title: "देवदास", language: hi}
       - tool: get_versions
         arguments:
           work_id: $work_id

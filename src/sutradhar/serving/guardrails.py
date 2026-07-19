@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from typing import Any
 
 from sutradhar.evals.generation import detect_hallucinated_movies
@@ -117,9 +118,35 @@ _PATTERNS: list[tuple[str, re.Pattern[str]]] = [
 ]
 
 
+# P7 task 16 (DEC-P7-5): obfuscation normalization before pattern matching.
+# Homoglyph swaps (Cyrillic/Greek lookalikes) and zero-width insertions are the
+# cheapest published evasions of pattern layers; NFKC + a small confusables map +
+# zero-width stripping neutralizes them. DELIBERATELY NOT handled: base64/leet
+# encodings — a static pattern layer cannot chase encodings, and the injection
+# suite documents that bound explicitly (ASR is claimed only for what the suite
+# covers, never as adaptive robustness).
+_ZERO_WIDTH = dict.fromkeys(map(ord, "\u200b\u200c\u200d\u2060\ufeff"))
+_CONFUSABLES = str.maketrans(
+    # Cyrillic + Greek lookalikes → Latin (lower/upper where distinct)
+    "аеорсхіѕАВЕКМНОРСТХІοΑΒΕΗΙΚΜΝΟΡΤΧ",
+    "aeopcxisABEKMHOPCTXIoABEHIKMNOPTX",
+)
+
+
+def normalize_for_matching(text: str) -> str:
+    """NFKC → strip zero-width chars → fold common homoglyphs to Latin."""
+    normalized = unicodedata.normalize("NFKC", text)
+    return normalized.translate(_ZERO_WIDTH).translate(_CONFUSABLES)
+
+
 def adversarial_flags(text: str) -> list[str]:
-    """Names of every adversarial pattern class the text matches (empty = clean)."""
-    return [name for name, pattern in _PATTERNS if pattern.search(text)]
+    """Names of every adversarial pattern class the text matches (empty = clean).
+
+    Matched over the raw text AND its obfuscation-normalized form (P7 task 16),
+    so homoglyph/zero-width variants of a known pattern still flag.
+    """
+    candidates = (text, normalize_for_matching(text))
+    return [name for name, pattern in _PATTERNS if any(pattern.search(c) for c in candidates)]
 
 
 def _mark_string(value: str) -> str:

@@ -31,8 +31,10 @@ frequently-updated factual data, so they live in **retrieval**, never in weights
 - **QLoRA owns the behaviour** — code-mixed intent parsing, slot extraction, multi-turn
   backtracking, tool-calling, answering in the user's language/register.
 
-If QLoRA does not measurably beat a well-prompted base model on the generation metrics, we cut it
-and document why.
+The rule was: if QLoRA does not measurably beat a well-prompted base model on the generation
+metrics, we cut it and document why. **Settled (2026-07-04): verdict CUT under the pre-registered
+rule ([DEC-P4-9](./docs/DECISIONS.md))** — the served model is the **well-prompted base**; the
+adapter + dataset remain published for provenance. The negative result is part of the portfolio.
 
 ## Subsystems
 
@@ -40,7 +42,7 @@ and document why.
 2. **API layer (FastAPI)** — orchestration, guardrails, caching, token/cost/latency tracking.
 3. **RAG Engine** — query normalization + transliteration, hybrid retrieval (BGE-M3 dense + sparse), cross-encoder reranking (bge-reranker-v2-m3), grounding, prompt-injection guardrails.
 4. **Catalog + Remake-Graph store** — Postgres modelling canonical Work nodes and per-language Version nodes with typed edges; embeddings in pgvector or Qdrant.
-5. **Conversation/Intent model** — Gemma 4 E4B + QLoRA adapter (see `docs/DECISIONS.md` DEC-0001).
+5. **Conversation/Intent model** — the well-prompted base Gemma 4 E4B (DEC-0001; QLoRA adapter trained and **CUT** under the pre-registered verdict, DEC-P4-9).
 6. **Serving** — vLLM on a rented GPU, brought up **on-demand** for demo/benchmark, then stopped.
 
 Cross-cutting: **Evals & Observability** (RAGAS + Langfuse + MLflow), CI-gated.
@@ -139,13 +141,38 @@ What each phase proved (details: [`docs/PORTFOLIO.md`](./docs/PORTFOLIO.md), num
   under a pre-committed keep/cut rule → **CUT** (the well-prompted base won); adapter +
   dataset published for provenance.
 - **P5 — the served path:** FastAPI orchestration with layered injection defense
-  (**live ASR 0.000**, hallucinated-movie rate 0 via a deterministic output gate),
+  (**live ASR 0.000** on the static suite — bounded claim, not adaptive robustness;
+  **served-layer** hallucinated-movie rate 0 via the deterministic output gate, while the
+  **model layer** honestly recorded **GS-02 = 1 ⚠ on both Table 2 columns** — the gate, not
+  the model, holds the zero),
   Redis sessions, cost accounting, graceful degradation (GPU off = structured 200).
 - **P6 — product + packaging:** the chat UI (version cards, citations, trace view,
   replay browser), one-command containerized demo (CI-proven from a fresh checkout),
   8 Playwright golden regressions on the rendered DOM, the
   [always-available static surface](https://venkathub.github.io/sutradhar-film-finder/),
   and the rehearsed, timed live-demo runbook.
+
+## Why the demo works despite base tool-call accuracy 0.083
+
+Table 2 records the honest number: the well-prompted 4B base scores **0.083 (1/12)** on strict
+BFCL-style full-sequence tool-call accuracy. So why does the served demo answer correctly? Because
+the product was engineered to not depend on that number:
+
+- **Deterministic orchestration** — the API layer, not the model, owns the control flow: query
+  normalization → retrieval → grounding → cited answer. The model orchestrates *within* a loop
+  whose steps are validated, retried with structured feedback, and bounded.
+- **Schema-validated tool loop** — every emitted call is validated against the frozen
+  [`tool_schema.v0.json`](./docs/phases/tool_schema.v0.json) *before execution*; hallucinated
+  tools/parameters are caught, fed back, and scored — they never execute. The strict metric counts
+  a conversation as failed if *any* step needed feedback; the loop recovers most of them.
+- **The output gate** — every asserted title is fuzzy-grounded against this conversation's actual
+  tool results; inventions are rewritten to `[unverified]` or disclaimed
+  (`sutradhar.serving.guardrails.output_gate`). Faithfulness is enforced at the boundary, not
+  hoped for from the weights.
+
+That layering is the point: a 4B model with an honest 0.083 strict score still ships a grounded,
+cited, non-hallucinating product — and the number stays published because the evidence, not the
+optics, is the portfolio.
 
 **The cost story is a feature:** nothing inference-side runs 24/7. Every neural workload
 ran in short, teardown-verified on-demand GPU windows; the standing evidence (benchmarks,

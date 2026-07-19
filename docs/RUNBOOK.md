@@ -15,8 +15,17 @@ No GPU, no secrets, no model. Works from a fresh clone (CI-proven by the tier-1
 
 ```bash
 make demo-up          # .env from template -> compose (postgres, redis, app) ->
-                      # migrate -> seed graph from recorded fixtures
+                      # migrate -> seed graph from recorded fixtures (incl. the
+                      # P7 uniqueness migration a41f09c3d7e2)
 # open http://localhost:8080/
+
+# P7 hardening, visible in 30 seconds (task 19 demo path):
+curl -si -X POST localhost:8080/api/chat -H 'content-type: application/json' \
+  -d '{"message":"papanasam?"}' | head -1        # GPU off => structured 200 (open surface)
+curl -si localhost:8080/api/status | grep -i x-request-id   # every response carries the id
+# With a GPU window up (Path B) the same unauthenticated POST returns 401, a
+# wrong token 401, >CHAT_RATE_LIMIT requests 429 — and a forced error returns
+# {"error":"internal_error","request_id":...} with nothing leaked.
 ```
 
 What you see and say:
@@ -64,8 +73,17 @@ make gpu-serve
 
 # 2. In the API shell: export those three + the pinned retrieval artifact, then
 export RETRIEVAL_RUN=20260702T135315Z-f6583183   # the pinned Table 1 winner artifact
+# P7 (DEC-P7-2): the live chat path requires auth — mint token(s) for this window.
+# The GPU-up /api/chat is the endpoint that burns GPU seconds; it is never open.
+export API_AUTH_TOKENS="$(openssl rand -hex 16)"   # comma-separate for guests
+echo "demo URL: http://localhost:8080/?token=${API_AUTH_TOKENS%%,*}"
 make demo-up                                # same command — compose passes the env through;
                                             # the flip is exports, never a rebuild
+
+# 2b. Open the printed ?token= URL — the UI adopts the token into sessionStorage
+#     and strips it from the address bar. Unauthed visitors still get the full
+#     GPU-off surface (replays, evidence); live turns 401 without the token and
+#     are rate-limited (CHAT_RATE_LIMIT, token-first keying) with it.
 
 # 3. Demo script (the gating story, live):
 #    - Tanglish/Hinglish plot query -> cited answer

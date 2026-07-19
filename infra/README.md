@@ -189,3 +189,11 @@ Managed via `gh api …/rulesets`. Required-check contexts are the Tier-1 job **
 ## Status
 **P0 builds the local compose stack, CI shells, and the one-time GPU validation.** The full
 `docs/RUNBOOK.md`, warm-resume demo path, and cost dashboards are **P4/P5/P6**.
+
+## P7 — Container hardening (task 5)
+
+Both images run as non-root (`app` user in the app image; uid-1000 `mlflow` in the MLflow
+image, matching the dev-host owner of the bind-mounted artifacts dir) and the app image
+carries an image-level HEALTHCHECK on `/api/health`. The tier-1 demo-smoke CI job asserts
+the BUILT image config via `docker inspect`; `tests/test_dockerfile_hardening.py` guards
+the Dockerfiles textually.

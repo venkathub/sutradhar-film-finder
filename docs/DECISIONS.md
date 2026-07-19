@@ -21,7 +21,7 @@ tool-calling) and serve via vLLM on an **on-demand** GPU. Two hard constraints s
    no headroom → FT can't win → wasted GPU. "Beatable" ≠ "weak"; it means *strong in general,
    unspecialized in our niche*.
 2. **Accurate + cheap to serve on-demand.** Small (~4B), single-GPU QLoRA, day-0 vLLM support,
-   fast to load for a sub-2-min live demo, Apache-2.0 (clean licensing for a portfolio).
+   fast to load for an on-demand live demo *(P7 annotation, 2026-07-18: measured posture is ~545 s ephemeral create→ready, not a sub-2-min resume — see RUNBOOK Path B)*, Apache-2.0 (clean licensing for a portfolio).
 
 **Options considered (mid-2026 landscape).**
 
@@ -154,7 +154,7 @@ H100 SXM 80 GB ≈ $2.69–2.80/hr; A30 / RTX 4090 24 GB budget tier; CPU VM ≈
 - **Primary workhorse for all core jobs (P1 extraction, P2 embedding incl. the 9B A/B, P4 QLoRA FT +
   base/after benchmark serving, P5/P6 demo) → NVIDIA A100 40 GB (~$0.89/hr).** Best balance: ample for
   4B QLoRA, strong tokens/sec for the 4B serving benchmark, fits the 9B embedder, best cost-per-token,
-  fast pause/resume for a sub-2-min live demo.
+  fast pause/resume for the live demo *(P7 annotation, 2026-07-18: the shipped posture is ephemeral create→destroy, measured ~545 s to ready — RUNBOOK Path B)*.
 - **Value alternative → RTX 6000 Ada 48 GB (~$0.99/hr)** if A100 40 GB is unavailable — more headroom
   (fits Sarvam-M 24B in FP8/4-bit) at a similar rate.
 - **Budget floor (FT + 4B serving only, skip the 9B embedder) → 24 GB tier (RTX 4090 / A30).** 24 GB
@@ -288,7 +288,7 @@ use" principle: the UP-state proof is reproducible from nothing.
 destroys any stray tagged instance — a leaked billing GPU is treated as a defect (a teardown test
 injects a smoke failure and asserts destroy still runs). (2) **Never on a PR** — developer- or
 `workflow_dispatch`-invoked only (cost + secrets); Tier-1 CI stays fully mocked/stubbed. (3) The
-*cold* create→destroy validation is distinct from the P6 **sub-2-min warm-resume** demo path (R4),
+*cold* create→destroy validation is distinct from the P6 demo path (R4) *(P7 annotation, 2026-07-18: the demo path also shipped as ephemeral create→destroy, measured ~545 s — no warm-resume exists)*,
 which remains in `docs/RUNBOOK.md`.
 
 **Consequences.** Adds `JARVISLABS_API_KEY` (+ `GPU_TYPE`) to `.env.example`; drops any persistent
@@ -860,7 +860,10 @@ P5's FastAPI middleware reuses this exact seam.
 
 **Status:** Accepted (P3 grooming; **user-directed**). Replaces the CLAUDE.md "Langfuse Cloud
 free tier" default — CLAUDE.md §Tech stack reconciled (2026-07-02); Cloud free tier remains the
-documented fallback.
+documented fallback. **P7 status annotation (2026-07-18): the VPS was DESTROYED once its
+evidence was committed — standing observability cost ₹799/mo → ₹0. The Langfuse Cloud free tier
+is the active fallback for future capture windows (DEC-P7-7); the idempotent bootstrap below
+remains the documented self-hosted rebuild path.**
 
 **Context (verified live against the AIC Cloud API, 2026-07-02).** Public catalogue
 `GET https://api.aiccloud.in/api/v1/public/essential-vps-plans` (no auth): the implemented
@@ -1159,6 +1162,15 @@ tool for one artifact family HF Hub already covers — ROADMAP §6.1 names HF Da
 D8 / §7 Q3). Implemented verbatim in `sutradhar.finetune.verdict` and committed before any
 training; the rule cannot move after the numbers exist.
 
+**Git-verifiable pre-registration (P7 task 12 annotation, 2026-07-18 — DEC-P7-1 finding 6).**
+Main is squash-merged, so the proof lives in **PR #5's retained branch commits**
+(`github.com/venkathub/sutradhar-film-finder/pull/5`): the rule was frozen in
+**`0fd94477`** — *"feat(finetune): frozen DEC-P4-8 verdict rule — committed BEFORE the window"*,
+**2026-07-04T03:06:31Z** — while the window that produced the numbers ran in **`710025c5`**
+(*"THE window executed — all three columns captured; verdict = CUT"*, **10:13:20Z**) and
+Table 2 published in **`95ea3d39`** (10:28:54Z). The rule predates the numbers by **7h07m**,
+verifiable by anyone from the PR commit timeline.
+
 **Decision.** **KEEP the adapter iff** (i) strict improvement on **≥ 2 of the 3 primary
 metrics** {GS-07 code-mixed intent accuracy, GS-07 slot F1, GS-08 backtracking coherence};
 (ii) **at least one improving primary metric clears ≥ +0.05 absolute** — so judge/small-n noise
@@ -1176,6 +1188,11 @@ generation-run artifacts — the 30-second demo path.
 
 **Status:** Accepted (P4 tasks 12–13 execution; verdict computed by `make ft-verdict` over the
 committed window artifacts — the DEC-P4-8 rule as frozen on 2026-07-03, applied untouched).
+
+**Git-verifiable ordering (P7 task 12 annotation, 2026-07-18).** PR #5 branch commits prove
+rule-before-numbers: DEC-P4-8 frozen in `0fd94477` (2026-07-04T03:06:31Z) → window executed
+`710025c5` (10:13:20Z) → Table 2 + this verdict published `95ea3d39` (10:28:54Z) — see the
+matching annotation on DEC-P4-8.
 
 **Verdict: CUT.** Window `ftwin-ce6b6930` (one A100, both columns, byte-identical serving):
 clause (i) 1/3 primaries improved — GS-07 slot F1 0.364→0.600 (+0.236, margin met); clause (iii)
@@ -1535,3 +1552,217 @@ degradation evidence). **Demo video recorded and published (2026-07-11):** one-t
 screen capture via the committed recorder (`ui/app/e2e/record_demo.mjs`) — zero-GPU replay →
 live turns → the GPU stopped on camera — Release asset `p6-demo-v1`, `DEMO_VIDEO_URL` set
 (repo variable + env); a narrated re-record stays optional per the RUNBOOK script.
+
+---
+
+## DEC-P7-1 — P7 fix list pre-registered from the post-P6 external review (2026-07-18)
+
+**Status:** Accepted (P7 grooming; entry criterion for every P7 task). Spec: `docs/phases/P7_SPEC.md`.
+
+**Context.** The project's standing pitch is *"the evidence never lies"*; the post-P6 external
+engineering review (summarized canonically in `ROADMAP.md` §2 P7, accessed refs §7) found the docs
+contradicting their own recorded evidence in ~6 places, plus real bugs/security gaps on the paid
+path and three evidence weaknesses. Logging the fix list BEFORE any fix makes the audit itself
+pre-registered and checkable. A 2026-07-18 code survey **confirmed every finding at file/line**:
+
+1. Stale FT claims: `CLAUDE.md` §5 / `README` / `ROADMAP` §1(b) still say "QLoRA measurably beat
+   the base"; recorded verdict is **CUT** (DEC-P4-9).
+2. "Sub-2-min resume" claims vs the measured **545 s** ephemeral-create (`RUNBOOK.md`).
+3. `PORTFOLIO.md:181` presents the "≈ $12–17" *estimate* as the project-total *actual*.
+4. "0 hallucinated movies" stated without the model-layer **GS-02 = 1 ⚠ (both Table 2 columns)**.
+5. `GOLDEN_SET_SCENARIOS.md` "≥ 100 fixtures" target vs 34 committed golden fixtures.
+6. Pre-registration not git-verifiable from squash-merged main.
+7. Spine upsert replaces `sources[]` and can downgrade human-verified records
+   (`pipeline/wikidata.py` L276–370; enrichment-union in `precedence.py` wiped on re-ingest).
+8. `CALIBRATED_NO_MATCH_THRESHOLD = 0.151747` hardcoded at `rag/retrieve.py:47`, decoupled from
+   its calibration artifact; no staleness check.
+9. Missing DB uniques: `person.tmdb_id`; candidate-edges dedup tuple; `(work_id, language,
+   release_year)` version fallback key.
+10. `POST /api/chat` open (no auth/rate limit); 500 envelope leaks `str(exc)` (app.py L211–216,
+    L361, L372); app image runs as root, no image-level HEALTHCHECK.
+11. Single-annotator judge validation (κ = 0.738, no agreement ceiling); GS-07 n=5 / GS-08 n=3;
+    injection suite = 14 fixtures, ASR-only framing.
+12. Scale path ("named as future ops", ROADMAP §6.6) not designed anywhere.
+
+**Decision.** These twelve findings ARE the P7 scope (four DoD groups, `P7_SPEC.md` §1); nothing
+else enters P7 without a new proposal. **No frozen benchmark artifact is re-scored**; metric
+changes come only from the separately-approved dated capture window (DEC-P7-7).
+
+**Pre-registration proof (finding 6) resolved at grooming:** PR #5 branch commits are retained on
+GitHub — rule frozen `0fd94477` (2026-07-04T03:06:31Z) precedes window execution `710025c5`
+(10:13:20Z) and Table 2 publication `95ea3d39` (10:28:54Z). These SHAs are annotated onto
+DEC-P4-8/DEC-P4-9 by P7 task 12.
+
+## DEC-P7-2 — `/api/chat` auth + rate limiting: slowapi on existing Redis, token-first keying (2026-07-18)
+
+**Status:** Accepted (P7 grooming; user-confirmed per spec §3 D1).
+
+**Context.** The endpoint that burns GPU seconds is open. Redis already runs in compose
+(DEC-P5-2/P5-5); slowapi is not yet a dependency.
+
+**Options.** (A) **slowapi + Redis** — purpose-built Starlette/FastAPI limiter, production-used
+("millions of requests/month" per maintainer), thin custom key function for token-first keying;
+caveat honestly noted: docs still self-describe "alpha quality / API may change". (B) Hand-rolled
+Redis INCR/EXPIRE middleware — zero deps but we own window-semantics correctness on a security
+control. (C) fastapi-limiter — less maintained, no advantage over A.
+
+**Decision.** **A.** Auth = static bearer token(s) from `API_AUTH_TOKENS` (comma-separated env;
+per-person tokens, revocation by removal — no JWT/OAuth for a portfolio demo endpoint). Limit key
+= sha256(token) when authed, client IP fallback (X-Forwarded-For honored only when
+`TRUST_PROXY=1`); limits env-tuned (`CHAT_RATE_LIMIT`, e.g. `10/minute`); fakeredis in tests.
+401/429 use the standard envelope. Health/static/degradation routes stay unauthenticated.
+
+**Consequences.** New deps: slowapi. New env: `API_AUTH_TOKENS`, `CHAT_RATE_LIMIT`,
+`TRUST_PROXY` in `.env.example`. RUNBOOK demo flow documents token issuance. Absent
+`API_AUTH_TOKENS` outside dev/test ⇒ `/api/chat` returns 503 "auth not configured" — never
+silently open.
+
+**Sources (accessed 2026-07-18).** slowapi GitHub/PyPI/docs (production usage + alpha caveat);
+slowapi-Redis integration patterns.
+
+## DEC-P7-3 — NO_MATCH θ binding: pinned calibration-run artifact + load-time staleness hard-fail (2026-07-18)
+
+**Status:** Accepted (P7 grooming; user-confirmed per spec §3 D2). Relocates the *binding* only —
+the calibrated value θ = 0.151747 (DEC-P2-5) is NOT reopened.
+
+**Options.** (A) **Pinned `CALIBRATION_RUN_ID`** → θ read at load from the committed
+`evals/retrieval_runs/<run>.calibration.json`, with an assertion that the live index/embed model
+matches the run's stamp (`meta.json` embed_model + manifest/index-version) — mismatch raises
+`StaleCalibrationError`, never silent reuse. (B) Bake θ into the index artifact's meta at build —
+strongest coupling but requires touching the frozen index artifact and conflates two lifecycles.
+(C) Env var — recreates the exact provenance-detached failure mode being fixed.
+
+**Decision.** **A.** `retrieve.py` keeps no numeric θ literal (grep tripwire test); re-calibration
+= commit new artifact + bump one pinned id (a reviewable diff). Tier-1-testable offline.
+
+**Consequences.** `rag/index.py::load_index` (already doing MANIFEST verification) gains the
+staleness assertion; `tests/test_calibration.py` asserts artifact round-trip + tamper detection.
+
+## DEC-P7-4 — Golden-set "≥ 100" target formally revised: targeted generation-slice expansion (2026-07-18)
+
+**Status:** Accepted (P7 grooming; user-confirmed per spec §3 D3).
+
+**Context.** `GOLDEN_SET_SCENARIOS.md` targets "≥ 100 fixtures total"; committed: 34 golden + 12
+held-out negatives + 14 injection = 60. The review's substantive point is generation-slice
+*stability* (GS-07 n=5, GS-08 n=3), not the round number; retrieval slices are saturated
+(Recall@10 = 1.000 across the P2 grid), so bulk fixtures there add cost without evidence value.
+
+**Decision.** Revise the documented target to the measured, slice-justified composition:
+**GS-07 ≥ 10, GS-08 ≥ 10, injection ~25** ⇒ ~48 golden + 12 negatives + ~25 injection ≈ **85
+total**. *(Count correction, PR #9 review 2026-07-19: as landed the exact numbers are
+**46 golden + 12 negatives + 25 injection = 83 total** — the "~48/≈85" grooming arithmetic
+overcounted by two; the composition and rationale are unchanged.)*
+`GOLDEN_SET_SCENARIOS.md` updated with this dated revision — no silently abandoned
+target. New fixtures only ADD; their `expected_tool_calls` must validate against
+`tool_schema.v0.json` in Tier-1; they are scored only in the DEC-P7-7 window.
+
+## DEC-P7-5 — Injection reporting: AgentDojo paired utility/security metrics (2026-07-18)
+
+**Status:** Accepted (P7 grooming; user-confirmed per spec §3 D4).
+
+**Decision.** The widened suite (obfuscation variants: encoding, homoglyph, split-across-fields)
+reports the AgentDojo triple — **benign utility, utility-under-attack, ASR** — instead of
+ASR-only, mapped onto the existing `run_injection_eval.py` off/on runner. Published framing is
+bounded honestly: a static suite bounds *these* attacks only; ASR 0.000 is never presented as
+adaptive-attacker robustness (2025 adaptive-attack results defeated all twelve published
+defenses).
+
+**Sources (accessed 2026-07-18).** AgentDojo (arXiv 2406.13352; BU/UA/ASR formal metrics; 97 user
+tasks / 629 security cases; adopted by US/UK AISI inspect_evals).
+
+## DEC-P7-6 — Judge-validation second pass: blind intra-rater test-retest κ, honestly labelled (2026-07-18)
+
+**Status:** Accepted (P7 grooming; user-confirmed — the original annotator will relabel).
+
+**Context.** The ROADMAP P7 entry asked for a **second annotator** to report a human–human κ
+ceiling. The available second pass is the *same* human who produced the original 30 labels
+(2026-07-02/03). Same-rater relabelling measures **intra-rater (test-retest) reliability**, not
+inter-rater agreement — presenting it as a human–human ceiling would be exactly the kind of
+overclaim P7 exists to remove.
+
+**Decision.** Run the second pass as a **blind test-retest**: `worksheet.blind.yaml` (labels +
+foil key stripped, item order reshuffled), ≥ 14 days after the original pass (satisfied: 15+
+days by 2026-07-18). Report **intra-rater κ** explicitly labelled as such — as an *upper-bound
+proxy*, stated weaker than a true inter-rater ceiling — beside judge–human κ and a
+real-items-only κ (foils excluded). The agreement protocol (binary scale, invalid-output → 0
+with note, no abstention) is committed as `evals/judge_validation/PROTOCOL.md` **before**
+labelling. Frozen `report.json` untouched; the new report is additive
+(`report_testretest.json`). If a genuine second human becomes available later, the inter-rater
+ceiling is captured then as a further additive report — the upgrade path stays open.
+
+## DEC-P7-7 — P7 capture window APPROVED (~$3–5); observability via Langfuse Cloud free tier (VPS destroyed) (2026-07-18)
+
+**Status:** Accepted (P7 grooming; user-approved budget — the one exception to P7's $0-GPU
+default).
+
+**Context.** (1) The expanded GS-07/GS-08 fixtures and widened injection suite need one short
+dated GPU window to produce authoritative numbers (new rows only; frozen artifacts never
+re-scored). (2) The user **destroyed the AIC Cloud VPS** that self-hosted Langfuse v3
+(DEC-P3-7), ending the ₹799/mo standing cost. (3) Clarified at grooming: **LangChain is not part
+of the stack** — it appears only as a *transitive* dependency of the pinned RAGAS lib
+(`constraint-dependencies = ["langchain-community>=0.3,<0.4"]` in `pyproject.toml`); nothing in
+`src/sutradhar/` imports it, and the VPS had nothing to do with it. The tracing wrapper is
+**no-op-safe** (DEC-P3-6): with `LANGFUSE_*` unset every span is a silent no-op.
+
+**Options for window observability.** (A) **Langfuse Cloud free tier** — the fallback documented
+in DEC-P3-7/CLAUDE.md since P3; zero standing cost; trace evidence preserved for the new rows;
+only `LANGFUSE_HOST/keys` env changes. (B) Re-bootstrap the VPS via the idempotent DEC-P3-7
+bootstrap — proves rebuild-from-scratch but re-opens ₹799/mo for a single window. (C) Tracing
+disabled — cheapest, but the new benchmark rows would lack the trace-link evidence every other
+row carries.
+
+**Decision.** **A — Langfuse Cloud free tier** for the window (keys in env, never code). The VPS
+destruction is recorded in the P7 doc-truth pass as a *cost-discipline improvement*: standing
+observability cost ₹799/mo → **₹0**; DEC-P3-7 gets a dated status annotation; the idempotent VPS
+bootstrap remains the documented self-hosted path if standing tracing is ever wanted again.
+Window scope: score expanded GS-07/GS-08 + injection triple (BU/UA/ASR) against the served
+base model, identical harness/judge config, full reproducibility stamp; results land as **new
+clearly-dated rows** in `BENCHMARKS.md` — existing rows byte-untouched. Budget ≈ **$3–5**
+(A100-40GB, DEC-0003 envelope), teardown per the standard nuke-verified flow.
+
+**Consequences.** MLflow stays the local compose service (DEC-P3-2, unaffected). `.env.example`
+comment updated: `LANGFUSE_HOST` may point at Cloud or a self-hosted instance. P7 tasks gain the
+window as the final, separately-runnable task; doc/bug/security work never waits on it.
+
+**Execution addendum (2026-07-19) — window EXECUTED; honest accounting.**
+
+- **Sessions (both A100-40GB, both destroyed, `make gpu-nuke` → "no stray instances" after
+  each):** A = instance **450702** (Gemma-4-E4B-it + FlagEmbedding sidecar): generation capture
+  run **`20260719T063002Z-1bf3cd3e`** (24/24 fixtures, Langfuse Cloud trace recorded in
+  BENCHMARKS) + live injection on/off (`inj-{on,off}-live.json`). B = instance **450712**
+  (gpt-oss-20b + sidecar via the committed `infra/gpu/p7_judge_window.py`): judge coherence
+  (10 fixtures) + RAGAS (24), written back into the run artifact in place.
+- **Cost — DASHBOARD ACTUALS (read by the user, 2026-07-19): ₹29.80 (Session A) + ₹21.29
+  (Session B) = ₹51.09 ≈ $0.61 total** — an order of magnitude inside the approved $3–5.
+  Back-solved at the DEC-0003 $0.89/h rate that is ~24 + ~17 billed minutes, consistent with
+  the timestamp-derived wall clocks (Session A ≈ 11:47–12:08 IST incl. ~9-min boot and the
+  ~4-min idle gap below; Session B ≈ 12:09–12:25 IST incl. boot + one failed create). The
+  earlier "≈ $0.55" estimate in this entry is superseded by these actuals.
+- **Incidents (recorded, not hidden):** (1) the sandbox killed the detached `gpu-serve` hold
+  after the window came UP — its `finally` never ran, so Session A was closed manually
+  (`make gpu-stop`) after the captures, with ~4 min of idle billing between UP and the first
+  capture; (2) the dead hold also leaked JarvisLabs **script slots** (3-slot quota), which
+  blocked Session B's first create (`Maximum scripts reached`) — cleaned via `remove_scripts`
+  and retried; `p7_judge_window.py` carries the standard remove-in-`finally`.
+- **Result posture:** new dated BENCHMARKS sections only; frozen 2026-07-04 rows and the
+  Tier-1 `PINNED_RUN` byte-untouched (the new run records GS-02 model-layer = 2 — the absolute
+  gate trips by design and is handled by the DEC-P4-9 relative framing; moving the pin is a
+  separate future decision).
+- **MLflow backfill — EXECUTED later the same day (2026-07-19), with a disclosed deviation.**
+  This entry originally deferred the backfill "because an ephemeral store would be fake
+  evidence." The executed resolution honours that rationale's substance while changing the
+  mechanism: the compose MLflow (DEC-P3-2 topology) remained impossible on the snap-confined
+  host, so the backfill targeted a **durable, non-ephemeral local store**
+  (`sqlite:///data/mlflow-artifacts/p7-backfill.sqlite` — persists on disk like every local
+  MLflow volume, gitignored like them; NOT the throwaway container the original rationale
+  rejected) using the same pinned MLflow 3.14.0 and the same `log_generation_run` code path.
+  Result: MLflow run `846967f022d941ebb0bd19ac4c7e224d`, screenshot committed
+  (`docs/evidence/p7-mlflow-backfill-run.png`), Langfuse trace exported to
+  `evals/generation_runs/20260719T063002Z-1bf3cd3e.trace.json` per the evidence-outlives-
+  infrastructure standard. The compose-topology import remains available whenever the dev
+  host runs it; the deviation is this paragraph, not a silent swap.
+- **RAGAS coverage gap on the new run (disclosed):** RAGAS **faithfulness scored 8/24
+  fixtures** (16 returned `IncompleteOutputException` from the judge's guided-JSON parse on
+  the longer multi-turn contexts; answer_relevancy scored 24/24). The 0.219 aggregate
+  covers the 8 survivors only — recorded in BENCHMARKS beside the number; the deterministic
+  hallucinated-movie detector (the gating metric) is unaffected.

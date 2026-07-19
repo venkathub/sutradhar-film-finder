@@ -75,7 +75,14 @@ def test_recorded_metrics_match_recomputation(
 def test_artifact_covers_the_full_generation_slice(
     artifact: GenerationRunArtifact, fixtures: dict[str, GoldenFixture]
 ) -> None:
-    expected_ids = {f.id for f in select_generation_fixtures(list(fixtures.values()))}
+    """The frozen artifact covers the FROZEN slice exactly; P7 additive fixtures
+    (PENDING_CAPTURE_FIXTURES, DEC-P7-4) are excluded until the DEC-P7-7 window —
+    frozen runs are never re-scored against fixtures that postdate them."""
+    from sutradhar.evals.generation_run import PENDING_CAPTURE_FIXTURES
+
+    expected_ids = {
+        f.id for f in select_generation_fixtures(list(fixtures.values()))
+    } - PENDING_CAPTURE_FIXTURES
     assert {r.fixture_id for r in artifact.fixtures} == expected_ids
     assert artifact.metrics.fixtures_completed == len(expected_ids)  # every conversation ended
 
@@ -201,7 +208,14 @@ def test_stamp_pins_current_prompt_and_schema(artifact: GenerationRunArtifact) -
     from sutradhar.evals.prompts import load_prompt_artifacts
 
     assert artifact.prompt_hash == load_prompt_artifacts(REPO_ROOT / "evals/prompts").prompt_hash
-    assert artifact.stamp.golden_set_hash == golden_set_hash(GOLDEN_DIR)
+    # P7 task 15 (DEC-P7-4): the golden DIR hash legitimately moved when the additive
+    # pending-capture fixtures landed; the frozen artifact pins the 2026-07-04 state,
+    # asserted here as the recorded constant (artifact-tampering tripwire). Drift in
+    # the fixtures the artifact actually SCORED is still caught content-level by the
+    # recompute tests above; the NEXT capture window re-pins the live hash.
+    frozen_golden_hash = "f8fd77a0a60354d949a5baca8ebcc600028bba1ff692e36b169e4c7a11017469"
+    assert artifact.stamp.golden_set_hash == frozen_golden_hash
+    assert golden_set_hash(GOLDEN_DIR)  # live hash computable (re-pinned next window)
     schema_sha = hashlib.sha256(
         (REPO_ROOT / "docs/phases/tool_schema.v0.json").read_bytes()
     ).hexdigest()

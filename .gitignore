@@ -69,3 +69,7 @@ __screenshots__/
 
 # Playwright demo-video recordings (published as Release assets, never committed)
 demo-video/
+
+# Artifact staging areas (DEC-P7-1 finding: previously ignored only transitively
+# via data/artifacts/; explicit rule so staging debris can never be tracked anywhere)
+.staging/

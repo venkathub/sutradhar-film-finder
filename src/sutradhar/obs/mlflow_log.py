@@ -205,7 +205,25 @@ def main(argv: list[str] | None = None) -> int:
         print(f"logged serving window {artifact.run_id} -> MLflow run {run_id}")
         print(f"experiment: {EXPERIMENT_SERVING} @ {get_settings().mlflow_tracking_uri}")
         return 0
-    print("usage: python -m sutradhar.obs.mlflow_log [backfill-retrieval|log-serving]")
+    if cmd == "backfill-generation":
+        # P7 task 20 follow-up (DEC-P7-7 addendum): capture-time MLflow logging is
+        # fail-safe (skips when the tracker is down), so a committed run can be
+        # backfilled later on the compose-capable host: `... backfill-generation <run_id>`.
+        from sutradhar.evals.generation_run import GENERATION_RUNS_DIR, GenerationRunArtifact
+
+        if len(argv) < 2:
+            print("usage: python -m sutradhar.obs.mlflow_log backfill-generation <run_id>")
+            return 2
+        gen_path = Path(GENERATION_RUNS_DIR) / f"{argv[1]}.json"
+        gen_artifact = GenerationRunArtifact.model_validate_json(gen_path.read_text("utf-8"))
+        run_id = log_generation_run(gen_artifact, gen_path)
+        print(f"backfilled generation run {gen_artifact.run_id} -> MLflow run {run_id}")
+        print(f"experiment: {EXPERIMENT_GENERATION} @ {get_settings().mlflow_tracking_uri}")
+        return 0
+    print(
+        "usage: python -m sutradhar.obs.mlflow_log "
+        "[backfill-retrieval|log-serving|backfill-generation <run_id>]"
+    )
     return 2
 
 

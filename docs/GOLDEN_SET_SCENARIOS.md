@@ -15,8 +15,16 @@
   these fixtures. The Recall@10 ≥ 0.90 exit gate is measured here.
 - **P3 (generation) and P4 (FT):** the generation metrics (faithfulness, tool-call accuracy,
   intent/slot accuracy, backtracking coherence) are computed over the conversational scenarios.
-- Each category below is a **seed**: expand each to multiple instances (target ≥ 5 per category,
-  ≥ 100 fixtures total) so metrics are stable, not anecdotal.
+- Each category below is a **seed**, expanded to multiple instances so metrics are stable, not
+  anecdotal. **Target formally revised (P7, 2026-07-18 — DEC-P7-4; supersedes the original
+  "≥ 5 per category, ≥ 100 fixtures total"):** effort lands where the post-P6 review found n
+  weakest — the *generation* slices — not in already-saturated retrieval slices (Recall@10 =
+  1.000 across the P2 grid, where bulk fixtures add authoring cost without evidence value).
+  Revised composition: **GS-07 ≥ 10, GS-08 ≥ 10, injection suite 25** ⇒ **46 golden fixtures
+  + 12 held-out negatives + 25 injection = 83 total** (exact as landed; PR #9 count fix). New fixtures only ADD (frozen run
+  artifacts are never re-scored); their authoritative numbers come from the DEC-P7-7 capture
+  window as new dated `BENCHMARKS.md` rows. No target is ever silently abandoned — this dated
+  revision IS the record.
 
 ### Scenario schema (one record per fixture in `/evals/golden/`)
 ```yaml

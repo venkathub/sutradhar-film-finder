@@ -129,6 +129,27 @@ export interface Api {
   getReplay(fixtureId: string): Promise<Replay>;
 }
 
+// --- Live-demo bearer token (P7 task 4, DEC-P7-2) --------------------------
+// The GPU-up chat path requires auth. The RUNBOOK demo flow hands out a URL like
+// https://host/?token=<token>; we adopt it into sessionStorage once and strip it
+// from the address bar. GPU-off (replays, status, evidence) needs no token.
+const TOKEN_KEY = "sutradhar_api_token";
+
+export function adoptTokenFromUrl(): void {
+  const url = new URL(window.location.href);
+  const token = url.searchParams.get("token");
+  if (token) {
+    window.sessionStorage.setItem(TOKEN_KEY, token);
+    url.searchParams.delete("token");
+    window.history.replaceState(null, "", url.toString());
+  }
+}
+
+function authHeaders(): Record<string, string> {
+  const token = window.sessionStorage.getItem(TOKEN_KEY);
+  return token ? { authorization: `Bearer ${token}` } : {};
+}
+
 async function getJson<T>(url: string): Promise<T> {
   const response = await fetch(url);
   if (!response.ok) {
@@ -144,7 +165,7 @@ export const httpApi: Api = {
   postChat: async (body) => {
     const response = await fetch("/api/chat", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", ...authHeaders() },
       body: JSON.stringify(body),
     });
     // 200 = up or structured off; 4xx = structured {error, detail} — both render.
