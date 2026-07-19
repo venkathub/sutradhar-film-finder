@@ -8,6 +8,9 @@
 # h Tanglish collision (disambiguate), i Tenglish franchise, j native Devanagari.
 # P7 fixtures are ADDITIVE and unscored until the DEC-P7-7 capture window; frozen
 # Table 2 runs are never re-scored against them.
+# Decontamination (PR #9 review): the P7 additions were authored 2026-07-18, after
+# the FT dataset sealed (2026-07-03) and against golden-slice entities that DEC-P4-3
+# structurally excludes from every training surface — no train/eval overlap possible.
 fixtures:
   - id: GS-07a
     name: Tanglish plot query

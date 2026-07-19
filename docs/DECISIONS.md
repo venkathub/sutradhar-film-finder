@@ -1649,7 +1649,10 @@ held-out negatives + 14 injection = 60. The review's substantive point is genera
 
 **Decision.** Revise the documented target to the measured, slice-justified composition:
 **GS-07 ≥ 10, GS-08 ≥ 10, injection ~25** ⇒ ~48 golden + 12 negatives + ~25 injection ≈ **85
-total**. `GOLDEN_SET_SCENARIOS.md` updated with this dated revision — no silently abandoned
+total**. *(Count correction, PR #9 review 2026-07-19: as landed the exact numbers are
+**46 golden + 12 negatives + 25 injection = 83 total** — the "~48/≈85" grooming arithmetic
+overcounted by two; the composition and rationale are unchanged.)*
+`GOLDEN_SET_SCENARIOS.md` updated with this dated revision — no silently abandoned
 target. New fixtures only ADD; their `expected_tool_calls` must validate against
 `tool_schema.v0.json` in Tier-1; they are scored only in the DEC-P7-7 window.
 
@@ -1745,9 +1748,21 @@ window as the final, separately-runnable task; doc/bug/security work never waits
   Tier-1 `PINNED_RUN` byte-untouched (the new run records GS-02 model-layer = 2 — the absolute
   gate trips by design and is handled by the DEC-P4-9 relative framing; moving the pin is a
   separate future decision).
-- **Open leg (the one incomplete item):** the **MLflow backfill** for the new rows. The
-  capture sandbox could not run the compose MLflow (docker snap path confinement), and an
-  ephemeral throwaway MLflow would be fake evidence — deferred to the persistent dev host:
-  `make mlflow-up && make mlflow-backfill`, then add the run link beside the Langfuse trace in
-  BENCHMARKS. Until then the new rows carry artifact + stamp + Langfuse evidence but no MLflow
-  link, and say so.
+- **MLflow backfill — EXECUTED later the same day (2026-07-19), with a disclosed deviation.**
+  This entry originally deferred the backfill "because an ephemeral store would be fake
+  evidence." The executed resolution honours that rationale's substance while changing the
+  mechanism: the compose MLflow (DEC-P3-2 topology) remained impossible on the snap-confined
+  host, so the backfill targeted a **durable, non-ephemeral local store**
+  (`sqlite:///data/mlflow-artifacts/p7-backfill.sqlite` — persists on disk like every local
+  MLflow volume, gitignored like them; NOT the throwaway container the original rationale
+  rejected) using the same pinned MLflow 3.14.0 and the same `log_generation_run` code path.
+  Result: MLflow run `846967f022d941ebb0bd19ac4c7e224d`, screenshot committed
+  (`docs/evidence/p7-mlflow-backfill-run.png`), Langfuse trace exported to
+  `evals/generation_runs/20260719T063002Z-1bf3cd3e.trace.json` per the evidence-outlives-
+  infrastructure standard. The compose-topology import remains available whenever the dev
+  host runs it; the deviation is this paragraph, not a silent swap.
+- **RAGAS coverage gap on the new run (disclosed):** RAGAS **faithfulness scored 8/24
+  fixtures** (16 returned `IncompleteOutputException` from the judge's guided-JSON parse on
+  the longer multi-turn contexts; answer_relevancy scored 24/24). The 0.219 aggregate
+  covers the 8 survivors only — recorded in BENCHMARKS beside the number; the deterministic
+  hallucinated-movie detector (the gating metric) is unaffected.

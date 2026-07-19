@@ -145,6 +145,22 @@ def test_rate_limit_applies_before_auth_for_anonymous_hammering() -> None:
     assert _chat(client).status_code == 429
 
 
+def test_rotating_garbage_tokens_cannot_mint_fresh_buckets() -> None:
+    """PR #9 blocking finding 1: only a VALID token earns its own bucket. Rotating
+    invalid bearer tokens must share the client-IP bucket — otherwise token
+    brute-force is unthrottled and the limiter key-space grows per request."""
+    client = _limited_client()
+    client.headers.pop("Authorization")
+    for n in (1, 2):
+        resp = _chat(client, headers={"Authorization": f"Bearer garbage-{n}"})
+        assert resp.status_code == 401
+    # Third request with yet another fresh garbage token: SAME IP bucket => 429.
+    resp = _chat(client, headers={"Authorization": "Bearer garbage-3"})
+    assert resp.status_code == 429
+    # And a VALID token still has its own untouched bucket.
+    assert _chat(client, headers={"Authorization": f"Bearer {TEST_TOKEN}"}).status_code == 200
+
+
 def test_x_forwarded_for_ignored_unless_trust_proxy() -> None:
     """A spoofable header must not let a client mint fresh IP buckets."""
     client = _limited_client()  # TRUST_PROXY defaults to False

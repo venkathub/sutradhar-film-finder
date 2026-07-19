@@ -44,3 +44,9 @@ def test_mlflow_image_runs_as_non_root() -> None:
     user_lines = [line for line in lines if line.startswith("USER ")]
     assert user_lines, "mlflow Dockerfile lost its USER instruction"
     assert user_lines[-1] not in ("USER root", "USER 0")
+
+
+def test_mlflow_image_has_healthcheck() -> None:
+    """PR #9 review: parity with the app image — both images self-describe liveness."""
+    text = MLFLOW_DOCKERFILE.read_text(encoding="utf-8")
+    assert "HEALTHCHECK" in text, "mlflow Dockerfile lost its HEALTHCHECK"

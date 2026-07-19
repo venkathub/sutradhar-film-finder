@@ -85,10 +85,12 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   slice κ = 1.0), with the disagreement analysis motivating the design: the deterministic
   no-hallucinated-movie detector **gates**, the judge stays supplementary; RAGAS runs through
   the same judge + self-served BGE-M3 with **zero external eval APIs**. **Label stability
-  closed the single-annotator loop honestly (P7, DEC-P7-6): a protocol-first blind test-retest
-  pass (ids re-minted, order reshuffled, 16-day gap) measured intra-rater κ = 0.933 overall
-  and 1.000 on real items (both label flips were on foils) — reported as an upper-bound proxy,
-  never as a human–human ceiling** (`evals/judge_validation/report_testretest.json`).
+  BOUNDED (not closed) the single-annotator limitation honestly (P7, DEC-P7-6): a
+  protocol-first blind test-retest pass (ids re-minted, order reshuffled, 16-day gap)
+  measured intra-rater κ = 0.933 (29/30 agreement — the single flip was on a foil) and
+  κ = 1.000 on real items (n = 15) — an upper-bound proxy, never a human–human ceiling; a
+  genuine second annotator remains the open upgrade path**
+  (`evals/judge_validation/report_testretest.json`).
 - Stood up the **all-self-hosted observability stack** and kept it honest about cost and
   reality: MLflow (compose, DB-backed registry) + Langfuse v3 self-hosted on a ₹799/mo VPS via
   an **idempotent from-scratch bootstrap** (find-or-create API provisioning + check-then-act
@@ -186,9 +188,12 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   p50 4252 ms (parity with the P5 benchmark), **$0.21 total for the 13.9-minute window**,
   teardown `nuke`-verified with the app auto-degrading to the offline state on camera.
 - **The capstone cost story: total on-demand GPU spend for the ENTIRE project ≈ $19–21,
-  recomputed 2026-07-18 from the audited per-phase ACTUALS in `docs/DECISIONS.md`** — never
-  from estimates (the earlier "≈ $12–17" here was an estimate-based figure; the honest itemized
-  actuals are: $0.34 P0 validation, ~$1 P1 extraction, $0.22 P2 embedding, <$1 P3 judge,
+  recomputed 2026-07-18/19 from the per-phase figures recorded in `docs/DECISIONS.md`** —
+  precision labelled per item, never an estimate passed off as a read (the earlier "≈ $12–17"
+  here was an unlabelled estimate; the itemization mixes **dashboard reads** ($0.34 P0,
+  $0.22 P2, $0.38 P6, $0.61 P7) with **recorded window approximations** (~$1 P1, <$1 P3,
+  ~$3–4 P5) and the **audited P4 reconstruction**: $0.34 P0 validation, ~$1 P1 extraction,
+  $0.22 P2 embedding, <$1 P3 judge,
   **≈ $13–14 P4 audited** — teacher ≈ $7 incl. think-mode/disk failures + train/benchmark
   window ≈ $6.2 incl. 8 recorded failure-mode attempts (DEC-P4-9) —, ~$3–4 P5 serving
   benchmark, $0.38 across the two P6 rehearsal/recording windows, **$0.61 P7 capture window —
@@ -229,9 +234,9 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   AgentDojo BU/UA/ASR triple — homoglyph/zero-width variants now caught by a normalization
   layer, while the encoding pair that evades is **committed as the documented bound** of the
   static-suite claim; judge validation gains a protocol-first blind test-retest package
-  (**measured: intra-rater κ = 0.933, real-items-only κ = 1.000** — framed as a proxy, never a
-  human–human ceiling); `docs/SCALE.md` designs the 50k-film path (pg_trgm funnel, HNSW
-  iterative scans, discovery-mode ingestion) with measured triggers.
+  (**measured: intra-rater κ = 0.933 at n = 30; real-items-only κ = 1.000 at n = 15** — a
+  proxy that bounds, never a human–human ceiling); `docs/SCALE.md` designs the 50k-film path
+  (pg_trgm funnel, HNSW iterative scans, discovery-mode ingestion) with measured triggers.
 - **Executed the approved capture window and kept the accounting honest (2026-07-19,
   DEC-P7-7 addendum):** two ephemeral A100 sessions — **₹51.09 ≈ $0.61 total, dashboard
   actuals** (₹29.80 + ₹21.29, vs the $3–5 envelope), both nuke-verified; run
@@ -239,5 +244,7 @@ generation quality + GPU throughput (P3/P4). See `docs/BENCHMARKS.md`._
   intent **held at 0.400 with n doubled to 10**; coherence **0.700 at n = 10**; Langfuse Cloud
   trace committed) and the widened 25-fixture injection suite ran live (**ASR 0.000 / BU 1.000
   / UA 0.800 defenses-ON**) — new dated BENCHMARKS rows beside byte-untouched frozen ones; the
-  window's own incidents (killed hold, leaked script slots) recorded in the DEC addendum, and
-  the one open leg (MLflow backfill on the persistent host) stated rather than papered over.
+  window's own incidents (killed hold, leaked script slots), the RAGAS-faithfulness coverage
+  gap (8/24 scored), and the MLflow-topology deviation (durable local sqlite instead of the
+  snap-blocked compose server — run `846967f0…` + screenshot + exported Langfuse trace all
+  committed) each recorded in the DEC-P7-7 addendum rather than papered over.

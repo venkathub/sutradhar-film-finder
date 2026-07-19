@@ -20,8 +20,8 @@
   "≥ 5 per category, ≥ 100 fixtures total"):** effort lands where the post-P6 review found n
   weakest — the *generation* slices — not in already-saturated retrieval slices (Recall@10 =
   1.000 across the P2 grid, where bulk fixtures add authoring cost without evidence value).
-  Revised composition: **GS-07 ≥ 10, GS-08 ≥ 10, injection suite ~25** ⇒ ~48 golden fixtures
-  + 12 held-out negatives + ~25 injection ≈ **85 total**. New fixtures only ADD (frozen run
+  Revised composition: **GS-07 ≥ 10, GS-08 ≥ 10, injection suite 25** ⇒ **46 golden fixtures
+  + 12 held-out negatives + 25 injection = 83 total** (exact as landed; PR #9 count fix). New fixtures only ADD (frozen run
   artifacts are never re-scored); their authoritative numbers come from the DEC-P7-7 capture
   window as new dated `BENCHMARKS.md` rows. No target is ever silently abandoned — this dated
   revision IS the record.

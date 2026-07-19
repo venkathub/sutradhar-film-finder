@@ -458,9 +458,13 @@ two-tier CI) live in **§6** and apply to every phase.
     - Repo hygiene: `mlruns/`, stray `.staging`/HF-cache dirs under `data/artifacts/`, and any
       tracked build output cleaned and git-ignored.
   - **Evidence strengthening (no frozen artifact re-scored):**
-    - **Second annotator** labels the existing 30-item judge-validation worksheet blind;
-      **human–human κ reported as the agreement ceiling** beside the judge–human κ, plus a
-      **real-items-only κ** (foils excluded). The agreement protocol (judgment scale, tie /
+    - **Second labelling pass on the 30-item judge-validation worksheet, blind.**
+      *(Amended at grooming, DEC-P7-6: no second human was available — the same rater
+      relabelled blind, so the deliverable is **intra-rater test-retest κ**, an upper-bound
+      proxy explicitly NOT presented as a human–human ceiling; a genuine second annotator
+      remains the additive upgrade path. Measured 2026-07-19: κ = 0.933, real-items-only
+      κ = 1.000 at n = 15.)* Plus a **real-items-only κ** (foils excluded). The agreement
+      protocol (judgment scale, tie /
       invalid-output / abstention handling) is stated *before* labelling, per current
       LLM-as-judge agreement-metric guidance (arXiv 2606.00093) — closing the single-annotator
       loop flagged in review.
@@ -545,7 +549,7 @@ nothing is left unproven.
 | Cost-aware GPU instance selection | **§6.7 / DEC-0003** | Instance-per-job table; ~$10–25 total cost envelope |
 | Audit-driven doc honesty (claims ⇄ evidence) | **P7** — doc-truth reconciliation | Dated reconciliation diffs; DEC-P7-1 fix list |
 | Securing a cost-bearing endpoint (auth + rate limit) | **P7** — API layer | Token-first limits on `/api/chat`; RUNBOOK demo flow |
-| Inter-rater reliability (human–human κ ceiling) | **P7** — judge validation | Second-annotator report; real-items-only κ |
+| Label-reliability measurement (intra-rater test-retest κ — DEC-P7-6; a human–human ceiling remains the upgrade path) | **P7** — judge validation | Blind test-retest report (κ 0.933; real-items-only κ 1.000, n = 15) |
 | Scale/capacity design writing | **P7** — `docs/SCALE.md` | 50k-film design note (pg_trgm, HNSW iterative scans, delta ingest) |
 
 ---

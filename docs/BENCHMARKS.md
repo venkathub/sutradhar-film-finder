@@ -138,7 +138,15 @@ multi-turn fixtures are longer (any step needing feedback fails the whole conver
 call-level rate is 0.235), which is exactly why the served product does not depend on this
 number (deterministic orchestration + validated tool loop + output gate; see README). GS-02
 model-layer inventions = 2 on this slice (both rewritten/disclaimed by the served-layer output
-gate — the two-layer framing above applies verbatim). Langfuse Cloud trace:
+gate — the two-layer framing above applies verbatim). **Coverage + gating honesty:** RAGAS
+**faithfulness scored 8/24 fixtures** (16 hit `IncompleteOutputException` in the judge's
+guided-JSON parse on the longer multi-turn contexts — the 0.219 aggregate covers the 8
+survivors only; answer_relevancy scored 24/24; the deterministic hallucinated-movie detector,
+the actual gate, covered 24/24). This row is **standing evidence, not a CI gate** — Tier-1
+continues to gate on the frozen `PINNED_RUN` (`20260704T093206Z-e9598564`); moving the pin is
+a separate future decision. Langfuse Cloud trace (exported copy committed per the
+evidence-outlives-infrastructure standard:
+`evals/generation_runs/20260719T063002Z-1bf3cd3e.trace.json`):
 `cloud.langfuse.com/project/cmrrd00d80zioad0dtypbluvn/traces/434e54340c7eeb74c55cb440ba56a2f4`;
 **MLflow run `846967f022d941ebb0bd19ac4c7e224d`** (experiment `sutradhar/generation`;
 backfilled 2026-07-19 via `mlflow_log backfill-generation` — full stamp as params, all

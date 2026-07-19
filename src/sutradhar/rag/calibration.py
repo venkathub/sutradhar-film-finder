@@ -26,6 +26,10 @@ from pathlib import Path
 # DEC-P2-5 calibration run (P2 task 11). θ = 1.35 × top calibration-canary score
 # (NEG-17); full curve + feasibility record in the artifact itself.
 PINNED_CALIBRATION_RUN = "20260702T135315Z-f6583183"
+# KNOWN DEBT (PR #9 review): CWD-relative, like every artifact path in this repo — the
+# process must run from the repo root (/app in the image). Anchoring to __file__ would
+# break the non-editable Docker install (site-packages ≠ artifact tree); routing through
+# Settings is the right fix if a second working-directory convention ever appears.
 DEFAULT_RUNS_DIR = Path("evals/retrieval_runs")
 
 

@@ -115,6 +115,11 @@ def _limiter_storage(settings: Settings) -> str:
 def _rate_limited_handler(request: Request, exc: Exception) -> JSONResponse:
     """429 in the standard envelope (P7 task 4); detail carries the limit only."""
     detail = getattr(exc, "detail", "rate limit exceeded")
+    # Retry-After from the tripped limit's actual window (PR #9 review), 60 s fallback.
+    try:
+        retry_after = int(exc.limit.limit.get_expiry())  # type: ignore[attr-defined]
+    except Exception:  # noqa: BLE001 — header hint only, never worth failing a response
+        retry_after = 60
     return JSONResponse(
         {
             "error": "rate_limited",
@@ -122,7 +127,7 @@ def _rate_limited_handler(request: Request, exc: Exception) -> JSONResponse:
             "request_id": getattr(request.state, "request_id", ""),
         },
         status_code=429,
-        headers={"Retry-After": "60"},
+        headers={"Retry-After": str(retry_after)},
     )
 
 

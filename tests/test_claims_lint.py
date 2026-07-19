@@ -51,6 +51,14 @@ RETIRED_CLAIMS: tuple[tuple[str, tuple[str, ...], str, tuple[str, ...]], ...] = 
         "zero-hallucination claims must carry the two-layer framing (model GS-02 = 1 ⚠)",
         (r"GS-02\s*=\s*1", r"served.layer", r"served-layer", r"output gate", r"dry-run"),
     ),
+    (
+        # PR #9 blocking finding 3: the deliverable is intra-rater test-retest (DEC-P7-6);
+        # a human–human ceiling / second-annotator report must never be claimed as existing.
+        r"human.human κ ceiling|human.human kappa ceiling|second.annotator report",
+        STANDING_DOCS,
+        "DEC-P7-6: intra-rater test-retest only — a human–human ceiling does not exist yet",
+        (r"remains the (additive )?upgrade path", r"NOT presented", r"intra-rater", r"DEC-P7-6"),
+    ),
 )
 
 

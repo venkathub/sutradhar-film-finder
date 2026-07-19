@@ -17,7 +17,7 @@
 | Versions | ~35 | ~100–150k | remakes/dubs per work |
 | `version_title` rows (canonical+AKA+translit) | ~10² | ~1M | AKA/dub titles × scripts |
 | Plot chunks (winner config `1024tok_15pct`) | 153 | ~1–2M | one plot per version, chunked |
-| Golden fixtures | 85 (DEC-P7-4) | unchanged | eval set does NOT scale with catalog |
+| Golden fixtures | 83 (DEC-P7-4, exact) | unchanged | eval set does NOT scale with catalog |
 
 **General trigger discipline:** each change below activates at a *measured* threshold (recorded
 in DECISIONS at the time), never preemptively — the seed slice must stay the simplest thing that
@@ -34,7 +34,10 @@ scoring — unshippable.
 - `CREATE EXTENSION pg_trgm;` + `CREATE INDEX ... ON version_title USING gin (match_key gin_trgm_ops);`
 - Query becomes a two-stage funnel: **(1)** in-DB trigram candidate pull —
   `SELECT ... WHERE match_key % :query_key ORDER BY similarity(match_key, :query_key) DESC LIMIT 200`
-  (index-served via GIN; `pg_trgm.similarity_threshold` tuned on GS-11) — then **(2)** the
+  (the `%` filter is GIN-index-served; the ORDER BY similarity is computed over the filtered
+  candidates — GIN does not order. If ordered index scans prove necessary, GiST with
+  `gist_trgm_ops` distance ordering is the documented alternative; `pg_trgm.similarity_threshold`
+  tuned on GS-11) — then **(2)** the
   existing rapidfuzz scorer re-ranks only those ≤200 candidates, preserving today's scoring
   semantics (`score` stays the rapidfuzz-normalized 0–1 the frozen tool schema documents).
 - Transliteration is unaffected: `match_key` is already the deterministic ITRANS romanization
