@@ -214,10 +214,10 @@ def main(argv: list[str] | None = None) -> int:
         if len(argv) < 2:
             print("usage: python -m sutradhar.obs.mlflow_log backfill-generation <run_id>")
             return 2
-        path = Path(GENERATION_RUNS_DIR) / f"{argv[1]}.json"
-        artifact = GenerationRunArtifact.model_validate_json(path.read_text("utf-8"))
-        run_id = log_generation_run(artifact, path)
-        print(f"backfilled generation run {artifact.run_id} -> MLflow run {run_id}")
+        gen_path = Path(GENERATION_RUNS_DIR) / f"{argv[1]}.json"
+        gen_artifact = GenerationRunArtifact.model_validate_json(gen_path.read_text("utf-8"))
+        run_id = log_generation_run(gen_artifact, gen_path)
+        print(f"backfilled generation run {gen_artifact.run_id} -> MLflow run {run_id}")
         print(f"experiment: {EXPERIMENT_GENERATION} @ {get_settings().mlflow_tracking_uri}")
         return 0
     print(
