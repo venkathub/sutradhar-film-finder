@@ -1,8 +1,26 @@
 # Sutradhar
 
+[![Tier-1 CI](https://github.com/venkathub/sutradhar-film-finder/actions/workflows/tier1.yml/badge.svg)](https://github.com/venkathub/sutradhar-film-finder/actions/workflows/tier1.yml)
+[![Pages](https://github.com/venkathub/sutradhar-film-finder/actions/workflows/pages.yml/badge.svg)](https://github.com/venkathub/sutradhar-film-finder/actions/workflows/pages.yml)
+![Python 3.12](https://img.shields.io/badge/Python-3.12-blue)
+![mypy strict](https://img.shields.io/badge/mypy-strict-informational)
+
 > A production-grade, multilingual assistant that finds an Indian film from its story, plot, or cast — cross-lingual remake/dub aware.
 
 Ask about **Papanasam** (Tamil) and Sutradhar knows the original is **Drishyam** (Malayalam), surfacing **all** language versions — the original plus every remake and official dub — with the original clearly flagged and every claim grounded in a cited source.
+
+## Results at a glance
+
+| Signal | Value | Where |
+|---|---|---|
+| Retrieval Recall@10 (gold suite) | **1.0** | sealed artifacts in `evals/`, recomputed by CI |
+| Version Surfacing Rate (remake families) | **1.0** | `docs/BENCHMARKS.md` |
+| Prompt-injection attack success rate | **0.000** (static suite) | `evals/injection_runs/` |
+| LLM-judge validation | κ = 0.738 (same-rater re-validation) | `docs/BENCHMARKS.md` |
+| QLoRA adapter vs prompted base | **CUT** — base won 2/3 primary metrics, pre-registered rule | honest negative result |
+| Demo | one command, zero GPU: `make demo-up` | replays pinned GPU transcripts |
+
+![Architecture](docs/assets/architecture.svg)
 
 ## The hard problem
 
