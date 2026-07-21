@@ -5,7 +5,7 @@
 ![Python 3.12](https://img.shields.io/badge/Python-3.12-blue)
 ![mypy strict](https://img.shields.io/badge/mypy-strict-informational)
 
-> A production-grade, multilingual assistant that finds an Indian film from its story, plot, or cast — cross-lingual remake/dub aware.
+> A multilingual assistant, built to production standards, that finds an Indian film from its story, plot, or cast — cross-lingual remake/dub aware.
 
 Ask about **Papanasam** (Tamil) and Sutradhar knows the original is **Drishyam** (Malayalam), surfacing **all** language versions — the original plus every remake and official dub — with the original clearly flagged and every claim grounded in a cited source.
 
